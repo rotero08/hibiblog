@@ -1,0 +1,204 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VocabFeature from '../components/VocabFeature.astro';
+import JournalHeader from '../components/JournalHeader.astro';
+---
+
+<Layout title="日々 — Hibi" description="Días, palabras, vida en Japón. Guías de japonés y notas honestas desde dentro.">
+  <!-- Hero -->
+  <div class="hero-wrapper">
+    <svg class="hero-bg" viewBox="0 0 1400 520" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="wash1" cx="50%" cy="50%" r="48%">
+          <stop offset="0%" stop-color="#C8B89A" stop-opacity="0.22"></stop>
+          <stop offset="100%" stop-color="#C8B89A" stop-opacity="0"></stop>
+        </radialGradient>
+        <radialGradient id="wash2" cx="50%" cy="50%" r="48%">
+          <stop offset="0%" stop-color="#8B6F47" stop-opacity="0.10"></stop>
+          <stop offset="100%" stop-color="#8B6F47" stop-opacity="0"></stop>
+        </radialGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="none"></rect>
+      <ellipse cx="1050" cy="200" rx="420" ry="280" fill="url(#wash1)"></ellipse>
+      <ellipse cx="140" cy="420" rx="320" ry="200" fill="url(#wash2)"></ellipse>
+      <text x="820" y="340" font-family="Noto Serif JP,serif" font-size="260" font-weight="300" fill="var(--ink)" fill-opacity="0.04" transform="rotate(-6 820 340)">語</text>
+      <text x="1080" y="180" font-family="Noto Serif JP,serif" font-size="160" font-weight="300" fill="var(--ink)" fill-opacity="0.03" transform="rotate(4 1080 180)">道</text>
+      <text x="60" y="280" font-family="Noto Serif JP,serif" font-size="200" font-weight="300" fill="var(--ink)" fill-opacity="0.03" transform="rotate(-3 60 280)">記</text>
+    </svg>
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Guías de japonés · Vida en Japón · Reflexiones</div>
+        <div class="hero-headline">
+          <span class="line1">日々の記録</span>
+          <span class="line2">días, palabras, vida en japón</span>
+        </div>
+        <p class="hero-desc">Guías para aprender japonés de verdad, no solo pasar exámenes. Vida en Japón tal como es. Notas honestas de alguien que sigue aprendiendo.</p>
+      </div>
+      <div class="hero-right"><span class="hero-kanji-stack">言葉と生活</span></div>
+    </div>
+  </div>
+
+  <div class="home-with-sidebar">
+    <div class="home-main-col">
+      <!-- Japanese Guide feature -->
+      <div class="jp-guide-block" style="margin-top:3rem">
+        <div class="jp-guide-header">
+          <div class="jp-guide-header-left">
+            <div class="jp-guide-eyebrow">Obra principal</div>
+            <h2 class="jp-guide-title">
+              Guía Completa de Japonés
+              <span class="jp-guide-subtitle">日本語完全ガイド</span>
+            </h2>
+            <p class="jp-guide-desc">Una guía de principio a fin para aprender japonés como se debe — sin atajos, sin métodos mágicos, con comprensión real del idioma.</p>
+            <div class="jp-guide-meta">
+              <span><strong>6</strong> partes</span>
+              <span><strong>1 FAQ</strong> dedicada</span>
+              <span><strong>~4h</strong> lectura total</span>
+              <span><strong>N5 → N2</strong> progresión</span>
+            </div>
+          </div>
+          <div class="jp-guide-kanji">語</div>
+        </div>
+
+        <div class="jp-guide-footer">
+          <span>Actualizado junio 2026 · Lectura libre</span>
+          <a class="jp-start-btn as-link" href="/guias/japones/" data-astro-reload>Empezar desde el principio →</a>
+        </div>
+      </div>
+
+      <!-- Two-column grid: guides + blog -->
+      <div class="home-grid">
+        <div>
+          <div class="home-col-header">
+            <span class="col-title">La Guía de Japón</span>
+            <a class="col-link as-link" href="/japon/">Ver todo →</a>
+          </div>
+          <a class="japan-guide-card as-link" href="/guias/llegada/" data-astro-reload>
+            <div class="guide-card-tag">Guía Esencial</div>
+            <div class="guide-card-title">Llegando a Japón por primera vez</div>
+            <div class="guide-card-meta">Aeropuerto · Transporte · Primeros días</div>
+          </a>
+          <a class="japan-guide-card as-link" href="/japon/guias/">
+            <div class="guide-card-tag">Guía Esencial</div>
+            <div class="guide-card-title">Alquilar piso siendo extranjero</div>
+            <div class="guide-card-meta">Garantías · Contratos · Key money</div>
+          </a>
+          <a class="japan-guide-card as-link" href="/japon/guias/">
+            <div class="guide-card-tag">Guía Práctica</div>
+            <div class="guide-card-title">Trámites, burocracia y visa</div>
+            <div class="guide-card-meta">My Number · Residencia · Banco</div>
+          </a>
+          <a class="japan-guide-card as-link" href="/japon/guias/">
+            <div class="guide-card-tag">Guía Práctica</div>
+            <div class="guide-card-title">Vida cotidiana en Japón</div>
+            <div class="guide-card-meta">Konbini · Transporte · Salud</div>
+          </a>
+        </div>
+        <div>
+          <div class="home-col-header">
+            <span class="col-title">El Blog de Japón</span>
+            <a class="col-link as-link" href="/blog/">Ver todo →</a>
+          </div>
+          <a class="blog-post-item as-link" href="/blog/">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Por qué el konbini arruinó cualquier otro país para mí</div>
+            <div class="bp-meta">Mayo 2026 · 5 min</div>
+          </a>
+          <a class="blog-post-item as-link" href="/blog/">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">El primer verano japonés: calor, cicadas, y aprender a sudar</div>
+            <div class="bp-meta">Julio 2025 · 4 min</div>
+          </a>
+          <a class="blog-post-item as-link" href="/blog/">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Tomar el shinkansen por primera vez tiene algo especial</div>
+            <div class="bp-meta">Marzo 2025 · 3 min</div>
+          </a>
+          <a class="blog-post-item as-link" href="/blog/">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Los supermercados municipales a las 8pm son otra dimensión</div>
+            <div class="bp-meta">Enero 2025 · 3 min</div>
+          </a>
+          <a class="blog-post-item as-link" href="/blog/">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Intenté hablar japonés por primera vez con un desconocido</div>
+            <div class="bp-meta">Noviembre 2024 · 6 min</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Personal section -->
+      <div class="personal-section">
+        <JournalHeader num="№ 03" title="Notas de Campo e Impresiones" seal="旅" viewAllHref="/personal/" />
+        <div class="personal-grid">
+          <a class="personal-card as-link" href="/personal/">
+            <div class="pc-date">Abril 2026</div>
+            <div class="pc-title">Seis meses después: lo que me equivoqué sobre mudarme a Japón</div>
+            <div class="pc-excerpt">Las cosas que ningún blog de expats te dice.</div>
+          </a>
+          <a class="personal-card as-link" href="/personal/">
+            <div class="pc-date">Febrero 2026</div>
+            <div class="pc-title">Sobre la soledad en el extranjero y por qué te hace mejor en idiomas</div>
+            <div class="pc-excerpt">Un efecto secundario que nadie menciona.</div>
+          </a>
+          <a class="personal-card as-link" href="/personal/">
+            <div class="pc-date">Enero 2026</div>
+            <div class="pc-title">Lo que me llevo del primer año: japonés, Japón, y yo</div>
+            <div class="pc-excerpt">Balance honesto de doce meses aprendiendo.</div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="home-sidebar">
+      <div class="about-card">
+        <div class="about-top">
+          <div class="about-avatar">人</div>
+          <div>
+            <div class="about-name">Tu nombre aquí</div>
+            <div class="about-loc">Japón, en algún lugar</div>
+          </div>
+        </div>
+        <p class="about-tagline">Escribo sobre japonés y vida en Japón desde adentro. No soy profesor. Solo alguien que presta atención.</p>
+        <div class="about-tags">
+          <span class="about-tag">N2</span>
+          <span class="about-tag">Tokio</span>
+          <span class="about-tag">3 años aquí</span>
+        </div>
+      </div>
+
+      <VocabFeature
+        class="sidebar-block"
+        word="侘寂"
+        reading="wabi-sabi"
+        meaning="la belleza en la imperfección y lo efímero"
+        exampleJa="この古い茶碗に侘寂を感じる。"
+        exampleEs="Siento wabi-sabi en este viejo cuenco de té."
+      />
+
+      <div class="sidebar-block">
+        <div class="section-label">Explorar por tema</div>
+        <div class="tag-cloud">
+          <span class="tag-pill">Gramática</span><span class="tag-pill">Kanji</span>
+          <span class="tag-pill">JLPT</span><span class="tag-pill">Anki</span>
+          <span class="tag-pill">Hablar</span><span class="tag-pill">Tokio</span>
+          <span class="tag-pill">Comida</span><span class="tag-pill">Vivienda</span>
+          <span class="tag-pill">Visa</span><span class="tag-pill">Cultura</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block">
+        <div class="now-card">
+          <div class="section-label" style="margin-bottom:.4rem">現在 — Ahora mismo</div>
+          <p>
+            Leyendo: <span class="val">夜は短し歩けよ乙女</span><br />
+            Estudiando: <span class="val">patrones N1</span><br />
+            Escuchando: <span class="jp">太陽とシスコムーン</span><br />
+            Humor: <span class="jp">梅雨 de la...</span>
+          </p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</Layout>

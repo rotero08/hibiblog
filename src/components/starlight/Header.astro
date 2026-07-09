@@ -1,0 +1,19 @@
+---
+import SiteNav from '../SiteNav.astro';
+import Search from '@astrojs/starlight/components/Search.astro';
+
+/**
+ * Starlight `Header` override — replaces Starlight's default header with the
+ * site's original top navigation bar (logo, links, 月/日 theme toggle) so the
+ * documentation guides show the exact same nav as the rest of the site. The
+ * fixed `<header class="header">` wrapper is neutralised in global.css so the
+ * nav owns the bar.
+ *
+ * Starlight's built-in <Search /> (Pagefind, ⌘K) is injected into the nav via
+ * the `search` slot so search stays available on the guides — inside this nav.
+ */
+---
+
+<SiteNav>
+  <Search slot="search" />
+</SiteNav>

@@ -1,0 +1,83 @@
+---
+import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import HankoSeal from '../components/HankoSeal.astro';
+import SiteNav from '../components/SiteNav.astro';
+
+/**
+ * Layout — the shared chrome for every custom (non-Starlight) page.
+ *
+ * Renders the persistent ambient leaves canvas, the main navigation with the
+ * dark-mode toggle, and the footer "receipt". Astro's View Transitions
+ * (`<ClientRouter />`) plus `transition:persist` on the canvas keep the leaf
+ * animation running smoothly across in-site navigations instead of resetting.
+ */
+interface Props {
+  /** Document <title>. @default '日々 — Hibi' */
+  title?: string;
+  /** Meta description for the page. */
+  description?: string;
+}
+
+const {
+  title = '日々 — Hibi',
+  description = 'Guías para aprender japonés de verdad y notas honestas sobre la vida en Japón.',
+} = Astro.props;
+
+const FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap';
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href={FONT_HREF} rel="stylesheet" />
+    {/* Apply the saved theme before paint; shares Starlight's storage key. */}
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('starlight-theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {}
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body class="hibi-site">
+    <canvas id="ambient-canvas" transition:persist="ambient-canvas"></canvas>
+
+    <SiteNav />
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <div class="footer-receipt">
+        <div class="footer-stub">
+          <span class="footer-jp">日々記録 · REGISTRO DIARIO</span>
+          <span class="footer-note">Hibi Blog — Publicación independiente en español</span>
+        </div>
+        <HankoSeal text="検" variant="square" size={44} rotation={6} />
+        <div class="footer-fare">
+          <span>GRACIAS POR VISITAR</span>
+          <span class="fare-jp">ご愛読ありがとうございました</span>
+        </div>
+      </div>
+    </footer>
+
+    <script is:inline src="/scripts/leaves.js"></script>
+  </body>
+</html>

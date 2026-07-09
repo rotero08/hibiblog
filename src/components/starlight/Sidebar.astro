@@ -1,0 +1,246 @@
+---
+/**
+ * Starlight `Sidebar` override — the LEFT pane. Renders the page navigation for
+ * the CURRENT guide only, using the legacy "travel-journal" checkbox design.
+ *
+ * Each guide (Japonés / Llegada) gets its OWN, entirely separate TOC: only the
+ * section whose pages live under the current URL prefix is shown. Above it sit:
+ *   • "Volver" — a themed go-back link (browser history, falling back to home);
+ *   • "Inicio" — the current GUIDE's landing page (not the site index).
+ *
+ * The index page is reached via "Inicio", so it is dropped from the numbered
+ * chapter list to avoid a duplicate entry, and the rest are renumbered from 01.
+ *
+ * Entries still come from Starlight's sidebar config
+ * (`Astro.locals.starlightRoute.sidebar`), so labels, hrefs and current-page
+ * state stay in sync with Starlight.
+ */
+type Link = { type: 'link'; href: string; label: string; isCurrent: boolean };
+type Group = { type: 'group'; label: string; entries: SidebarEntry[] };
+type SidebarEntry = Link | Group;
+
+const { sidebar } = Astro.locals.starlightRoute;
+const entries = sidebar as unknown as SidebarEntry[];
+
+const flattenLinks = (items: SidebarEntry[]): Link[] =>
+  items.flatMap((e) => (e.type === 'link' ? [e] : flattenLinks(e.entries)));
+
+const groups = entries.filter((e): e is Group => e.type === 'group');
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const noSlash = (h: string) => h.replace(/\/+$/, '');
+
+// Which guide are we in? Each guide renders ONLY its own section.
+const path = Astro.url.pathname;
+const SECTIONS = [
+  { prefix: '/guias/japones', home: '/guias/japones/' },
+  { prefix: '/guias/llegada', home: '/guias/llegada/' },
+];
+const section = SECTIONS.find((s) => path.startsWith(s.prefix));
+
+// The group whose pages live under the current guide's prefix.
+const currentGroup = section
+  ? groups.find((g) =>
+      flattenLinks(g.entries).some((l) => noSlash(l.href).startsWith(section.prefix))
+    )
+  : undefined;
+
+const inicioHref = section?.home ?? '/';
+const inicioActive = section ? noSlash(path) === noSlash(inicioHref) : false;
+
+// Fallback to all groups for any future docs page outside the two guides.
+const groupsToRender = currentGroup ? [currentGroup] : groups;
+const chaptersOf = (g: Group): Link[] => {
+  const links = flattenLinks(g.entries);
+  return currentGroup ? links.filter((l) => noSlash(l.href) !== noSlash(inicioHref)) : links;
+};
+---
+
+<nav class="doc-nav" aria-label="Navegación de la guía">
+  <a
+    class="doc-back"
+    href="/"
+    data-astro-reload
+    onclick="if(window.history.length>1){history.back();return false}"
+  >
+    <span class="doc-back-arrow" aria-hidden="true">←</span>
+    <span class="doc-back-text">Volver</span>
+    <span class="doc-back-jp" aria-hidden="true">戻る</span>
+  </a>
+
+  <ul class="doc-toc-list doc-nav-top">
+    <li>
+      <a
+        class="doc-toc-item"
+        class:list={[{ 'is-active': inicioActive }]}
+        href={inicioHref}
+        aria-current={inicioActive ? 'page' : undefined}
+      >
+        <span class="doc-toc-stamp" aria-hidden="true" />
+        <span class="doc-toc-num">⌂</span>
+        <span class="doc-toc-title">Inicio</span>
+      </a>
+    </li>
+  </ul>
+
+  {groupsToRender.map((group) => (
+    <div class="doc-nav-group">
+      <p class="doc-toc-label">{group.label}</p>
+      <ul class="doc-toc-list">
+        {chaptersOf(group).map((link, i) => (
+          <li>
+            <a
+              class="doc-toc-item"
+              class:list={[{ 'is-active': link.isCurrent }]}
+              href={link.href}
+              aria-current={link.isCurrent ? 'page' : undefined}
+            >
+              <span class="doc-toc-stamp" aria-hidden="true" />
+              <span class="doc-toc-num">{pad(i + 1)}</span>
+              <span class="doc-toc-title">{link.label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</nav>
+
+<style>
+  .doc-nav {
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+  }
+  /* Must out-specify `.doc-toc-list { margin: 0 }` (defined later below), which
+     would otherwise reset this gap to zero — hence the doubled class selector. */
+  .doc-toc-list.doc-nav-top {
+    margin-bottom: 1.8rem;
+  }
+  .doc-nav-group + .doc-nav-group {
+    margin-top: 1.5rem;
+  }
+
+  /* Go-back link — sits above Inicio. Lighter than the chapter cards so it reads
+     as "leave the guide", with a brush-stroke 戻る to match the bilingual theme. */
+  .doc-back {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.5rem;
+    margin-bottom: 1.1rem;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    border-bottom: 1px dashed var(--border-lt);
+    border-radius: 0;
+    transition: color 0.25s, border-color 0.35s;
+  }
+  .doc-back:hover {
+    color: var(--ink);
+    border-color: var(--border);
+  }
+  .doc-back-arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+  .doc-back:hover .doc-back-arrow {
+    transform: translateX(-3px);
+  }
+  .doc-back-text {
+    font-weight: 500;
+  }
+  .doc-back-jp {
+    margin-inline-start: auto;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--brown-lt);
+  }
+
+  .doc-toc-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin: 0 0 1rem;
+  }
+  .doc-toc-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+  }
+  .doc-toc-list li {
+    margin: 0;
+  }
+  .doc-toc-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border-lt);
+    background: var(--cream2);
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background 0.25s, border-color 0.35s, transform 0.15s;
+  }
+  .doc-toc-item:hover {
+    background: var(--cream3);
+    border-color: var(--border);
+    transform: translateX(2px);
+  }
+  .doc-toc-item.is-active {
+    border-color: var(--stamp);
+    background: var(--cream3);
+  }
+  .doc-toc-stamp {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--muted);
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.25s, background-color 0.25s;
+  }
+  .doc-toc-item.is-active .doc-toc-stamp {
+    border-color: var(--stamp);
+    background: var(--stamp);
+  }
+  .doc-toc-item.is-active .doc-toc-stamp::after {
+    content: '✓';
+    color: var(--cream);
+    font-size: 8px;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+  }
+  .doc-toc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--purple);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    min-width: 1.1em;
+    text-align: center;
+  }
+  :global(:root[data-theme='dark']) .doc-toc-num {
+    color: #9a8abf;
+  }
+  .doc-toc-title {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>

@@ -1,0 +1,103 @@
+---
+/**
+ * HankoSeal — a traditional Japanese red ink stamp (判子 / hanko).
+ *
+ * Renders a rotating circular or square seal printed in the brand "stamp"
+ * red. Used both as a decorative accent (nav brand, journal sections, footer)
+ * and, when given a `label`, as an interactive button.
+ *
+ * The visual contract lives entirely in this component so it maps cleanly to a
+ * future CMS field group (text + variant + size + rotation).
+ */
+interface Props {
+  /** Character(s) printed inside the seal, e.g. "日々", "検" or "学". */
+  text: string;
+  /**
+   * Visual style of the seal:
+   * - `ring`   — double solid ring (the main brand stamp).
+   * - `dashed` — solid outer ring with a dashed inner ring (journal seals).
+   * - `square` — rounded square stamp (footer receipt stamp).
+   * @default 'ring'
+   */
+  variant?: 'ring' | 'dashed' | 'square';
+  /** Diameter (ring/dashed) or side length (square), in pixels. @default 48 */
+  size?: number;
+  /** Resting rotation of the seal, in degrees. @default -8 */
+  rotation?: number;
+  /**
+   * Accessible label. When provided the seal renders as an interactive
+   * `<button>`; when omitted the seal is decorative and hidden from assistive
+   * technology.
+   */
+  label?: string;
+}
+
+const { text, variant = 'ring', size = 48, rotation = -8, label } = Astro.props;
+const Tag = label ? 'button' : 'span';
+const fontSize = Math.max(10, Math.round(size * 0.26));
+---
+
+<Tag
+  class:list={['hanko-seal', `hanko-seal--${variant}`]}
+  style={`--seal-size:${size}px;--seal-rotation:${rotation}deg;--seal-font:${fontSize}px`}
+  type={label ? 'button' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+>{text}</Tag>
+
+<style>
+  .hanko-seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--seal-size);
+    height: var(--seal-size);
+    color: var(--stamp);
+    font-family: 'Noto Serif JP', serif;
+    font-size: var(--seal-font);
+    font-weight: 600;
+    letter-spacing: 1px;
+    transform: rotate(var(--seal-rotation));
+    flex-shrink: 0;
+    position: relative;
+    user-select: none;
+    background: transparent;
+    border: 2.5px solid var(--stamp);
+    transition: border-color 0.35s, color 0.35s, transform 0.2s;
+  }
+  button.hanko-seal {
+    cursor: pointer;
+    font: inherit;
+    color: var(--stamp);
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+  }
+  .hanko-seal--ring,
+  .hanko-seal--dashed {
+    border-radius: 50%;
+  }
+  .hanko-seal--square {
+    border-radius: 3px;
+    border-width: 1.75px;
+    opacity: 1;
+  }
+  .hanko-seal--ring::before,
+  .hanko-seal--dashed::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    transition: border-color 0.35s;
+  }
+  .hanko-seal--ring::before {
+    border: 1px solid var(--stamp);
+    opacity: 0.35;
+  }
+  .hanko-seal--dashed::before {
+    border: 1px dashed var(--stamp);
+  }
+  .hanko-seal:hover {
+    transform: rotate(0deg) scale(1.05);
+  }
+</style>

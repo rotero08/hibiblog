@@ -1,0 +1,1536 @@
+/* ─────────────────────────────────────────
+   TOKENS
+───────────────────────────────────────── */
+:root {
+  --cream:      #F5EFE0;
+  --cream2:     #EDE5D0;
+  --cream3:     #E4D9C0;
+  --ink:        #2C2118;
+  --ink-soft:   #4A3728;
+  /* Secondary/accent text colours darkened to clear WCAG AA (4.5:1) on the cream
+     backgrounds — the old warmer tints (e.g. --muted #9A8470 ≈ 2.5–3.1:1) were
+     the recurring low-contrast culprit across eyebrows, meta, labels & captions. */
+  --brown:      #6E5736;
+  --brown-lt:   #7A6143;
+  --stamp:      #BC3318;
+  --muted:      #6F5B45;
+  --border:     #D4C4AA;
+  --border-lt:  #E8DCC8;
+  --nav-bg:     rgba(245,239,224,0.93);
+  --feat-bg:    #2C2118;
+  --feat-text:  #F5EFE0;
+  --feat-muted: #A89377;
+  --feat-border:rgba(255,255,255,0.1);
+  --feat-btn:   #A88B65;
+  --vocab-grid: transparent;
+  --green:      #3D6E55;
+  --green-lt:   #7AAD92;
+  --purple:     #675788;
+  /* Text colour for use ON the stamp-red background (buttons). */
+  --on-stamp:   #ffffff;
+}
+:root[data-theme='dark'] {
+  --cream:      #16181b;
+  --cream2:     #1d2025;
+  --cream3:     #22262d;
+  --ink:        #e8e5dc;
+  --ink-soft:   #c8c3b8;
+  --brown:      #8aa390;
+  --brown-lt:   #a0bfaf;
+  --stamp:      #e65a4e;
+  --muted:      #9a968d;
+  --border:     #2e333b;
+  --border-lt:  #252a31;
+  --nav-bg:     rgba(22,24,27,0.93);
+  --feat-bg:    #0f1013;
+  --feat-text:  #e8e5dc;
+  --feat-muted: #8d8b82;
+  --feat-border:rgba(255,255,255,0.07);
+  --feat-btn:   #8aa390;
+  --vocab-grid: transparent;
+  --green:      #8aa390;
+  --green-lt:   #a0bfaf;
+  --purple:     #9a8abf;
+  /* The dark-mode stamp red (#e65a4e) is light enough that dark text reads best
+     on it (≈5:1) — white would only reach ≈3.5:1. */
+  --on-stamp:   #1a1410;
+}
+
+/* ─────────────────────────────────────────
+   RESET & BASE (Tipografía y visualización ampliada)
+───────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+/* Aggressive margin/padding reset is scoped to the custom site chrome so it
+   never strips spacing from Starlight's documentation layout. */
+.hibi-site *,.hibi-site *::before,.hibi-site *::after{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body.hibi-site{
+  margin:0; /* kill the 8px UA body margin so the page fills the full viewport */
+  background:var(--cream);color:var(--ink);
+  font-family:'Inter',sans-serif;font-size:16px;line-height:1.65;
+  min-height:100vh;transition:background .35s,color .35s;
+  position: relative;
+}
+
+/* ── Ambient Canvas Layer (Hojas cayendo en 3D avanzadas) ── */
+#ambient-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.42;
+  transition: opacity 0.5s;
+}
+
+/* Reset general de botones para evitar estilos nativos de navegador.
+   `:where()` keeps this at low (0,1,0) specificity so component button classes
+   (.mode-btn, .nav-link, …) still win — matching the original cascade. */
+.hibi-site :where(button, .col-link) {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* ─────────────────────────────────────────
+   PAGE SYSTEM (custom-site chrome stacking context)
+   NOTE: only the footer is forced to position:relative here; the nav must keep
+   its own position:sticky (from .main-nav), so it is intentionally excluded.
+───────────────────────────────────────── */
+.hibi-site footer { position: relative; z-index: 10; }
+
+/* ─────────────────────────────────────────
+   HANKO
+───────────────────────────────────────── */
+.hanko{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:48px;height:48px;border:2.5px solid var(--stamp);border-radius:50%;
+  color:var(--stamp);font-family:'Noto Serif JP',serif;font-size:12px;
+  font-weight:600;letter-spacing:1px;transform:rotate(-8deg);flex-shrink:0;
+  position:relative;user-select:none;background:transparent;
+  transition:border-color .35s,color .35s,transform 0.2s;
+  align-self: center;
+}
+.hanko::before{
+  content:'';position:absolute;inset:3px;border:1px solid var(--stamp);
+  border-radius:50%;opacity:.35;transition:border-color .35s;
+}
+.hanko:hover {
+  transform: rotate(0deg) scale(1.05);
+}
+
+/* ─────────────────────────────────────────
+   NAV (Barra de navegación principal limpia)
+───────────────────────────────────────── */
+nav.main-nav {
+  position:sticky;top:0;
+  background:var(--nav-bg);backdrop-filter:blur(12px);
+  border-bottom: 1.5px solid var(--border);
+  /* Height is driven by --sl-nav-height (default 60px below) so the bar is
+     guaranteed identical on the custom pages and inside the Starlight guides. */
+  padding:0 clamp(1.5rem,5vw,4rem);height:var(--sl-nav-height,60px);
+  display:flex;align-items:center;justify-content:space-between;gap:2rem;
+  transition:background .35s,border-color .35s;
+  z-index: 100;
+}
+.nav-brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;cursor:pointer}
+.nav-title{display:flex;flex-direction:column;gap:4px;line-height:1.15}
+.nav-title .jp{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:400;color:var(--ink);letter-spacing:4px;transition:color .35s}
+.nav-title .sub{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-weight:400;transition:color .35s}
+.nav-links{display:flex;gap:1.8rem;list-style:none;align-items:center}
+.nav-links a,.nav-links button.nav-link{
+  color:var(--muted);text-decoration:none;font-size:12.5px;letter-spacing:1.5px;
+  text-transform:uppercase;font-weight:500;transition:color .2s;
+  background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:0;
+  position: relative;
+}
+.nav-links a:hover,.nav-links button.nav-link:hover,.nav-links a.active,.nav-links button.nav-link.active{color:var(--ink)}
+.nav-links a.active,.nav-links button.nav-link.active{
+  border-bottom:1px solid var(--stamp);
+  padding-bottom:1px;
+}
+/* Indicador de hanko tradicional para el elemento activo (enlaces y botón) */
+.nav-links .nav-link.active::before {
+  content: '㊞';
+  color: var(--stamp);
+  font-size: 11px;
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* Dropdown */
+.nav-dropdown{position:relative}
+.nav-dropdown-menu{
+  display:none;position:absolute;top:100%;left:0;
+  background:var(--cream);border:1px solid var(--border);min-width:240px;
+  box-shadow:0 8px 24px rgba(44,33,24,.12);z-index:300;
+  padding:.4rem 0;
+  transition:background .35s,border-color .35s;
+}
+:root[data-theme='dark'] .nav-dropdown-menu{box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.nav-dropdown-menu.open{display:block}
+.nav-dropdown-menu a,.nav-dropdown-menu button{
+  display:block;width:100%;text-align:left;padding:.75rem 1.2rem;
+  font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;font-family:'Inter',sans-serif;
+  background:none;border:none;cursor:pointer;font-weight:500;
+  transition:color .2s,background .2s;
+}
+.nav-dropdown-menu a:hover,.nav-dropdown-menu button:hover{color:var(--ink);background:var(--cream2)}
+.nav-dropdown-menu .divider{height:1px;background:var(--border-lt);margin:.3rem 0}
+
+/* Jerarquía clara en el menú desplegable */
+.nav-dropdown-menu .dropdown-main-link {
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  padding-left: 1.2rem !important;
+}
+.nav-dropdown-menu .dropdown-sub-link {
+  padding-left: 2.2rem !important; /* Indentación visual de subsecciones */
+  font-size: 10.5px !important;
+  color: var(--muted) !important;
+  font-weight: 400 !important;
+}
+.nav-dropdown-menu .dropdown-sub-link:hover {
+  color: var(--ink) !important;
+  background: var(--cream2) !important;
+}
+
+/* Mode button */
+.mode-btn{
+  display:inline-flex;align-items:center;gap:6px;background:none;
+  border:1px solid var(--border);color:var(--muted);padding:5px 10px 5px 8px;
+  cursor:pointer;font-family:'Inter',sans-serif;font-size:10px;letter-spacing:1.5px;
+  text-transform:uppercase;font-weight:500;transition:color .2s,border-color .2s,background .35s;
+  white-space:nowrap;flex-shrink:0;
+}
+.mode-btn:hover{color:var(--ink);border-color:var(--brown)}
+.mode-btn .mode-kanji{font-family:'Noto Serif JP',serif;font-size:13px;font-weight:300;line-height:1;color:var(--stamp);transition:color .35s}
+.mode-btn .label-dark{display:inline}.mode-btn .label-light{display:none}
+:root[data-theme='dark'] .mode-btn .label-dark{display:none}:root[data-theme='dark'] .mode-btn .label-light{display:inline}
+.mode-btn .kanji-moon{display:inline}.mode-btn .kanji-sun{display:none}
+:root[data-theme='dark'] .mode-btn .kanji-moon{display:none}:root[data-theme='dark'] .mode-btn .kanji-sun{display:inline}
+
+/* ── DISEÑO TEMÁTICO: Cabeceras de Registro Fieles (№ 03) ── */
+.journal-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 0.6rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  transition: border-color .35s;
+  width: 100%;
+}
+.journal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.journal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.journal-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--stamp);
+  font-weight: 500;
+  transition: color .35s;
+}
+.journal-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+  font-weight: 500;
+  color: var(--ink);
+  transition: color .35s;
+}
+.journal-stamp-seal {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--stamp);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-size: 11px;
+  font-weight: 600;
+  transform: rotate(-12deg);
+  opacity: 0.75;
+  background: transparent;
+  position: relative;
+  transition: border-color .35s, color .35s, transform 0.3s ease-out;
+  flex-shrink: 0;
+}
+.journal-stamp-seal::before {
+  content: '';
+  position: absolute;
+  inset: 2.5px;
+  border: 1px dashed var(--stamp);
+  border-radius: 50%;
+  transition: border-color .35s;
+}
+.journal-stamp-seal:hover {
+  transform: rotate(12deg) scale(1.1);
+}
+.journal-ver-todo {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.journal-ver-todo:hover {
+  color: var(--ink);
+}
+
+/* ── DISEÑO TEMÁTICO: Tarjeta Billete Refinada con Cortes Fieles (Kippu - 切符) ── */
+.kippu-ticket {
+  position: relative;
+  background-color: var(--cream2);
+  border: 1.5px solid var(--border) !important;
+  border-radius: 12px;
+  padding: 2.2rem;
+  overflow: visible !important;
+  margin-top: 20px; /* Margen de seguridad para evitar recortes de elementos flotantes */
+  transition: background-color .35s, border-color .35s, transform 0.25s;
+}
+.kippu-ticket:hover {
+  transform: translateY(-2px);
+}
+/* Troqueles circulares con máscara exterior para crear muescas reales */
+.kippu-ticket::before, .kippu-ticket::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  transition: background-color .35s, border-color .35s;
+}
+.kippu-ticket::before {
+  left: -11px;
+}
+.kippu-ticket::after {
+  right: -11px;
+}
+/* Máscaras para tapar los bordes exteriores de las muescas */
+.kippu-left-cover, .kippu-right-cover {
+  position: absolute;
+  width: 12px;
+  height: 24px;
+  background: var(--cream);
+  z-index: 11;
+  top: calc(50% - 12px);
+  transition: background .35s;
+}
+.kippu-left-cover { left: -14px; }
+.kippu-right-cover { right: -14px; }
+
+/* Troque rectangular en la base inferior */
+.kippu-notch {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 8px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-bottom: none;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  z-index: 10;
+  transition: background-color .35s, border-color .35s;
+}
+/* Línea de corte punteada de billete de tren (Visible) */
+.ticket-stub-border {
+  position: absolute;
+  right: 80px;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--border);
+  pointer-events: none;
+  opacity: 0.95;
+  transition: border-color .35s;
+}
+/* Línea de corte troquelada horizontal encima del quote */
+.ticket-stub-border-horizontal {
+  grid-column: 1 / -1;
+  border-top: 2px dashed var(--border);
+  margin: 1.2rem -1.4rem;
+  opacity: 0.95;
+  transition: border-color 0.35s;
+}
+
+/* ── DISEÑO TEMÁTICO: Sello de Tinta Tradicional de Estación (Eki-Stamp) ── */
+.eki-stamp-seal {
+  position: absolute;
+  right: 100px;
+  top: -16px;
+  transform: rotate(-9deg);
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0.8;
+  user-select: none;
+  transition: opacity .35s;
+}
+.eki-stamp-circle {
+  stroke: var(--stamp);
+  fill: none;
+  transition: stroke .35s;
+}
+.eki-stamp-text {
+  fill: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 600;
+  transition: fill .35s;
+}
+.eki-stamp-date {
+  fill: var(--stamp);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  transition: fill .35s;
+}
+
+/* ─────────────────────────────────────────
+   PÁGINAS AMPLIADAS (Diseño amplio de 1450px)
+───────────────────────────────────────── */
+.hero, .home-with-sidebar, .guide-page, .japan-hub, footer {
+  max-width: 1450px !important;
+}
+
+/* ─────────────────────────────────────────
+   RESTORED ORIGINAL BALANCED TYPOGRAPHY (No outlines or boxed labels)
+───────────────────────────────────────── */
+.post-tag {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--stamp);
+  font-weight: 600;
+  margin-bottom: .6rem;
+  transition: color .35s;
+}
+.post-tag.vida{color:var(--green)}
+.post-tag.personal{color:var(--brown)}
+.post-tag.jp-guide{color:var(--purple)}
+
+.guide-card-tag, .bp-tag, .jh-blog-tag {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.post-title{font-family:'Lora',serif;font-size:clamp(1.1rem,2.2vw,1.45rem);font-weight:500;color:var(--ink);margin-bottom:.4rem;line-height:1.35;transition:color .35s}
+.post-title .jp-sub{display:block;font-family:'Noto Serif JP',serif;font-size:.62em;color:var(--brown);letter-spacing:3px;font-weight:300;font-style:normal;margin-top:4px;transition:color .35s}
+.post-excerpt{color:var(--ink-soft);font-size:14.5px;line-height:1.8;margin-top:0.3rem;margin-bottom:0.8rem;transition:color .35s}
+.post-meta{display:flex;align-items:center;gap:.8rem;font-size:13.5px;color:var(--muted);border-top:1px solid var(--border-lt);padding-top:.7rem;margin-top:.7rem;transition:color .35s,border-color .35s}
+.post-meta .dot{opacity:.5}
+
+/* Estilo consistente para enlaces "Ver Todo" en homepage */
+button.col-link, .col-link {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 10.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: color .2s;
+  outline: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-block;
+}
+button.col-link:hover, .col-link:hover {
+  color: var(--ink) !important;
+}
+
+/* ─────────────────────────────────────────
+   HERO & TRANSITIONS
+───────────────────────────────────────── */
+.hero-wrapper{
+  position:relative;
+  overflow:hidden;
+  border-bottom:1px solid var(--border);
+  background:var(--cream2);
+  transition:background .35s,border-color .35s;
+}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero{position:relative;z-index:2;padding:clamp(2.75rem,6vw,4.5rem) clamp(1.5rem,5vw,4rem) clamp(2.25rem,4vw,3.25rem);display:grid;grid-template-columns:1fr auto;gap:3rem;align-items:end;margin:0 auto}
+.hero-eyebrow{font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:var(--stamp);font-weight:500;margin-bottom:1.4rem;display:flex;align-items:center;gap:10px;transition:color .35s}
+.hero-eyebrow::after{content:'';display:inline-block;height:1px;width:32px;background:var(--stamp);opacity:.5}
+.hero-headline{font-family:'Noto Serif JP',serif;font-weight:300;line-height:1.05;margin-bottom:1.6rem}
+.hero-headline .line1{font-size:clamp(3rem,8vw,7rem);color:var(--ink);display:block;letter-spacing:-1px;transition:color .35s}
+.hero-headline .line2{font-size:clamp(1rem,2.2vw,1.45rem);color:var(--brown);display:block;letter-spacing:5px;margin-top:.5rem;font-weight:400;transition:color .35s}
+.hero-desc{max-width:480px;color:var(--ink-soft);font-size:16px;line-height:1.8;border-left:2px solid var(--border);padding-left:1.2rem;font-family:'Lora',serif;font-style:italic;transition:color .35s,border-color .35s}
+.hero-right{opacity:.18;user-select:none}
+.hero-kanji-stack{font-family:'Noto Serif JP',serif;font-size:clamp(2.5rem,5vw,4.5rem);font-weight:300;color:var(--ink);writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:12px;line-height:1;height:clamp(160px,22vw,280px);transition:color .35s}
+
+/* ─────────────────────────────────────────
+   HOMEPAGE LAYOUT
+───────────────────────────────────────── */
+.home-body{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem)}
+
+/* ── Japanese Guide Feature Block ── */
+.jp-guide-block{
+  border: 1px solid var(--border);
+  margin: 3rem 0 2.5rem;
+  transition: border-color .35s;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.jp-guide-header{
+  background:var(--feat-bg);padding:2rem 2rem 1.6rem;
+  display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:start;
+  transition:background .35s;
+}
+/* Always sits on the dark feature box (--feat-bg, dark in both themes), so it
+   uses the light purple rather than the cream-tuned --purple (which is dark). */
+.jp-guide-eyebrow{font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:#9a8abf;font-weight:500;margin-bottom:.8rem;display:flex;align-items:center;gap:8px}
+.jp-guide-eyebrow::after{content:'';display:inline-block;height:1px;width:24px;background:#9a8abf;opacity:.6}
+.jp-guide-title{font-family:'Noto Serif JP',serif;font-size:clamp(1.3rem,2.8vw,2rem);font-weight:400;color:var(--feat-text);line-height:1.2;margin-bottom:.5rem}
+.jp-guide-subtitle{font-family:'Noto Serif JP',serif;font-size:.7em;color:#8aa390;letter-spacing:4px;font-weight:300;display:block;margin-top:.3rem}
+.jp-guide-desc{color:rgba(245,239,224,.8);font-size:15px;line-height:1.8;margin-top:.8rem;font-family:'Inter',sans-serif;font-style:normal;max-width:560px}
+.jp-guide-meta{display:flex;gap:1.5rem;margin-top:1.2rem;flex-wrap:wrap}
+.jp-guide-meta span{font-size:12.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--feat-muted)}
+.jp-guide-meta strong{color:var(--feat-text);font-weight:500}
+.jp-guide-kanji{font-family:'Noto Serif JP',serif;font-size:clamp(3rem,6vw,5rem);font-weight:300;color:var(--feat-text);opacity:.12;line-height:1;user-select:none;align-self:center}
+
+/* ── COLLAPSING GRID (Líneas perfectamente continuas y alineadas; sin dobles líneas ni efectos hover 3D) ── */
+.jp-parts-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1.5px solid var(--border);
+  background: transparent;
+  overflow: hidden;
+}
+.jp-part-tile {
+  background: var(--cream);
+  padding: 1.8rem 1.6rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  min-height: 150px;
+  border: none !important;
+  transition: background .2s;
+}
+
+/* Sistema de bordes dinámicos para evitar duplicidad con el marco exterior */
+@media (min-width: 901px) {
+  .jp-part-tile {
+    border-right: 1.5px solid var(--border) !important;
+    border-bottom: 1.5px solid var(--border) !important;
+  }
+  .jp-part-tile:nth-child(3n) {
+    border-right: none !important;
+  }
+  .jp-part-tile:nth-child(n+4) {
+    border-bottom: none !important;
+  }
+}
+@media (max-width: 900px) and (min-width: 601px) {
+  .jp-part-tile {
+    border-right: 1.5px solid var(--border) !important;
+    border-bottom: 1.5px solid var(--border) !important;
+  }
+  .jp-part-tile:nth-child(2n) {
+    border-right: none !important;
+  }
+  .jp-part-tile:nth-child(n+5) {
+    border-bottom: none !important;
+  }
+}
+@media (max-width: 600px) {
+  .jp-part-tile {
+    border-bottom: 1.5px solid var(--border) !important;
+  }
+  .jp-part-tile:last-child {
+    border-bottom: none !important;
+  }
+}
+.jp-part-tile:hover {
+  background: var(--cream2);
+}
+
+.jp-part-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--purple);font-weight:600}
+:root[data-theme='dark'] .jp-part-num{color:#9a8abf}
+.jp-part-title{font-size:16.5px;font-weight:600;color:var(--ink);line-height:1.4;transition:color .35s}
+.jp-part-desc{font-size:13.5px;color:var(--muted);line-height:1.6;transition:color .35s}
+.jp-guide-footer{
+  background:var(--cream2);border-top:1px solid var(--border);
+  padding:.9rem 1.4rem;display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;transition:background .35s,border-color .35s;
+}
+.jp-guide-footer span{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.jp-start-btn{
+  display:inline-flex;align-items:center;gap:8px;background:var(--stamp);
+  border:none;padding:.6rem 1.2rem;font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;
+  transition:opacity .2s;
+}
+/* Specificity (0,2,0) so it wins over `.as-link{color:inherit}` (the button is an
+   <a class="jp-start-btn as-link">), keeping the label readable on the red bg. */
+.jp-start-btn.as-link,
+.hibi-site .jp-start-btn{color:var(--on-stamp)}
+.jp-start-btn:hover{opacity:.85}
+
+/* ── Two-column home grid ── */
+.home-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-bottom:3rem;
+  border-top:1px solid var(--border);padding-top:2.5rem;
+  transition:border-color .35s;
+}
+
+/* Japan Life column */
+.home-col-header{margin-bottom:1.5rem;display:flex;align-items:baseline;justify-content:space-between}
+.home-col-header .col-title{font-family:'Lora',serif;font-size:1rem;font-weight:500;color:var(--ink);transition:color .35s}
+
+/* Japan guide hub card (Proporción mayor) */
+.japan-guide-card{
+  background:var(--cream2);border:1px solid var(--border);padding:1.6rem;
+  margin-bottom:8px;cursor:pointer;transition:background .2s,border-color .35s, transform 0.2s;
+  display:flex;flex-direction:column;gap:.5rem;
+  min-height: 120px;
+  justify-content: center;
+}
+.japan-guide-card:hover{
+  background:var(--cream3);
+  transform: translateY(-2px);
+}
+.guide-card-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);line-height:1.35;transition:color .35s}
+.guide-card-meta{font-size:13.5px;color:var(--muted);letter-spacing:.5px;transition:color .35s}
+
+/* Blog posts in japan column */
+.blog-post-item, .jh-blog-item {
+  padding: 1rem 0 1rem 24px;
+  border-bottom: 1px solid var(--border-lt);
+  cursor: pointer;
+  transition: opacity .2s, border-color .35s;
+  position: relative;
+}
+.blog-post-item:hover, .jh-blog-item:hover {
+  opacity: .85;
+}
+/* Detalle decorativo hanko inline (Evita encimamientos) */
+.bp-tag::before, .jh-blog-tag::before {
+  content: '㊞ ';
+  color: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 6px;
+  display: inline-block;
+}
+
+.blog-post-item .bp-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);line-height:1.35;margin-bottom:.25rem;transition:color .35s}
+.blog-post-item .bp-meta{font-size:13.5px;color:var(--muted);letter-spacing:.5px;transition:color .35s}
+
+/* ── Personal section ── */
+.personal-section{
+  border-top:1px solid var(--border);padding-top:2rem;margin-bottom:4rem;
+  transition:border-color .35s;
+}
+.personal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1.5rem}
+.personal-card{
+  padding:1.5rem;border:1px solid var(--border-lt);cursor:pointer;
+  transition:border-color .2s,background .35s;
+}
+.personal-card:hover{border-color:var(--border)}
+.personal-card .pc-date{font-size:13.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:.5rem;transition:color .35s}
+.personal-card .pc-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);line-height:1.4;transition:color .35s}
+.personal-card .pc-excerpt{font-size:14px;color:var(--muted);margin-top:.5rem;line-height:1.7;transition:color .35s}
+
+/* ── Vocab widget (Estética original restaurada con padding y espaciados mejorados) ── */
+.vocab-feature{border:1px solid var(--border);overflow:hidden;background:var(--cream2);transition:background .35s,border-color .35s}
+.vocab-feature.kippu-ticket {
+  padding: 0;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 12px;
+  overflow: visible !important;
+}
+.vocab-header {
+  background: var(--feat-bg);
+  padding: 1.8rem 1.2rem 0.9rem; /* Margen superior amplio para dar espacio a las estrellas internas */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center; /* Centrado vertical del icono con respecto a las dos filas de la derecha */
+  column-gap: 12px;
+  row-gap: 3px;
+  transition: background .35s;
+}
+.vocab-header-left {
+  display: contents; /* Promueve el SVG y el span como elementos de cuadrícula independientes */
+}
+.vocab-header-left span {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(245,239,224,1);
+  font-weight: 500;
+  white-space: nowrap;
+}
+:root[data-theme='dark'] .vocab-header-left span {
+  color: rgba(232,229,220,.95);
+}
+.vocab-header-icon {
+  grid-column: 1;
+  grid-row: 1 / span 2; /* Centrado vertical: abarca las dos filas de texto del encabezado */
+  color: #EDE5D0;
+  opacity: 0.9;
+  flex-shrink: 0;
+  align-self: center;
+}
+:root[data-theme='dark'] .vocab-header-icon {
+  color: #a0bfaf;
+}
+.vocab-jp {
+  grid-column: 2;
+  grid-row: 2;
+  font-family: 'Noto Serif JP', serif;
+  font-size: 12.5px;
+  color: var(--cream3);
+  opacity: 1;
+  letter-spacing: 2.5px;
+  font-weight: 300;
+  white-space: nowrap;
+}
+:root[data-theme='dark'] .vocab-jp{color:#8aa390}
+.vocab-body{padding:1.5rem 1.4rem;display:grid;grid-template-columns:auto 1fr;gap:0 1.8rem;align-items:baseline;transition:background .35s}
+:root[data-theme='dark'] .vocab-body{background-color:var(--cream2)}
+.vocab-word{font-family:'Noto Serif JP',serif;font-size:3rem;font-weight:300;color:var(--ink);grid-row:1/3;line-height:1;padding-top:4px;transition:color .35s}
+.vocab-reading{font-family:'JetBrains Mono',monospace;font-size:13.5px;color:var(--stamp);letter-spacing:1px;align-self:end;padding-bottom:2px;transition:color .35s}
+.vocab-meaning{color:var(--ink-soft);font-size:15px;align-self:start;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+.vocab-example{grid-column:1/-1;margin-top:1.2rem;padding:.9rem 1rem;background:var(--cream3);font-size:13.5px;color:var(--muted);border-left:2px solid var(--border);transition:background .35s,color .35s,border-color .35s}
+.vocab-example .jp-line{font-family:'Noto Serif JP',serif;color:var(--ink);font-size:14.5px;font-weight:300;margin-bottom:4px;transition:color .35s}
+
+/* Estilo mejorado para las estrellas del ticket (dentro del billete) */
+.kippu-stars {
+  position: absolute;
+  top: 12px; /* Posicionadas adentro para evitar que queden por fuera */
+  left: 1.5rem;
+  display: flex;
+  gap: 5px;
+  color: var(--stamp); /* Color de sello rojo elegante por defecto */
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.9;
+  user-select: none;
+  z-index: 20;
+}
+/* Estrellas doradas/claras específicas para el fondo oscuro del widget de vocabulario */
+.vocab-feature .kippu-stars {
+  color: var(--brown-lt) !important;
+}
+:root[data-theme='dark'] .vocab-feature .kippu-stars {
+  color: var(--stamp) !important;
+}
+
+/* ─────────────────────────────────────────
+   DISEÑO AMPLIO Y SEPARADO PARA ARCHIVOS (Grid de tarjetas)
+───────────────────────────────────────── */
+.archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+  width: 100%;
+}
+.archive-card {
+  background: var(--cream2);
+  border: 1px solid var(--border-lt);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
+  cursor: pointer;
+  transition: background .25s, border-color .25s, transform 0.2s;
+  border-radius: 6px;
+}
+.archive-card:hover {
+  background: var(--cream3);
+  border-color: var(--border);
+  transform: translateY(-2px);
+}
+.archive-card-bottom {
+  border-top: 1px solid var(--border-lt);
+  padding-top: 1rem;
+  margin-top: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.archive-card-action {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--brown);
+  font-weight: 600;
+}
+.archive-card:hover .archive-card-action {
+  color: var(--ink);
+}
+
+/* ─────────────────────────────────────────
+   GUIDE HUB PAGE — JAPANESE
+───────────────────────────────────────── */
+.guide-page{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem)}
+
+/* Page header (Espaciados reducidos) */
+.guide-page-header{
+  padding:1.8rem 0 1.2rem;border-bottom:1px solid var(--border);
+  display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;
+  transition:border-color .35s;
+}
+.guide-page-eyebrow{font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:.8rem;display:flex;align-items:center;gap:8px}
+.guide-page-eyebrow::after{content:'';display:inline-block;height:1px;width:24px;background:var(--purple);opacity:.5}
+.guide-page-title{font-family:'Noto Serif JP',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:300;color:var(--ink);line-height:1.1;margin-bottom:.4rem;transition:color .35s}
+.guide-page-jp{font-family:'Noto Serif JP',serif;font-size:clamp(1rem,2vw,1.4rem);font-weight:300;color:var(--brown);letter-spacing:4px;display:block;margin-bottom:1rem;transition:color .35s}
+.guide-page-desc{max-width:580px;color:var(--ink-soft);font-size:16px;line-height:1.85;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+.guide-stats{display:flex;gap:2rem;margin-top:1.2rem;flex-wrap:wrap}
+.guide-stat{display:flex;flex-direction:column;gap:2px}
+.guide-stat .stat-val{font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:var(--ink);font-weight:400;transition:color .35s}
+.guide-stat .stat-label{font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);transition:color .35s}
+.guide-page-kanji{font-family:'Noto Serif JP',serif;font-size:5rem;font-weight:300;color:var(--ink);opacity:.08;user-select:none;line-height:1;transition:color .35s}
+
+/* Guide body layout */
+.guide-body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 4rem; /* Mayor espaciado para evitar que todo esté pegado */
+  padding: 2.5rem 0 5rem;
+  transition: border-color .35s;
+}
+
+/* Evita conflictos de la barra general con el TOC de la guía */
+.guide-toc{
+  border-right:1px solid var(--border);padding-right:2.5rem;
+  position:sticky;top:80px;height:fit-content;max-height:calc(100vh - 100px);
+  overflow-y:auto;transition:border-color .35s;
+  display: block;
+}
+.guide-toc::-webkit-scrollbar{width:3px}
+.guide-toc::-webkit-scrollbar-track{background:transparent}
+.guide-toc::-webkit-scrollbar-thumb{background:var(--border)}
+.toc-label{
+  font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-weight:500;
+  margin-bottom:1.5rem;transition:color .35s;
+  display: block;
+}
+
+/* ── TOC ESTILO REGISTRO DE VIAJERO ── */
+.toc-list{
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:0.4rem;
+}
+.toc-item{
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border-lt);
+  background: var(--cream2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.35s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.toc-item:hover {
+  background: var(--cream3);
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+.toc-item.active {
+  border-color: var(--stamp);
+  background: var(--cream3);
+}
+/* Casilla de verificación de hito viajero */
+.toc-item-stamp {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color .25s, background-color .25s;
+}
+.toc-item.active .toc-item-stamp {
+  border-color: var(--stamp);
+  background: var(--stamp);
+}
+.toc-item.active .toc-item-stamp::after {
+  content: '✓';
+  color: var(--cream);
+  font-size: 8px;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.toc-item:last-child{border-bottom:none}
+.toc-item-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);letter-spacing:1px;padding-top:2px;flex-shrink:0;transition:color .35s}
+:root[data-theme='dark'] .toc-item-num{color:#9a8abf}
+.toc-item-title{font-size:13.5px;color:var(--muted);line-height:1.4;transition:color .35s}
+.toc-faq{
+  margin-top:1.5rem;padding:.7rem;border:1px solid var(--border-lt);
+  cursor:pointer;transition:background .2s,border-color .35s;
+}
+.toc-faq:hover{background:var(--cream2)}
+.toc-faq-label{font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--stamp);font-weight:500;margin-bottom:.2rem}
+.toc-faq-sub{font-size:11px;color:var(--muted);transition:color .35s}
+
+/* Guide content (Gaps reducidos) */
+.guide-content{padding-left:1.5rem}
+.guide-intro{
+  background:var(--cream2);border:1px solid var(--border);
+  padding:1.4rem;margin-bottom:1.4rem;transition:background .35s,border-color .35s;
+}
+.guide-intro-title{font-family:'Lora',serif;font-size:1rem;font-weight:500;color:var(--ink);margin-bottom:.8rem;transition:color .35s}
+.guide-intro p{font-size:13.5px;color:var(--ink-soft);line-height:1.85;font-family:'Lora',serif;transition:color .35s}
+.guide-intro p+p{margin-top:.8rem}
+
+/* Philosophy box */
+.philosophy-box{
+  border-left:3px solid var(--purple);padding:0.8rem 1.2rem;
+  background:var(--cream2);margin:1rem 0;transition:background .35s,border-color .35s;
+}
+.philosophy-box p{font-size:13px;color:var(--ink-soft);line-height:1.8;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+
+/* ── PARTS LIST (Estructura de grilla perfectamente continua recuperada) ── */
+.parts-list {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: transparent;
+  margin-bottom: 2rem;
+  transition: border-color .35s;
+}
+.part-card {
+  background: var(--cream);
+  padding: 1.8rem 2rem;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  border-bottom: 1.5px solid var(--border);
+  transition: background .2s;
+}
+.part-card:last-child {
+  border-bottom: none;
+}
+.part-card:hover {
+  background: var(--cream2);
+}
+
+.part-card-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:1px;font-weight:400;white-space:nowrap;padding-top:2px}
+:root[data-theme='dark'] .part-card-num{color:#9a8abf}
+.part-card-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);margin-bottom:.3rem;transition:color .35s}
+.part-card-jp{font-family:'Noto Serif JP',serif;font-size:.7em;color:var(--brown);letter-spacing:2px;font-weight:300;display:block;margin-bottom:.3rem;transition:color .35s}
+.part-card-desc{font-size:13.5px;color:var(--muted);line-height:1.6;transition:color .35s}
+.part-card-topics{display:flex;flex-wrap:wrap;gap:5px;margin-top:.6rem}
+.part-topic{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--border);padding:2px 7px;color:var(--muted);transition:border-color .35s,color .35s}
+.part-card-arrow{color:var(--muted);font-size:18px;opacity:.4;transition:opacity .2s}
+.part-card:hover .part-card-arrow{opacity:.8}
+
+/* Part status badges */
+.part-status{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;font-weight:500}
+.part-status.done{color:var(--green);border:1px solid var(--green);opacity:.7}
+.part-status.draft{color:var(--brown);border:1px solid var(--brown);opacity:.7}
+.part-status.soon{color:var(--muted);border:1px solid var(--border)}
+
+/* FAQ section */
+.faq-section{margin-top:2.5rem}
+.faq-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+.faq-header-jp{font-family:'Noto Serif JP',serif;font-size:1.4rem;font-weight:300;color:var(--brown);letter-spacing:3px;transition:color .35s}
+.faq-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);transition:border-color .35s}
+.faq-item{border-bottom:1px solid var(--border-lt);transition:border-color .35s}
+.faq-item:last-child{border-bottom:none}
+.faq-q{
+  width:100%;text-align:left;background:none;border:none;cursor:pointer;
+  padding:1.1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;font-family:'Lora',serif;font-size:.9rem;font-weight:500;
+  color:var(--ink);line-height:1.4;transition:color .35s,background .2s;
+}
+.faq-q:hover{background:var(--cream2)}
+.faq-chevron{font-size:12px;color:var(--muted);flex-shrink:0;transition:transform .25s,color .35s}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-a{
+  display:none;padding:0 1.3rem 1.1rem;font-size:13.5px;color:var(--ink-soft);
+  line-height:1.85;font-family:'Lora',serif;transition:color .35s;
+}
+.faq-item.open .faq-a{display:block}
+.faq-a p+p{margin-top:.7rem}
+.faq-a .jp-note{font-family:'Noto Serif JP',serif;font-size:1.1em;color:var(--brown);letter-spacing:2px;font-weight:300;transition:color .35s}
+
+/* ── INTERACCIÓN Y PEQUEÑAS PINCELADAS DE PERSONALIDAD ── */
+.personal-card {
+  transition: transform 0.2s, border-color 0.2s;
+}
+.personal-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ─────────────────────────────────────────
+   JAPAN LIFE HUB
+───────────────────────────────────────── */
+.japan-hub{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem) 5rem}
+.japan-hub-header{padding:3rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem;transition:border-color .35s}
+.japan-hub-header .guide-page-eyebrow{color:var(--green)}
+.japan-hub-header .guide-page-eyebrow::after{background:var(--green)}
+
+/* BILLETE "KIPPU" DE BIENVENIDA EN HUB (Tarjeta Destacada con tamaño y proporciones óptimas recuperadas) */
+.jh-hero-card {
+  padding: 2.2rem;
+  margin-bottom: 3.5rem;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2.5rem;
+  align-items: center;
+  position: relative;
+}
+.jh-hero-card:hover {
+  transform: translateY(-2px);
+}
+.jh-hero-badge {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 0.8rem;
+}
+.jh-hero-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.4rem, 3.2vw, 1.85rem);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 0.8rem;
+}
+.jh-hero-desc {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.75;
+  margin-bottom: 1.2rem;
+  max-width: 740px;
+}
+.jh-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 12.5px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.jh-hero-meta .dot {
+  opacity: 0.5;
+}
+.jh-hero-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 140px;
+  z-index: 2;
+}
+.jh-hero-kanji {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 4.5rem;
+  font-weight: 300;
+  color: var(--green);
+  opacity: 0.12;
+  line-height: 1;
+  user-select: none;
+}
+.jh-hero-btn {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 600;
+  margin-top: auto;
+  transition: color 0.2s;
+  border-bottom: 1px solid var(--green);
+  padding-bottom: 2px;
+}
+.jh-hero-card:hover .jh-hero-btn {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+@media(max-width: 768px) {
+  .jh-hero-card {
+    grid-template-columns: 1fr;
+    padding: 1.6rem;
+    gap: 1rem;
+  }
+  .jh-hero-visual {
+    align-items: flex-start;
+    min-height: auto;
+    margin-top: 1rem;
+  }
+  .jh-hero-kanji {
+    display: none;
+  }
+}
+
+/* Hub Grid system */
+.japan-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
+.japan-hub-col-title{font-family:'Lora',serif;font-size:1.1rem;font-weight:500;color:var(--ink);transition:color .35s,border-color .35s}
+.japan-hub-col-title small{display:block;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:400;margin-top:3px;font-style:normal}
+
+/* Guide cards for Japan hub (Separación vertical aumentada para legibilidad) */
+.jh-guide-card{
+  border:1px solid var(--border);
+  margin-bottom: 2rem; /* Separadas de forma más holgada */
+  cursor:pointer;
+  transition:background .2s,border-color .35s;
+}
+.jh-guide-card:hover{background:var(--cream2)}
+.jh-guide-card-inner{padding:1.2rem 1.4rem;display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:start}
+.jh-guide-icon{
+  width:36px;height:36px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif JP',serif;font-size:14px;color:var(--green);
+  flex-shrink:0;font-weight:300;background:var(--cream2);transition:background .35s,border-color .35s,color .35s;
+}
+:root[data-theme='dark'] .jh-guide-icon{color:#8aa390}
+.jh-guide-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);margin-bottom:.25rem;line-height:1.3;transition:color .35s}
+.jh-guide-sub{font-size:14px;color:var(--muted);line-height:1.55;transition:color .35s}
+.jh-guide-topics{padding:.6rem 1.4rem .8rem 3.6rem;display:flex;flex-wrap:wrap;gap:5px;border-top:1px solid var(--border-lt);transition:border-color .35s}
+.jh-topic{font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--border);padding:3px 8px;color:var(--muted);transition:border-color .35s,color .35s}
+
+/* Blog items in japan hub */
+.jh-blog-item{
+  padding:1rem 0;border-bottom:1px solid var(--border-lt);
+  cursor:pointer;transition:opacity .2s,border-color .35s;
+}
+.jh-blog-item:last-child{border-bottom:none}
+.jh-blog-item:hover{opacity:.65}
+.jh-blog-tag{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:500;margin-bottom:.3rem;transition:color .35s}
+:root[data-theme='dark'] .jh-blog-tag{color:#8aa390}
+.jh-blog-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);line-height:1.35;margin-bottom:.25rem;transition:color .35s}
+.jh-blog-meta{font-size:13.5px;color:var(--muted);letter-spacing:.5px;display:flex;gap:.5rem;transition:color .35s}
+.jh-blog-excerpt{font-size:14px;color:var(--muted);line-height:1.65;margin-top:.3rem;transition:color .35s}
+
+/* ── Arrival Guide Section Styling ── */
+.arrival-section {
+  scroll-margin-top: 80px;
+}
+.arrival-section .journal-header {
+  margin-top: 1.8rem;
+  margin-bottom: 0.8rem;
+}
+
+/* ── SIDEBAR (homepage) ── */
+.home-with-sidebar{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem);display:grid;grid-template-columns:1fr 290px;gap:0}
+.home-main-col{border-right:1px solid var(--border);padding-right:clamp(2rem,4vw,4rem);padding-bottom:5rem;transition:border-color .35s}
+.home-sidebar{padding-left:clamp(2rem,3.5vw,3rem);padding-top:3rem;padding-bottom:5rem}
+.sidebar-block{margin-bottom:2.2rem}
+.about-card{background:var(--cream2);border:1px solid var(--border);padding:1.4rem;margin-bottom:2.2rem;transition:background .35s,border-color .35s}
+.about-top{display:flex;align-items:center;gap:12px;margin-bottom:.9rem}
+.about-avatar{width:44px;height:44px;border-radius:50%;background:var(--cream3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif JP',serif;font-size:16px;color:var(--brown);font-weight:300;flex-shrink:0;transition:background .35s,border-color .35s,color .35s}
+.about-name{font-family:'Lora',serif;font-size:16.5px;font-weight:500;color:var(--ink);margin-bottom:2px;transition:color .35s}
+.about-loc{font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;transition:color .35s}
+.about-tagline{font-size:13.5px;color:var(--ink-soft);margin-bottom:1rem;line-height:1.75;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+.about-tags{display:flex;flex-wrap:wrap;gap:6px}
+.about-tag{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:3px 8px;background:var(--cream);transition:background .35s,border-color .35s,color .35s}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:7px}
+.tag-pill{font-size:11px;letter-spacing:1px;color:var(--muted);border:1px solid var(--border);padding:6px 12px;cursor:pointer;transition:color .2s,border-color .2s,background .35s;text-transform:uppercase;background:var(--cream)}
+.tag-pill:hover{color:var(--ink);border-color:var(--brown);background:var(--cream2)}
+.recent-posts{display:flex;flex-direction:column}
+.recent-item{padding:.75rem 0;border-bottom:1px solid var(--border-lt);cursor:pointer;transition:opacity .2s,border-color .35s}
+.recent-item:last-child{border-bottom:none}
+.recent-item:hover{opacity:.6}
+.recent-title{font-size:12.5px;color:var(--ink);margin-bottom:3px;line-height:1.45;font-family:'Lora',serif;transition:color .35s}
+.recent-date{font-size:11px;color:var(--muted);letter-spacing:1px;transition:color .35s}
+.now-card{border:1px solid var(--border);padding:1.2rem;background:var(--cream2);transition:background .35s,border-color .35s}
+.now-card p{font-size:12px;color:var(--muted);line-height:1.9;margin-top:.6rem;transition:color .35s}
+.now-card p span.val{color:var(--ink-soft);font-family:'Lora',serif;transition:color .35s}
+.now-card p span.jp{font-family:'Noto Serif JP',serif;color:var(--brown);font-weight:300;transition:color .35s}
+
+/* Footer de Recibo */
+.hibi-site footer {
+  border-top: 1.5px dashed var(--border);
+  padding: 1.8rem clamp(1.5rem, 5vw, 4rem) 2rem;
+  margin: 0 auto;
+  transition: border-color .35s;
+  position: relative;
+}
+.footer-receipt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  opacity: 0.85;
+}
+.footer-stub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.footer-jp {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+.footer-note {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.footer-stamp-hanko {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--stamp);
+  color: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 600;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transform: rotate(6deg);
+  opacity: 0.75;
+  user-select: none;
+  transition: transform 0.2s;
+}
+.footer-stamp-hanko:hover {
+  transform: rotate(0deg) scale(1.1);
+}
+.footer-fare {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.footer-fare span {
+  font-size: 11.5px;
+  letter-spacing: 2.5px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.footer-fare .fare-jp {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 13px;
+  color: var(--stamp);
+  letter-spacing: 1px;
+}
+
+@media(max-width: 768px) {
+  .footer-receipt {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  .footer-fare {
+    text-align: center;
+  }
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media(max-width:1024px){
+  .guide-body{grid-template-columns:1fr}
+  .guide-toc{position:static;border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:1.5rem;margin-bottom:2rem;max-height:none;overflow-y:visible}
+  .toc-list{flex-direction:row;flex-wrap:wrap;gap:.5rem; border-left: none; padding-left: 0; margin-left: 0;}
+  .toc-item{border-bottom:none;border:1px solid var(--border-lt);padding:.4rem .7rem}
+  .toc-item-stamp{display: none;}
+  .guide-content{padding-left:0}
+  .japan-hub-grid{grid-template-columns:1fr}
+}
+@media(max-width:900px){
+  .home-with-sidebar{grid-template-columns:1fr}
+  .home-main-col{border-right:none;padding-right:0}
+  .home-sidebar{padding-left:0;border-top:1px solid var(--border);padding-top:2.5rem}
+  .hero{grid-template-columns:1fr}
+  .hero-right{display:none}
+  .home-grid{grid-template-columns:1fr}
+  .jp-guide-header{grid-template-columns:1fr}
+  .jp-parts-strip{grid-template-columns:repeat(2, 1fr)}
+  .guide-page-header{grid-template-columns:1fr}
+  .guide-page-kanji{display:none}
+  .personal-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .nav-links{display:none}
+  .jp-parts-strip{grid-template-columns:1fr}
+  .personal-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+a:focus-visible,button:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+
+/* ─────────────────────────────────────────
+   STARLIGHT THEME BRIDGE
+   Map Starlight's design tokens onto the Hibi palette so the documentation
+   guides automatically inherit the custom colours, fonts and dark mode.
+   Because these point at the Hibi custom properties (which themselves flip
+   under [data-theme='dark']), most tokens adapt to dark mode for free; the
+   dark block below re-asserts them so it wins over Starlight's own defaults.
+───────────────────────────────────────── */
+:root {
+  --sl-font: 'Inter', sans-serif;
+  --sl-font-mono: 'JetBrains Mono', monospace;
+  --sl-color-accent: var(--stamp);
+  --sl-color-accent-low: var(--cream3);
+  --sl-color-accent-high: var(--stamp);
+  --sl-color-white: var(--ink);
+  --sl-color-gray-1: var(--ink);
+  --sl-color-gray-2: var(--ink-soft);
+  --sl-color-gray-3: var(--muted);
+  --sl-color-gray-4: var(--brown-lt);
+  --sl-color-gray-5: var(--border);
+  --sl-color-gray-6: var(--cream3);
+  --sl-color-gray-7: var(--cream2);
+  --sl-color-black: var(--cream);
+  --sl-color-bg: var(--cream);
+  --sl-color-bg-nav: var(--nav-bg);
+  --sl-color-bg-sidebar: var(--cream);
+  --sl-color-bg-inline-code: var(--cream3);
+  --sl-color-hairline: var(--border);
+  --sl-color-hairline-light: var(--border-lt);
+  --sl-color-hairline-shade: var(--border);
+  --sl-color-text: var(--ink-soft);
+  --sl-color-text-accent: var(--stamp);
+  --sl-color-text-invert: var(--cream);
+}
+:root[data-theme='dark'] {
+  --sl-color-accent: var(--stamp);
+  --sl-color-accent-low: var(--cream3);
+  --sl-color-accent-high: var(--stamp);
+  --sl-color-white: var(--ink);
+  --sl-color-gray-1: var(--ink);
+  --sl-color-gray-2: var(--ink-soft);
+  --sl-color-gray-3: var(--muted);
+  --sl-color-gray-4: var(--brown-lt);
+  --sl-color-gray-5: var(--border);
+  --sl-color-gray-6: var(--cream3);
+  --sl-color-gray-7: var(--cream2);
+  --sl-color-black: var(--cream);
+  --sl-color-bg: var(--cream);
+  --sl-color-bg-nav: var(--nav-bg);
+  --sl-color-bg-sidebar: var(--cream);
+  --sl-color-bg-inline-code: var(--cream3);
+  --sl-color-hairline: var(--border);
+  --sl-color-hairline-light: var(--border-lt);
+  --sl-color-hairline-shade: var(--border);
+  --sl-color-text: var(--ink-soft);
+  --sl-color-text-accent: var(--stamp);
+  --sl-color-text-invert: var(--cream);
+}
+
+/* ─────────────────────────────────────────
+   HELPERS (additions for the Astro migration)
+───────────────────────────────────────── */
+/* Anchors that carry a card class (replacing the original onclick handlers).
+   Keep the card's own display; just strip link styling. */
+.as-link { text-decoration: none; color: inherit; }
+/* Card classes that didn't set a display now need block when used as <a>. */
+a.blog-post-item.as-link, a.personal-card.as-link,
+a.jh-blog-item.as-link, a.jh-guide-card.as-link { display: block; }
+
+/* Small uppercase section label used in the home sidebar (implicit before). */
+.section-label {
+  font-size: 10.5px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); font-weight: 500; margin-bottom: 1rem; display: block;
+  transition: color .35s;
+}
+
+/* Kippu "entry ticket" header meta row (Japan hub hero). */
+.jh-hero-content { width: 100%; }
+.kippu-header-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.kippu-header-meta .serial {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--stamp); letter-spacing: 1px;
+}
+.kippu-header-meta .ticket-type {
+  font-family: 'Noto Serif JP', serif; font-size: 11px; letter-spacing: 2px;
+  color: var(--muted); text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────
+   STARLIGHT LAYOUT OVERRIDES
+   Make the documentation guide pages match the rest of the site: the custom top
+   nav (SiteNav, via the Header override) owns the bar; the standard Starlight
+   two-column layout is kept (left = page navigation with the legacy checkbox
+   design, right = Starlight's native on-page TOC). These selectors only exist on
+   Starlight pages, so they are inert on the custom .astro pages.
+───────────────────────────────────────── */
+:root {
+  /* Single source of truth for the nav bar height — also used by the custom
+     pages' nav (see nav.main-nav) so both bars are guaranteed identical. */
+  --sl-nav-height: 60px;
+  /* Modest prose widening over Starlight's 45rem default. */
+  --sl-content-width: 52rem;
+  /* The whole guide "shell" (left nav + content + right TOC) is capped at this
+     width and centered in the viewport, matching the custom pages' 1450px. */
+  --hibi-shell: 1450px;
+  --hibi-gutter: 0px;
+  /* Fixed width of the on-page TOC column (right pane). */
+  --hibi-toc-col: 16rem;
+}
+
+/* Center the guide shell: symmetric gutters push the (viewport-pinned) left
+   sidebar inward, offset the content start, and pull the right TOC in. */
+@media (min-width: 50rem) {
+  :root {
+    --hibi-gutter: max(0px, calc((100vw - var(--hibi-shell)) / 2));
+  }
+  .sidebar-pane {
+    inset-inline-start: var(--hibi-gutter);
+  }
+  /* `html[...]` (0,1,1) so this beats Starlight's own unlayered, later-in-source
+     `[data-has-sidebar]` rule (0,1,0) in Page.astro that otherwise resets this to
+     a bare `--sl-sidebar-width`. Without the bump, source order wins and the
+     content start loses the gutter offset — leaving the gutter-width of every line
+     hidden behind the gutter-shifted fixed sidebar (the "text cutoff"). */
+  html[data-has-sidebar] {
+    --sl-content-inline-start: calc(var(--sl-sidebar-width) + var(--hibi-gutter));
+  }
+  .main-frame {
+    padding-inline-end: var(--hibi-gutter);
+  }
+}
+
+/* Right pane (on-page TOC). Starlight sizes this column and the TOC text from
+   `100vw`-based magic-number calcs that ignore our centered shell, so the TOC
+   ends up stranded with a wide dead zone to its right. Replace that with an
+   explicit fixed-width column pinned to the shell's right edge — mirroring the
+   left sidebar hugging the left gutter — and give the content pane the rest. */
+@media (min-width: 72rem) {
+  [data-has-sidebar][data-has-toc] .main-pane {
+    width: calc(100% - var(--hibi-toc-col));
+  }
+  .right-sidebar-container {
+    width: var(--hibi-toc-col);
+  }
+  /* `.right-sidebar` is `position: fixed`; pin its right edge to the shell edge
+     and give it the column width (its default `left:auto; width:100%` resolves to
+     a 100vw bar that strands the TOC on the left). */
+  .right-sidebar {
+    left: auto;
+    right: var(--hibi-gutter);
+    width: var(--hibi-toc-col);
+  }
+  /* Let the TOC fill the column instead of Starlight's 100vw quarter-width. */
+  .right-sidebar-panel .sl-container {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Let the custom <SiteNav> own the fixed top bar (its own bg/border/height). */
+header.header {
+  padding: 0 !important;
+  border-bottom: none !important;
+  background: transparent !important;
+}
+header.header .main-nav {
+  /* relative so the absolutely-positioned search positions against the nav;
+     still in-flow and filling the fixed header. */
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Starlight's <Search /> in the nav, aligned above the content column (just
+   right of the left sidebar) and made into a wide search bar. Guides only. */
+.nav-search {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(var(--hibi-gutter) + var(--sl-sidebar-width) + 0.6rem);
+  width: min(32rem, calc(var(--sl-content-width) - 2rem));
+  display: flex;
+  align-items: center;
+  z-index: 1;
+}
+.nav-search site-search,
+.nav-search button[data-open-modal] {
+  width: 100%;
+}
+.nav-search button[data-open-modal] {
+  gap: 0.5rem;
+  justify-content: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--cream2);
+  padding: 7px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.nav-search button[data-open-modal]:hover {
+  color: var(--ink);
+  border-color: var(--brown);
+  background: var(--cream3);
+}

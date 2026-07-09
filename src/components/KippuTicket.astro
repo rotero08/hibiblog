@@ -1,0 +1,82 @@
+---
+/**
+ * KippuTicket — a Japanese train-ticket (切符 / kippu) styled card.
+ *
+ * Provides the full ticket "chrome": rounded card with punched circular
+ * notches on the sides, a bottom rectangular notch, optional dashed
+ * perforation stub, optional ✦ validation stars and an optional station
+ * ink-stamp (駅スタンプ / eki-stamp). The actual ticket content is supplied
+ * through the default slot, keeping the component reusable for the vocabulary
+ * widget, the hub entry ticket, and future CMS-driven tickets.
+ */
+interface Props {
+  /** Render the three ✦ "validation" stars in the top-left corner. @default false */
+  stars?: boolean;
+  /** Render the vertical dashed perforation ("stub") line near the right edge. @default false */
+  stub?: boolean;
+  /**
+   * Optional station ink-stamp printed top-right. Provide the inner text lines;
+   * omit the whole object to render no stamp.
+   */
+  stamp?: {
+    /** Large kanji line, e.g. "到着". */
+    title: string;
+    /** Small caption line, e.g. "乗車記念". */
+    subtitle?: string;
+    /** Monospaced date line, e.g. "2026.06.12". */
+    date?: string;
+  };
+  /** Extra class names merged onto the ticket (layout / theme modifiers). */
+  class?: string;
+  /** When set, the entire ticket becomes a link pointing to this URL. */
+  href?: string;
+  /**
+   * Force a full page load instead of a client-side View Transition for the
+   * link. Use this when linking to a Starlight docs route, which lives outside
+   * the custom-pages router. @default false
+   */
+  reload?: boolean;
+}
+
+const { stars = false, stub = false, stamp, class: className = '', href, reload = false } = Astro.props;
+const Tag = href ? 'a' : 'div';
+// Spread (rather than a literal attribute) so the static checker doesn't warn
+// about data-astro-reload on the dynamic tag — it is only set on the <a> form.
+const linkAttrs = href && reload ? { 'data-astro-reload': true } : {};
+---
+
+<Tag
+  class:list={['kippu-ticket', className, { 'as-link': href }]}
+  href={href}
+  {...linkAttrs}
+>
+  <div class="kippu-left-cover"></div>
+  <div class="kippu-right-cover"></div>
+  <div class="kippu-notch"></div>
+  {stub && <div class="ticket-stub-border"></div>}
+  {stars && <div class="kippu-stars">✦ ✦ ✦</div>}
+  {
+    stamp && (
+      <div class="eki-stamp-seal">
+        <svg viewBox="0 0 100 100" width="96" height="96">
+          <circle cx="50" cy="50" r="46" class="eki-stamp-circle" stroke-width="2" stroke-dasharray="140 2 60 4 20 2" />
+          <circle cx="50" cy="50" r="41" class="eki-stamp-circle" stroke-width="1" />
+          <text x="50" y="44" class="eki-stamp-text" font-size="18" text-anchor="middle" font-weight="600">
+            {stamp.title}
+          </text>
+          {stamp.subtitle && (
+            <text x="50" y="61" class="eki-stamp-text" font-size="11" text-anchor="middle" letter-spacing="1">
+              {stamp.subtitle}
+            </text>
+          )}
+          {stamp.date && (
+            <text x="50" y="75" class="eki-stamp-date" text-anchor="middle">
+              {stamp.date}
+            </text>
+          )}
+        </svg>
+      </div>
+    )
+  }
+  <slot />
+</Tag>

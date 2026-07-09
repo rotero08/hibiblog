@@ -1,0 +1,36 @@
+---
+import HankoSeal from './HankoSeal.astro';
+
+/**
+ * JournalHeader — the "traveller's journal" section header (Cabecera de
+ * Registro). A numbered eyebrow plus title on the left, an optional dashed
+ * hanko seal and an optional "see all" link on the right.
+ */
+interface Props {
+  /** Section number label, e.g. "№ 01". */
+  num: string;
+  /** Section title text. */
+  title: string;
+  /** Optional seal character shown on the right, e.g. "学", "旅" or "問". */
+  seal?: string;
+  /** Optional target for a trailing "see all" action link. */
+  viewAllHref?: string;
+  /** Label for the "see all" action. @default 'Ver todo →' */
+  viewAllLabel?: string;
+}
+
+const { num, title, seal, viewAllHref, viewAllLabel = 'Ver todo →' } = Astro.props;
+---
+
+<div class="journal-header-row">
+  <div class="journal-header-left">
+    <span class="journal-num">{num}</span>
+    <h2 class="journal-title">{title}</h2>
+  </div>
+  <div class="journal-header-right">
+    {seal && <HankoSeal text={seal} variant="dashed" size={32} rotation={-12} />}
+    {viewAllHref && (
+      <a class="journal-ver-todo as-link" href={viewAllHref}>{viewAllLabel}</a>
+    )}
+  </div>
+</div>

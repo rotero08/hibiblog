@@ -1,0 +1,122 @@
+---
+import HankoSeal from './HankoSeal.astro';
+
+/**
+ * SiteNav — the shared top navigation bar (brand hanko, section links, the
+ * Japón dropdown and the day/night theme toggle). Used both by the custom
+ * pages (via Layout.astro) and by the Starlight documentation pages (via the
+ * Header component override) so every page shows the identical original nav.
+ *
+ * Active-state detection mirrors the original showPage() highlight logic.
+ */
+const path = Astro.url.pathname;
+const isJpGuide = path.startsWith('/guias/japones');
+const isJapan =
+  path.startsWith('/japon') || path.startsWith('/blog') || path.startsWith('/guias/llegada');
+const isPersonal = path.startsWith('/personal');
+
+// Optional search slot — supplied with Starlight's <Search /> on guide pages,
+// empty (and therefore hidden) on the custom pages.
+const hasSearch = Astro.slots.has('search');
+---
+
+<nav class="main-nav">
+  <a class="nav-brand" href="/">
+    <HankoSeal text="日々" variant="ring" size={48} />
+    <span class="nav-title">
+      <span class="jp">日々</span>
+      <span class="sub">Hibi — notas diarias</span>
+    </span>
+  </a>
+  {hasSearch && (
+    <div class="nav-search">
+      <slot name="search" />
+    </div>
+  )}
+  <ul class="nav-links">
+    <li>
+      <a class="nav-link" class:list={[{ active: isJpGuide }]} href="/guias/japones/" data-astro-reload>
+        Guías de Japonés
+      </a>
+    </li>
+    <li class="nav-dropdown">
+      <button
+        class="nav-link"
+        class:list={[{ active: isJapan }]}
+        data-dropdown-toggle
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        Japón ▾
+      </button>
+      <div class="nav-dropdown-menu">
+        <a class="dropdown-main-link" href="/japon/">Guías y Blog (Hub)</a>
+        <div class="divider"></div>
+        <a class="dropdown-sub-link" href="/guias/llegada/" data-astro-reload>↳ Guía de Llegada</a>
+        <a class="dropdown-sub-link" href="/japon/guias/">↳ Guías Temáticas</a>
+        <a class="dropdown-sub-link" href="/blog/">↳ El Blog</a>
+      </div>
+    </li>
+    <li>
+      <a class="nav-link" class:list={[{ active: isPersonal }]} href="/personal/">Personal</a>
+    </li>
+    <li>
+      <button class="mode-btn" data-theme-toggle aria-label="Cambiar modo">
+        <span class="mode-kanji kanji-moon">月</span>
+        <span class="mode-kanji kanji-sun">日</span>
+        <span class="label-dark">Noche</span>
+        <span class="label-light">Día</span>
+      </button>
+    </li>
+  </ul>
+</nav>
+
+<script is:inline>
+  (function () {
+    if (window.__hibiNav) return;
+    window.__hibiNav = true;
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      try {
+        localStorage.setItem('starlight-theme', theme);
+      } catch (e) {}
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
+        m.classList.remove('open');
+      });
+      document
+        .querySelectorAll('[data-dropdown-toggle][aria-expanded="true"]')
+        .forEach(function (b) {
+          b.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+      var themeToggle = e.target.closest('[data-theme-toggle]');
+      if (themeToggle) {
+        var isDark = document.documentElement.dataset.theme === 'dark';
+        applyTheme(isDark ? 'light' : 'dark');
+        return;
+      }
+
+      var ddToggle = e.target.closest('[data-dropdown-toggle]');
+      if (ddToggle) {
+        e.stopPropagation();
+        var menu = ddToggle.parentElement.querySelector('.nav-dropdown-menu');
+        var willOpen = menu && !menu.classList.contains('open');
+        closeAllDropdowns();
+        if (willOpen) {
+          menu.classList.add('open');
+          ddToggle.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+
+      // Any other click closes open dropdowns.
+      closeAllDropdowns();
+    });
+  })();
+</script>

@@ -1,0 +1,108 @@
+---
+/**
+ * AccordionFAQ — a collapsible list of question / answer items.
+ *
+ * Built on the native `<details>` / `<summary>` elements so it works without
+ * client-side JavaScript (and therefore renders correctly inside Starlight MDX
+ * guides). Items share a `name` so only one stays open at a time, mirroring the
+ * original single-open accordion behaviour.
+ */
+interface FaqItem {
+  /** The question shown on the clickable summary row. */
+  question: string;
+  /** The answer body: a single paragraph, or several paragraphs. */
+  answer: string | string[];
+}
+
+interface Props {
+  /** The question / answer pairs to render, in display order. */
+  items: FaqItem[];
+  /**
+   * Shared group name enabling the exclusive (single-open) accordion behaviour
+   * of native `<details name>`. @default 'faq'
+   */
+  name?: string;
+}
+
+const { items, name = 'faq' } = Astro.props;
+const toParagraphs = (answer: string | string[]): string[] =>
+  Array.isArray(answer) ? answer : [answer];
+---
+
+<div class="faq-list">
+  {
+    items.map((item) => (
+      <details class="faq-item" name={name}>
+        <summary class="faq-q">
+          {item.question}
+          <span class="faq-chevron">▾</span>
+        </summary>
+        <div class="faq-a">
+          {toParagraphs(item.answer).map((paragraph) => (
+            <p>{paragraph}</p>
+          ))}
+        </div>
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  /* Themed via the global Hibi custom properties. */
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    transition: border-color 0.35s;
+  }
+  .faq-item {
+    border-bottom: 1px solid var(--border-lt);
+    transition: border-color 0.35s;
+  }
+  .faq-item:last-child {
+    border-bottom: none;
+  }
+  .faq-q {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    list-style: none;
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-family: 'Lora', serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.4;
+    transition: color 0.35s, background 0.2s;
+  }
+  .faq-q::-webkit-details-marker {
+    display: none;
+  }
+  .faq-q:hover {
+    background: var(--cream2);
+  }
+  .faq-chevron {
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: transform 0.25s, color 0.35s;
+  }
+  .faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+  }
+  .faq-a {
+    padding: 0 1.3rem 1.1rem;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.85;
+    font-family: 'Lora', serif;
+    transition: color 0.35s;
+  }
+  .faq-a p + p {
+    margin-top: 0.7rem;
+  }
+</style>

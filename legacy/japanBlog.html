@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日々 — Hibi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────
+   TOKENS
+───────────────────────────────────────── */
+:root {
+  --cream:      #F5EFE0;
+  --cream2:     #EDE5D0;
+  --cream3:     #E4D9C0;
+  --ink:        #2C2118;
+  --ink-soft:   #4A3728;
+  --brown:      #8B6F47;
+  --brown-lt:   #A88B65;
+  --stamp:      #C8391F;
+  --muted:      #9A8470;
+  --border:     #D4C4AA;
+  --border-lt:  #E8DCC8;
+  --nav-bg:     rgba(245,239,224,0.93);
+  --feat-bg:    #2C2118;
+  --feat-text:  #F5EFE0;
+  --feat-muted: #9A8470;
+  --feat-border:rgba(255,255,255,0.1);
+  --feat-btn:   #A88B65;
+  --vocab-grid: transparent;
+  --green:      #5A8A72;
+  --green-lt:   #7AAD92;
+  --purple:     #7A6A9A;
+}
+html.dark {
+  --cream:      #16181b;
+  --cream2:     #1d2025;
+  --cream3:     #22262d;
+  --ink:        #e8e5dc;
+  --ink-soft:   #c8c3b8;
+  --brown:      #8aa390;
+  --brown-lt:   #a0bfaf;
+  --stamp:      #e65a4e;
+  --muted:      #9a968d;
+  --border:     #2e333b;
+  --border-lt:  #252a31;
+  --nav-bg:     rgba(22,24,27,0.93);
+  --feat-bg:    #0f1013;
+  --feat-text:  #e8e5dc;
+  --feat-muted: #7a7870;
+  --feat-border:rgba(255,255,255,0.07);
+  --feat-btn:   #8aa390;
+  --vocab-grid: transparent;
+  --green:      #8aa390;
+  --green-lt:   #a0bfaf;
+  --purple:     #9a8abf;
+}
+
+/* ─────────────────────────────────────────
+   RESET & BASE (Tipografía y visualización ampliada)
+───────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--cream);color:var(--ink);
+  font-family:'Inter',sans-serif;font-size:16px;line-height:1.65;
+  min-height:100vh;transition:background .35s,color .35s;
+  position: relative;
+}
+
+/* ── Ambient Canvas Layer (Hojas cayendo en 3D avanzadas) ── */
+#ambient-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.42;
+  transition: opacity 0.5s;
+}
+
+/* Reset general de botones para evitar estilos nativos de navegador */
+button, .col-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* ─────────────────────────────────────────
+   PAGE SYSTEM
+───────────────────────────────────────── */
+.page{display:none; position: relative; z-index: 2;}
+.page.active{display:block}
+nav.main-nav, footer { position: relative; z-index: 10; }
+
+/* ─────────────────────────────────────────
+   HANKO
+───────────────────────────────────────── */
+.hanko{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:48px;height:48px;border:2.5px solid var(--stamp);border-radius:50%;
+  color:var(--stamp);font-family:'Noto Serif JP',serif;font-size:12px;
+  font-weight:600;letter-spacing:1px;transform:rotate(-8deg);flex-shrink:0;
+  position:relative;user-select:none;background:transparent;
+  transition:border-color .35s,color .35s,transform 0.2s;
+  align-self: center;
+}
+.hanko::before{
+  content:'';position:absolute;inset:3px;border:1px solid var(--stamp);
+  border-radius:50%;opacity:.35;transition:border-color .35s;
+}
+.hanko:hover {
+  transform: rotate(0deg) scale(1.05);
+}
+
+/* ─────────────────────────────────────────
+   NAV (Barra de navegación principal limpia)
+───────────────────────────────────────── */
+nav.main-nav {
+  position:sticky;top:0;
+  background:var(--nav-bg);backdrop-filter:blur(12px);
+  border-bottom: 1.5px solid var(--border);
+  padding:0 clamp(1.5rem,5vw,4rem);height:60px;
+  display:flex;align-items:center;justify-content:space-between;gap:2rem;
+  transition:background .35s,border-color .35s;
+  z-index: 100;
+}
+.nav-brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;cursor:pointer}
+.nav-title{display:flex;flex-direction:column;line-height:1.15}
+.nav-title .jp{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:400;color:var(--ink);letter-spacing:4px;transition:color .35s}
+.nav-title .sub{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-weight:400;transition:color .35s}
+.nav-links{display:flex;gap:1.8rem;list-style:none;align-items:center}
+.nav-links a,.nav-links button.nav-link{
+  color:var(--muted);text-decoration:none;font-size:12.5px;letter-spacing:1.5px;
+  text-transform:uppercase;font-weight:500;transition:color .2s;
+  background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:0;
+  position: relative;
+}
+.nav-links a:hover,.nav-links button.nav-link:hover,.nav-links a.active,.nav-links button.nav-link.active{color:var(--ink)}
+.nav-links a.active,.nav-links button.nav-link.active{
+  border-bottom:1px solid var(--stamp);
+  padding-bottom:1px;
+}
+/* Indicador de hanko tradicional para el elemento activo */
+.nav-links button.nav-link.active::before {
+  content: '㊞';
+  color: var(--stamp);
+  font-size: 11px;
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* Dropdown */
+.nav-dropdown{position:relative}
+.nav-dropdown-menu{
+  display:none;position:absolute;top:100%;left:0;
+  background:var(--cream);border:1px solid var(--border);min-width:240px;
+  box-shadow:0 8px 24px rgba(44,33,24,.12);z-index:300;
+  padding:.4rem 0;
+  transition:background .35s,border-color .35s;
+}
+html.dark .nav-dropdown-menu{box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.nav-dropdown-menu.open{display:block}
+.nav-dropdown-menu a,.nav-dropdown-menu button{
+  display:block;width:100%;text-align:left;padding:.75rem 1.2rem;
+  font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;font-family:'Inter',sans-serif;
+  background:none;border:none;cursor:pointer;font-weight:500;
+  transition:color .2s,background .2s;
+}
+.nav-dropdown-menu a:hover,.nav-dropdown-menu button:hover{color:var(--ink);background:var(--cream2)}
+.nav-dropdown-menu .divider{height:1px;background:var(--border-lt);margin:.3rem 0}
+
+/* Jerarquía clara en el menú desplegable */
+.nav-dropdown-menu .dropdown-main-link {
+  font-weight: 600 !important;
+  color: var(--ink) !important;
+  padding-left: 1.2rem !important;
+}
+.nav-dropdown-menu .dropdown-sub-link {
+  padding-left: 2.2rem !important; /* Indentación visual de subsecciones */
+  font-size: 10.5px !important;
+  color: var(--muted) !important;
+  font-weight: 400 !important;
+}
+.nav-dropdown-menu .dropdown-sub-link:hover {
+  color: var(--ink) !important;
+  background: var(--cream2) !important;
+}
+
+/* Mode button */
+.mode-btn{
+  display:inline-flex;align-items:center;gap:6px;background:none;
+  border:1px solid var(--border);color:var(--muted);padding:5px 10px 5px 8px;
+  cursor:pointer;font-family:'Inter',sans-serif;font-size:10px;letter-spacing:1.5px;
+  text-transform:uppercase;font-weight:500;transition:color .2s,border-color .2s,background .35s;
+  white-space:nowrap;flex-shrink:0;
+}
+.mode-btn:hover{color:var(--ink);border-color:var(--brown)}
+.mode-btn .mode-kanji{font-family:'Noto Serif JP',serif;font-size:13px;font-weight:300;line-height:1;color:var(--stamp);transition:color .35s}
+.mode-btn .label-dark{display:inline}.mode-btn .label-light{display:none}
+html.dark .mode-btn .label-dark{display:none}html.dark .mode-btn .label-light{display:inline}
+.mode-btn .kanji-moon{display:inline}.mode-btn .kanji-sun{display:none}
+html.dark .mode-btn .kanji-moon{display:none}html.dark .mode-btn .kanji-sun{display:inline}
+
+/* ── DISEÑO TEMÁTICO: Cabeceras de Registro Fieles (№ 03) ── */
+.journal-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 0.6rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  transition: border-color .35s;
+  width: 100%;
+}
+.journal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.journal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.journal-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--stamp);
+  font-weight: 500;
+  transition: color .35s;
+}
+.journal-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+  font-weight: 500;
+  color: var(--ink);
+  transition: color .35s;
+}
+.journal-stamp-seal {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--stamp);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-size: 11px;
+  font-weight: 600;
+  transform: rotate(-12deg);
+  opacity: 0.75;
+  background: transparent;
+  position: relative;
+  transition: border-color .35s, color .35s, transform 0.3s ease-out;
+  flex-shrink: 0;
+}
+.journal-stamp-seal::before {
+  content: '';
+  position: absolute;
+  inset: 2.5px;
+  border: 1px dashed var(--stamp);
+  border-radius: 50%;
+  transition: border-color .35s;
+}
+.journal-stamp-seal:hover {
+  transform: rotate(12deg) scale(1.1);
+}
+.journal-ver-todo {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.journal-ver-todo:hover {
+  color: var(--ink);
+}
+
+/* ── DISEÑO TEMÁTICO: Tarjeta Billete Refinada con Cortes Fieles (Kippu - 切符) ── */
+.kippu-ticket {
+  position: relative;
+  background-color: var(--cream2);
+  border: 1.5px solid var(--border) !important;
+  border-radius: 12px;
+  padding: 2.2rem;
+  overflow: visible !important;
+  margin-top: 20px; /* Margen de seguridad para evitar recortes de elementos flotantes */
+  transition: background-color .35s, border-color .35s, transform 0.25s;
+}
+.kippu-ticket:hover {
+  transform: translateY(-2px);
+}
+/* Troqueles circulares con máscara exterior para crear muescas reales */
+.kippu-ticket::before, .kippu-ticket::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  transition: background-color .35s, border-color .35s;
+}
+.kippu-ticket::before {
+  left: -11px;
+}
+.kippu-ticket::after {
+  right: -11px;
+}
+/* Máscaras para tapar los bordes exteriores de las muescas */
+.kippu-left-cover, .kippu-right-cover {
+  position: absolute;
+  width: 12px;
+  height: 24px;
+  background: var(--cream);
+  z-index: 11;
+  top: calc(50% - 12px);
+  transition: background .35s;
+}
+.kippu-left-cover { left: -14px; }
+.kippu-right-cover { right: -14px; }
+
+/* Troque rectangular en la base inferior */
+.kippu-notch {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 8px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-bottom: none;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  z-index: 10;
+  transition: background-color .35s, border-color .35s;
+}
+/* Línea de corte punteada de billete de tren (Visible) */
+.ticket-stub-border {
+  position: absolute;
+  right: 80px;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--border);
+  pointer-events: none;
+  opacity: 0.95;
+  transition: border-color .35s;
+}
+/* Línea de corte troquelada horizontal encima del quote */
+.ticket-stub-border-horizontal {
+  grid-column: 1 / -1;
+  border-top: 2px dashed var(--border);
+  margin: 1.2rem -1.4rem;
+  opacity: 0.95;
+  transition: border-color 0.35s;
+}
+
+/* ── DISEÑO TEMÁTICO: Sello de Tinta Tradicional de Estación (Eki-Stamp) ── */
+.eki-stamp-seal {
+  position: absolute;
+  right: 100px;
+  top: -16px;
+  transform: rotate(-9deg);
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0.8;
+  user-select: none;
+  transition: opacity .35s;
+}
+.eki-stamp-circle {
+  stroke: var(--stamp);
+  fill: none;
+  transition: stroke .35s;
+}
+.eki-stamp-text {
+  fill: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 600;
+  transition: fill .35s;
+}
+.eki-stamp-date {
+  fill: var(--stamp);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  transition: fill .35s;
+}
+
+/* ─────────────────────────────────────────
+   PÁGINAS AMPLIADAS (Diseño amplio de 1450px)
+───────────────────────────────────────── */
+.hero, .home-with-sidebar, .guide-page, .japan-hub, footer {
+  max-width: 1450px !important;
+}
+
+/* ─────────────────────────────────────────
+   RESTORED ORIGINAL BALANCED TYPOGRAPHY (No outlines or boxed labels)
+───────────────────────────────────────── */
+.post-tag {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--stamp);
+  font-weight: 600;
+  margin-bottom: .6rem;
+  transition: color .35s;
+}
+.post-tag.vida{color:var(--green)}
+.post-tag.personal{color:var(--brown)}
+.post-tag.jp-guide{color:var(--purple)}
+
+.guide-card-tag, .bp-tag, .jh-blog-tag {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.post-title{font-family:'Lora',serif;font-size:clamp(1.1rem,2.2vw,1.45rem);font-weight:500;color:var(--ink);margin-bottom:.4rem;line-height:1.35;transition:color .35s}
+.post-title .jp-sub{display:block;font-family:'Noto Serif JP',serif;font-size:.62em;color:var(--brown);letter-spacing:3px;font-weight:300;font-style:normal;margin-top:4px;transition:color .35s}
+.post-excerpt{color:var(--ink-soft);font-size:14.5px;line-height:1.8;margin-top:0.3rem;margin-bottom:0.8rem;transition:color .35s}
+.post-meta{display:flex;align-items:center;gap:.8rem;font-size:13.5px;color:var(--muted);border-top:1px solid var(--border-lt);padding-top:.7rem;margin-top:.7rem;transition:color .35s,border-color .35s}
+.post-meta .dot{opacity:.5}
+
+/* Estilo consistente para enlaces "Ver Todo" en homepage */
+button.col-link, .col-link {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 9.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: color .2s;
+  outline: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-block;
+}
+button.col-link:hover, .col-link:hover {
+  color: var(--ink) !important;
+}
+
+/* ─────────────────────────────────────────
+   HERO & TRANSITIONS
+───────────────────────────────────────── */
+.hero-wrapper{
+  position:relative;
+  overflow:hidden;
+  border-bottom:1px solid var(--border);
+  background:var(--cream2);
+  transition:background .35s,border-color .35s;
+}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero{position:relative;z-index:2;padding:clamp(4rem,9vw,7rem) clamp(1.5rem,5vw,4rem) clamp(3rem,6vw,5rem);display:grid;grid-template-columns:1fr auto;gap:3rem;align-items:end;margin:0 auto}
+.hero-eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--stamp);font-weight:500;margin-bottom:1.4rem;display:flex;align-items:center;gap:10px;transition:color .35s}
+.hero-eyebrow::after{content:'';display:inline-block;height:1px;width:32px;background:var(--stamp);opacity:.5}
+.hero-headline{font-family:'Noto Serif JP',serif;font-weight:300;line-height:1.05;margin-bottom:1.6rem}
+.hero-headline .line1{font-size:clamp(3rem,8vw,7rem);color:var(--ink);display:block;letter-spacing:-1px;transition:color .35s}
+.hero-headline .line2{font-size:clamp(1rem,2.2vw,1.45rem);color:var(--brown);display:block;letter-spacing:5px;margin-top:.5rem;font-weight:400;transition:color .35s}
+.hero-desc{max-width:460px;color:var(--ink-soft);font-size:14px;line-height:1.85;border-left:2px solid var(--border);padding-left:1.2rem;font-family:'Lora',serif;font-style:italic;transition:color .35s,border-color .35s}
+.hero-right{opacity:.18;user-select:none}
+.hero-kanji-stack{font-family:'Noto Serif JP',serif;font-size:clamp(2.5rem,5vw,4.5rem);font-weight:300;color:var(--ink);writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:12px;line-height:1;height:clamp(160px,22vw,280px);transition:color .35s}
+
+/* ─────────────────────────────────────────
+   HOMEPAGE LAYOUT
+───────────────────────────────────────── */
+.home-body{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem)}
+
+/* ── Japanese Guide Feature Block ── */
+.jp-guide-block{
+  border: 1px solid var(--border);
+  margin: 3rem 0 2.5rem;
+  transition: border-color .35s;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.jp-guide-header{
+  background:var(--feat-bg);padding:2rem 2rem 1.6rem;
+  display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:start;
+  transition:background .35s;
+}
+.jp-guide-header-left{}
+.jp-guide-eyebrow{font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:.8rem;display:flex;align-items:center;gap:8px}
+html.dark .jp-guide-eyebrow{color:#9a8abf}
+.jp-guide-eyebrow::after{content:'';display:inline-block;height:1px;width:24px;background:var(--purple);opacity:.5}
+.jp-guide-title{font-family:'Noto Serif JP',serif;font-size:clamp(1.3rem,2.8vw,2rem);font-weight:400;color:var(--feat-text);line-height:1.2;margin-bottom:.5rem}
+.jp-guide-subtitle{font-family:'Noto Serif JP',serif;font-size:.7em;color:#8aa390;letter-spacing:4px;font-weight:300;display:block;margin-top:.3rem}
+.jp-guide-desc{color:var(--feat-muted);font-size:13px;line-height:1.8;margin-top:.8rem;font-family:'Lora',serif;font-style:italic;max-width:560px}
+.jp-guide-meta{display:flex;gap:1.5rem;margin-top:1.2rem;flex-wrap:wrap}
+.jp-guide-meta span{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--feat-muted)}
+.jp-guide-meta strong{color:var(--feat-text);font-weight:500}
+.jp-guide-kanji{font-family:'Noto Serif JP',serif;font-size:clamp(3rem,6vw,5rem);font-weight:300;color:var(--feat-text);opacity:.12;line-height:1;user-select:none;align-self:center}
+
+/* ── COLLAPSING GRID (Líneas perfectamente continuas y alineadas; sin dobles líneas ni efectos hover 3D) ── */
+.jp-parts-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1.5px solid var(--border);
+  background: transparent;
+  overflow: hidden;
+}
+.jp-part-tile {
+  background: var(--cream);
+  padding: 1.8rem 1.6rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  min-height: 150px;
+  border: none !important;
+  transition: background .2s;
+}
+
+/* Sistema de bordes dinámicos para evitar duplicidad con el marco exterior */
+@media (min-width: 901px) {
+  .jp-part-tile {
+    border-right: 1.5px solid var(--border) !important;
+    border-bottom: 1.5px solid var(--border) !important;
+  }
+  .jp-part-tile:nth-child(3n) {
+    border-right: none !important;
+  }
+  .jp-part-tile:nth-child(n+4) {
+    border-bottom: none !important;
+  }
+}
+@media (max-width: 900px) and (min-width: 601px) {
+  .jp-part-tile {
+    border-right: 1.5px solid var(--border) !important;
+    border-bottom: 1.5px solid var(--border) !important;
+  }
+  .jp-part-tile:nth-child(2n) {
+    border-right: none !important;
+  }
+  .jp-part-tile:nth-child(n+5) {
+    border-bottom: none !important;
+  }
+}
+@media (max-width: 600px) {
+  .jp-part-tile {
+    border-bottom: 1.5px solid var(--border) !important;
+  }
+  .jp-part-tile:last-child {
+    border-bottom: none !important;
+  }
+}
+.jp-part-tile:hover {
+  background: var(--cream2);
+}
+
+.jp-part-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--purple);font-weight:600}
+html.dark .jp-part-num{color:#9a8abf}
+.jp-part-title{font-size:16.5px;font-weight:600;color:var(--ink);line-height:1.4;transition:color .35s}
+.jp-part-desc{font-size:13.5px;color:var(--muted);line-height:1.6;transition:color .35s}
+.jp-guide-footer{
+  background:var(--cream2);border-top:1px solid var(--border);
+  padding:.9rem 1.4rem;display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;transition:background .35s,border-color .35s;
+}
+.jp-guide-footer span{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.jp-start-btn{
+  display:inline-flex;align-items:center;gap:8px;background:var(--stamp);
+  color:white;border:none;padding:.55rem 1.2rem;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;
+  transition:opacity .2s;
+}
+.jp-start-btn:hover{opacity:.85}
+
+/* ── Two-column home grid ── */
+.home-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-bottom:3rem;
+  border-top:1px solid var(--border);padding-top:2.5rem;
+  transition:border-color .35s;
+}
+
+/* Japan Life column */
+.home-col-header{margin-bottom:1.5rem;display:flex;align-items:baseline;justify-content:space-between}
+.home-col-header .col-title{font-family:'Lora',serif;font-size:1rem;font-weight:500;color:var(--ink);transition:color .35s}
+
+/* Japan guide hub card (Proporción mayor) */
+.japan-guide-card{
+  background:var(--cream2);border:1px solid var(--border);padding:1.6rem;
+  margin-bottom:8px;cursor:pointer;transition:background .2s,border-color .35s, transform 0.2s;
+  display:flex;flex-direction:column;gap:.5rem;
+  min-height: 120px;
+  justify-content: center;
+}
+.japan-guide-card:hover{
+  background:var(--cream3);
+  transform: translateY(-2px);
+}
+.guide-card-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);line-height:1.35;transition:color .35s}
+.guide-card-meta{font-size:13.5px;color:var(--muted);letter-spacing:.5px;transition:color .35s}
+
+/* Blog posts in japan column */
+.blog-post-item, .jh-blog-item {
+  padding: 1rem 0 1rem 24px;
+  border-bottom: 1px solid var(--border-lt);
+  cursor: pointer;
+  transition: opacity .2s, border-color .35s;
+  position: relative;
+}
+.blog-post-item:hover, .jh-blog-item:hover {
+  opacity: .85;
+}
+/* Detalle decorativo hanko inline (Evita encimamientos) */
+.bp-tag::before, .jh-blog-tag::before {
+  content: '㊞ ';
+  color: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 6px;
+  display: inline-block;
+}
+
+.blog-post-item .bp-title{font-family:'Lora',serif;font-size:.875rem;font-weight:500;color:var(--ink);line-height:1.35;margin-bottom:.25rem;transition:color .35s}
+.blog-post-item .bp-meta{font-size:13.5px;color:var(--muted);letter-spacing:.5px;transition:color .35s}
+
+/* ── Personal section ── */
+.personal-section{
+  border-top:1px solid var(--border);padding-top:2rem;margin-bottom:4rem;
+  transition:border-color .35s;
+}
+.personal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1.5rem}
+.personal-card{
+  padding:1.2rem;border:1px solid var(--border-lt);cursor:pointer;
+  transition:border-color .2s,background .35s;
+}
+.personal-card:hover{border-color:var(--border)}
+.personal-card .pc-date{font-size:13.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:.4rem;transition:color .35s}
+.personal-card .pc-title{font-family:'Lora',serif;font-size:.875rem;font-weight:500;color:var(--ink);line-height:1.35;transition:color .35s}
+.personal-card .pc-excerpt{font-size:11.5px;color:var(--muted);margin-top:.4rem;line-height:1.6;transition:color .35s}
+
+/* ── Vocab widget (Estética original restaurada con padding y espaciados mejorados) ── */
+.vocab-feature{border:1px solid var(--border);overflow:hidden;background:var(--cream2);transition:background .35s,border-color .35s}
+.vocab-feature.kippu-ticket {
+  padding: 0;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 12px;
+  overflow: visible !important;
+}
+.vocab-header {
+  background: var(--feat-bg);
+  padding: 1.8rem 1.2rem 0.9rem; /* Margen superior amplio para dar espacio a las estrellas internas */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center; /* Centrado vertical del icono con respecto a las dos filas de la derecha */
+  column-gap: 12px;
+  row-gap: 3px;
+  transition: background .35s;
+}
+.vocab-header-left {
+  display: contents; /* Promueve el SVG y el span como elementos de cuadrícula independientes */
+}
+.vocab-header-left span {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(245,239,224,.85);
+  font-weight: 500;
+  white-space: nowrap;
+}
+html.dark .vocab-header-left span {
+  color: rgba(232,229,220,.8);
+}
+.vocab-header-icon {
+  grid-column: 1;
+  grid-row: 1 / span 2; /* Centrado vertical: abarca las dos filas de texto del encabezado */
+  color: #EDE5D0;
+  opacity: 0.9;
+  flex-shrink: 0;
+  align-self: center;
+}
+html.dark .vocab-header-icon {
+  color: #a0bfaf;
+}
+.vocab-jp {
+  grid-column: 2;
+  grid-row: 2;
+  font-family: 'Noto Serif JP', serif;
+  font-size: 10px;
+  color: var(--cream3);
+  opacity: 0.7;
+  letter-spacing: 2.5px;
+  font-weight: 300;
+  white-space: nowrap;
+}
+html.dark .vocab-jp{color:#8aa390}
+.vocab-body{padding:1.5rem 1.4rem;display:grid;grid-template-columns:auto 1fr;gap:0 1.8rem;align-items:baseline;transition:background .35s}
+html.dark .vocab-body{background-color:var(--cream2)}
+.vocab-word{font-family:'Noto Serif JP',serif;font-size:3rem;font-weight:300;color:var(--ink);grid-row:1/3;line-height:1;padding-top:4px;transition:color .35s}
+.vocab-reading{font-family:'JetBrains Mono',monospace;font-size:13.5px;color:var(--stamp);letter-spacing:1px;align-self:end;padding-bottom:2px;transition:color .35s}
+.vocab-meaning{color:var(--ink-soft);font-size:15px;align-self:start;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+.vocab-example{grid-column:1/-1;margin-top:1.2rem;padding:.9rem 1rem;background:var(--cream3);font-size:13.5px;color:var(--muted);border-left:2px solid var(--border);transition:background .35s,color .35s,border-color .35s}
+.vocab-example .jp-line{font-family:'Noto Serif JP',serif;color:var(--ink);font-size:14.5px;font-weight:300;margin-bottom:4px;transition:color .35s}
+
+/* Estilo mejorado para las estrellas del ticket (dentro del billete) */
+.kippu-stars {
+  position: absolute;
+  top: 12px; /* Posicionadas adentro para evitar que queden por fuera */
+  left: 1.5rem;
+  display: flex;
+  gap: 5px;
+  color: var(--stamp); /* Color de sello rojo elegante por defecto */
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.9;
+  user-select: none;
+  z-index: 20;
+}
+/* Estrellas doradas/claras específicas para el fondo oscuro del widget de vocabulario */
+.vocab-feature .kippu-stars {
+  color: var(--brown-lt) !important;
+}
+html.dark .vocab-feature .kippu-stars {
+  color: var(--stamp) !important;
+}
+
+/* ─────────────────────────────────────────
+   DISEÑO AMPLIO Y SEPARADO PARA ARCHIVOS (Grid de tarjetas)
+───────────────────────────────────────── */
+.archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+  width: 100%;
+}
+.archive-card {
+  background: var(--cream2);
+  border: 1px solid var(--border-lt);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
+  cursor: pointer;
+  transition: background .25s, border-color .25s, transform 0.2s;
+  border-radius: 6px;
+}
+.archive-card:hover {
+  background: var(--cream3);
+  border-color: var(--border);
+  transform: translateY(-2px);
+}
+.archive-card-top {}
+.archive-card-bottom {
+  border-top: 1px solid var(--border-lt);
+  padding-top: 1rem;
+  margin-top: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.archive-card-action {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--brown);
+  font-weight: 600;
+}
+.archive-card:hover .archive-card-action {
+  color: var(--ink);
+}
+
+/* ─────────────────────────────────────────
+   GUIDE HUB PAGE — JAPANESE
+───────────────────────────────────────── */
+.guide-page{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem)}
+
+/* Page header (Espaciados reducidos) */
+.guide-page-header{
+  padding:1.8rem 0 1.2rem;border-bottom:1px solid var(--border);
+  display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center;
+  transition:border-color .35s;
+}
+.guide-page-eyebrow{font-size:9.5px;letter-spacing:3px;text-transform:uppercase;color:var(--purple);font-weight:500;margin-bottom:.8rem;display:flex;align-items:center;gap:8px}
+.guide-page-eyebrow::after{content:'';display:inline-block;height:1px;width:24px;background:var(--purple);opacity:.5}
+.guide-page-title{font-family:'Noto Serif JP',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:300;color:var(--ink);line-height:1.1;margin-bottom:.4rem;transition:color .35s}
+.guide-page-jp{font-family:'Noto Serif JP',serif;font-size:clamp(1rem,2vw,1.4rem);font-weight:300;color:var(--brown);letter-spacing:4px;display:block;margin-bottom:1rem;transition:color .35s}
+.guide-page-desc{max-width:580px;color:var(--ink-soft);font-size:14px;line-height:1.85;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+.guide-stats{display:flex;gap:2rem;margin-top:1.2rem;flex-wrap:wrap}
+.guide-stat{display:flex;flex-direction:column;gap:2px}
+.guide-stat .stat-val{font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:var(--ink);font-weight:400;transition:color .35s}
+.guide-stat .stat-label{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);transition:color .35s}
+.guide-page-kanji{font-family:'Noto Serif JP',serif;font-size:5rem;font-weight:300;color:var(--ink);opacity:.08;user-select:none;line-height:1;transition:color .35s}
+
+/* Guide body layout */
+.guide-body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 4rem; /* Mayor espaciado para evitar que todo esté pegado */
+  padding: 2.5rem 0 5rem;
+  transition: border-color .35s;
+}
+
+/* Evita conflictos de la barra general con el TOC de la guía */
+.guide-toc{
+  border-right:1px solid var(--border);padding-right:2.5rem;
+  position:sticky;top:80px;height:fit-content;max-height:calc(100vh - 100px);
+  overflow-y:auto;transition:border-color .35s;
+  display: block;
+}
+.guide-toc::-webkit-scrollbar{width:3px}
+.guide-toc::-webkit-scrollbar-track{background:transparent}
+.guide-toc::-webkit-scrollbar-thumb{background:var(--border)}
+.toc-label{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-weight:500;
+  margin-bottom:1.5rem;transition:color .35s;
+  display: block;
+}
+
+/* ── TOC ESTILO REGISTRO DE VIAJERO ── */
+.toc-list{
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:0.4rem;
+}
+.toc-item{
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border-lt);
+  background: var(--cream2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.35s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.toc-item:hover {
+  background: var(--cream3);
+  border-color: var(--border);
+  transform: translateX(2px);
+}
+.toc-item.active {
+  border-color: var(--stamp);
+  background: var(--cream3);
+}
+/* Casilla de verificación de hito viajero */
+.toc-item-stamp {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color .25s, background-color .25s;
+}
+.toc-item.active .toc-item-stamp {
+  border-color: var(--stamp);
+  background: var(--stamp);
+}
+.toc-item.active .toc-item-stamp::after {
+  content: '✓';
+  color: var(--cream);
+  font-size: 8px;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.toc-item:last-child{border-bottom:none}
+.toc-item-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);letter-spacing:1px;padding-top:2px;flex-shrink:0;transition:color .35s}
+html.dark .toc-item-num{color:#9a8abf}
+.toc-item-title{font-size:13.5px;color:var(--muted);line-height:1.4;transition:color .35s}
+.toc-faq{
+  margin-top:1.5rem;padding:.7rem;border:1px solid var(--border-lt);
+  cursor:pointer;transition:background .2s,border-color .35s;
+}
+.toc-faq:hover{background:var(--cream2)}
+.toc-faq-label{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--stamp);font-weight:500;margin-bottom:.2rem}
+.toc-faq-sub{font-size:11px;color:var(--muted);transition:color .35s}
+
+/* Guide content (Gaps reducidos) */
+.guide-content{padding-left:1.5rem}
+.guide-intro{
+  background:var(--cream2);border:1px solid var(--border);
+  padding:1.4rem;margin-bottom:1.4rem;transition:background .35s,border-color .35s;
+}
+.guide-intro-title{font-family:'Lora',serif;font-size:1rem;font-weight:500;color:var(--ink);margin-bottom:.8rem;transition:color .35s}
+.guide-intro p{font-size:13.5px;color:var(--ink-soft);line-height:1.85;font-family:'Lora',serif;transition:color .35s}
+.guide-intro p+p{margin-top:.8rem}
+
+/* Philosophy box */
+.philosophy-box{
+  border-left:3px solid var(--purple);padding:0.8rem 1.2rem;
+  background:var(--cream2);margin:1rem 0;transition:background .35s,border-color .35s;
+}
+.philosophy-box p{font-size:13px;color:var(--ink-soft);line-height:1.8;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+
+/* ── PARTS LIST (Estructura de grilla perfectamente continua recuperada) ── */
+.parts-list {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: transparent;
+  margin-bottom: 2rem;
+  transition: border-color .35s;
+}
+.part-card {
+  background: var(--cream);
+  padding: 1.8rem 2rem;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  border-bottom: 1.5px solid var(--border);
+  transition: background .2s;
+}
+.part-card:last-child {
+  border-bottom: none;
+}
+.part-card:hover {
+  background: var(--cream2);
+}
+
+.part-card-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--purple);letter-spacing:1px;font-weight:400;white-space:nowrap;padding-top:2px}
+html.dark .part-card-num{color:#9a8abf}
+.part-card-body{}
+.part-card-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:500;color:var(--ink);margin-bottom:.3rem;transition:color .35s}
+.part-card-jp{font-family:'Noto Serif JP',serif;font-size:.7em;color:var(--brown);letter-spacing:2px;font-weight:300;display:block;margin-bottom:.3rem;transition:color .35s}
+.part-card-desc{font-size:13.5px;color:var(--muted);line-height:1.6;transition:color .35s}
+.part-card-topics{display:flex;flex-wrap:wrap;gap:5px;margin-top:.6rem}
+.part-topic{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--border);padding:2px 7px;color:var(--muted);transition:border-color .35s,color .35s}
+.part-card-arrow{color:var(--muted);font-size:18px;opacity:.4;transition:opacity .2s}
+.part-card:hover .part-card-arrow{opacity:.8}
+
+/* Part status badges */
+.part-status{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;font-weight:500}
+.part-status.done{color:var(--green);border:1px solid var(--green);opacity:.7}
+.part-status.draft{color:var(--brown);border:1px solid var(--brown);opacity:.7}
+.part-status.soon{color:var(--muted);border:1px solid var(--border)}
+
+/* FAQ section */
+.faq-section{margin-top:2.5rem}
+.faq-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+.faq-header-jp{font-family:'Noto Serif JP',serif;font-size:1.4rem;font-weight:300;color:var(--brown);letter-spacing:3px;transition:color .35s}
+.faq-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);transition:border-color .35s}
+.faq-item{border-bottom:1px solid var(--border-lt);transition:border-color .35s}
+.faq-item:last-child{border-bottom:none}
+.faq-q{
+  width:100%;text-align:left;background:none;border:none;cursor:pointer;
+  padding:1.1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;font-family:'Lora',serif;font-size:.9rem;font-weight:500;
+  color:var(--ink);line-height:1.4;transition:color .35s,background .2s;
+}
+.faq-q:hover{background:var(--cream2)}
+.faq-chevron{font-size:12px;color:var(--muted);flex-shrink:0;transition:transform .25s,color .35s}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-a{
+  display:none;padding:0 1.3rem 1.1rem;font-size:13.5px;color:var(--ink-soft);
+  line-height:1.85;font-family:'Lora',serif;transition:color .35s;
+}
+.faq-item.open .faq-a{display:block}
+.faq-a p+p{margin-top:.7rem}
+.faq-a .jp-note{font-family:'Noto Serif JP',serif;font-size:1.1em;color:var(--brown);letter-spacing:2px;font-weight:300;transition:color .35s}
+
+/* ── INTERACCIÓN Y PEQUEÑAS PINCELADAS DE PERSONALIDAD ── */
+.personal-card {
+  transition: transform 0.2s, border-color 0.2s;
+}
+.personal-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ─────────────────────────────────────────
+   JAPAN LIFE HUB
+───────────────────────────────────────── */
+.japan-hub{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem) 5rem}
+.japan-hub-header{padding:3rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem;transition:border-color .35s}
+.japan-hub-header .guide-page-eyebrow{color:var(--green)}
+.japan-hub-header .guide-page-eyebrow::after{background:var(--green)}
+
+/* BILLETE "KIPPU" DE BIENVENIDA EN HUB (Tarjeta Destacada con tamaño y proporciones óptimas recuperadas) */
+.jh-hero-card {
+  padding: 2.2rem;
+  margin-bottom: 3.5rem;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2.5rem;
+  align-items: center;
+  position: relative;
+}
+.jh-hero-card:hover {
+  transform: translateY(-2px);
+}
+.jh-hero-badge {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 0.8rem;
+}
+.jh-hero-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.4rem, 3.2vw, 1.85rem);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 0.8rem;
+}
+.jh-hero-desc {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.75;
+  margin-bottom: 1.2rem;
+  max-width: 740px;
+}
+.jh-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 12.5px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.jh-hero-meta .dot {
+  opacity: 0.5;
+}
+.jh-hero-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 140px;
+  z-index: 2;
+}
+.jh-hero-kanji {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 4.5rem;
+  font-weight: 300;
+  color: var(--green);
+  opacity: 0.12;
+  line-height: 1;
+  user-select: none;
+}
+.jh-hero-btn {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 600;
+  margin-top: auto;
+  transition: color 0.2s;
+  border-bottom: 1px solid var(--green);
+  padding-bottom: 2px;
+}
+.jh-hero-card:hover .jh-hero-btn {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+@media(max-width: 768px) {
+  .jh-hero-card {
+    grid-template-columns: 1fr;
+    padding: 1.6rem;
+    gap: 1rem;
+  }
+  .jh-hero-visual {
+    align-items: flex-start;
+    min-height: auto;
+    margin-top: 1rem;
+  }
+  .jh-hero-kanji {
+    display: none;
+  }
+}
+
+/* Hub Grid system */
+.japan-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
+.japan-hub-col-title{font-family:'Lora',serif;font-size:1.1rem;font-weight:500;color:var(--ink);transition:color .35s,border-color .35s}
+.japan-hub-col-title small{display:block;font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:400;margin-top:3px;font-style:normal}
+
+/* Guide cards for Japan hub (Separación vertical aumentada para legibilidad) */
+.jh-guide-card{
+  border:1px solid var(--border);
+  margin-bottom: 2rem; /* Separadas de forma más holgada */
+  cursor:pointer;
+  transition:background .2s,border-color .35s;
+}
+.jh-guide-card:hover{background:var(--cream2)}
+.jh-guide-card-inner{padding:1.2rem 1.4rem;display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:start}
+.jh-guide-icon{
+  width:36px;height:36px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif JP',serif;font-size:14px;color:var(--green);
+  flex-shrink:0;font-weight:300;background:var(--cream2);transition:background .35s,border-color .35s,color .35s;
+}
+html.dark .jh-guide-icon{color:#8aa390}
+.jh-guide-body{}
+.jh-guide-title{font-family:'Lora',serif;font-size:.9rem;font-weight:500;color:var(--ink);margin-bottom:.25rem;line-height:1.3;transition:color .35s}
+.jh-guide-sub{font-size:11px;color:var(--muted);line-height:1.5;transition:color .35s}
+.jh-guide-topics{padding:.6rem 1.4rem .8rem 3.6rem;display:flex;flex-wrap:wrap;gap:5px;border-top:1px solid var(--border-lt);transition:border-color .35s}
+.jh-topic{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--border);padding:2px 7px;color:var(--muted);transition:border-color .35s,color .35s}
+
+/* Blog items in japan hub */
+.jh-blog-item{
+  padding:1rem 0;border-bottom:1px solid var(--border-lt);
+  cursor:pointer;transition:opacity .2s,border-color .35s;
+}
+.jh-blog-item:last-child{border-bottom:none}
+.jh-blog-item:hover{opacity:.65}
+.jh-blog-tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:500;margin-bottom:.3rem;transition:color .35s}
+html.dark .jh-blog-tag{color:#8aa390}
+.jh-blog-title{font-family:'Lora',serif;font-size:.9rem;font-weight:500;color:var(--ink);line-height:1.35;margin-bottom:.25rem;transition:color .35s}
+.jh-blog-meta{font-size:12px;color:var(--muted);letter-spacing:.5px;display:flex;gap:.5rem;transition:color .35s}
+.jh-blog-excerpt{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:.3rem;transition:color .35s}
+
+/* ── Arrival Guide Section Styling ── */
+.arrival-section {
+  scroll-margin-top: 80px;
+}
+.arrival-section .journal-header {
+  margin-top: 1.8rem;
+  margin-bottom: 0.8rem;
+}
+
+/* ── SIDEBAR (homepage) ── */
+.home-with-sidebar{margin:0 auto;padding:0 clamp(1.5rem,5vw,4rem);display:grid;grid-template-columns:1fr 290px;gap:0}
+.home-main-col{border-right:1px solid var(--border);padding-right:clamp(2rem,4vw,4rem);padding-bottom:5rem;transition:border-color .35s}
+.home-sidebar{padding-left:clamp(2rem,3.5vw,3rem);padding-top:3rem;padding-bottom:5rem}
+.sidebar-block{margin-bottom:2.2rem}
+.about-card{background:var(--cream2);border:1px solid var(--border);padding:1.4rem;margin-bottom:2.2rem;transition:background .35s,border-color .35s}
+.about-top{display:flex;align-items:center;gap:12px;margin-bottom:.9rem}
+.about-avatar{width:44px;height:44px;border-radius:50%;background:var(--cream3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif JP',serif;font-size:16px;color:var(--brown);font-weight:300;flex-shrink:0;transition:background .35s,border-color .35s,color .35s}
+.about-name{font-family:'Lora',serif;font-size:16.5px;font-weight:500;color:var(--ink);margin-bottom:2px;transition:color .35s}
+.about-loc{font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;transition:color .35s}
+.about-tagline{font-size:13.5px;color:var(--ink-soft);margin-bottom:1rem;line-height:1.75;font-family:'Lora',serif;font-style:italic;transition:color .35s}
+.about-tags{display:flex;flex-wrap:wrap;gap:6px}
+.about-tag{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:3px 8px;background:var(--cream);transition:background .35s,border-color .35s,color .35s}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:7px}
+.tag-pill{font-size:11px;letter-spacing:1px;color:var(--muted);border:1px solid var(--border);padding:6px 12px;cursor:pointer;transition:color .2s,border-color .2s,background .35s;text-transform:uppercase;background:var(--cream)}
+.tag-pill:hover{color:var(--ink);border-color:var(--brown);background:var(--cream2)}
+.recent-posts{display:flex;flex-direction:column}
+.recent-item{padding:.75rem 0;border-bottom:1px solid var(--border-lt);cursor:pointer;transition:opacity .2s,border-color .35s}
+.recent-item:last-child{border-bottom:none}
+.recent-item:hover{opacity:.6}
+.recent-title{font-size:12.5px;color:var(--ink);margin-bottom:3px;line-height:1.45;font-family:'Lora',serif;transition:color .35s}
+.recent-date{font-size:10px;color:var(--muted);letter-spacing:1px;transition:color .35s}
+.now-card{border:1px solid var(--border);padding:1.2rem;background:var(--cream2);transition:background .35s,border-color .35s}
+.now-card p{font-size:12px;color:var(--muted);line-height:1.9;margin-top:.6rem;transition:color .35s}
+.now-card p span.val{color:var(--ink-soft);font-family:'Lora',serif;transition:color .35s}
+.now-card p span.jp{font-family:'Noto Serif JP',serif;color:var(--brown);font-weight:300;transition:color .35s}
+
+/* Footer de Recibo */
+footer {
+  border-top: 1.5px dashed var(--border);
+  padding: 2.8rem clamp(1.5rem, 5vw, 4rem) 3.5rem;
+  margin: 0 auto;
+  transition: border-color .35s;
+  position: relative;
+}
+.footer-receipt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  opacity: 0.85;
+}
+.footer-stub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.footer-jp {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+.footer-note {
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+.footer-stamp-hanko {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--stamp);
+  color: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 600;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transform: rotate(6deg);
+  opacity: 0.75;
+  user-select: none;
+  transition: transform 0.2s;
+}
+.footer-stamp-hanko:hover {
+  transform: rotate(0deg) scale(1.1);
+}
+.footer-fare {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.footer-fare span {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.footer-fare .fare-jp {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 11.5px;
+  color: var(--stamp);
+  letter-spacing: 1px;
+}
+
+@media(max-width: 768px) {
+  .footer-receipt {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  .footer-fare {
+    text-align: center;
+  }
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media(max-width:1024px){
+  .guide-body{grid-template-columns:1fr}
+  .guide-toc{position:static;border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:1.5rem;margin-bottom:2rem;max-height:none;overflow-y:visible}
+  .toc-list{flex-direction:row;flex-wrap:wrap;gap:.5rem; border-left: none; padding-left: 0; margin-left: 0;}
+  .toc-item{border-bottom:none;border:1px solid var(--border-lt);padding:.4rem .7rem}
+  .toc-item-stamp{display: none;}
+  .guide-content{padding-left:0}
+  .japan-hub-grid{grid-template-columns:1fr}
+}
+@media(max-width:900px){
+  .home-with-sidebar{grid-template-columns:1fr}
+  .home-main-col{border-right:none;padding-right:0}
+  .home-sidebar{padding-left:0;border-top:1px solid var(--border);padding-top:2.5rem}
+  .hero{grid-template-columns:1fr}
+  .hero-right{display:none}
+  .home-grid{grid-template-columns:1fr}
+  .jp-guide-header{grid-template-columns:1fr}
+  .jp-parts-strip{grid-template-columns:repeat(2, 1fr)}
+  .guide-page-header{grid-template-columns:1fr}
+  .guide-page-kanji{display:none}
+  .personal-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .nav-links{display:none}
+  .jp-parts-strip{grid-template-columns:1fr}
+  .personal-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+a:focus-visible,button:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+</style>
+<script>
+// Dark mode applied immediately (before paint)
+if(localStorage.getItem('hibi-dark')==='1') document.documentElement.classList.add('dark');
+
+function toggleDropdown(id, e){
+  e.stopPropagation();
+  const menu=document.getElementById('menu-'+id.replace('dropdown-',''));
+  const isOpen=menu.classList.contains('open');
+  closeDropdown();
+  if(!isOpen) menu.classList.add('open');
+}
+
+function closeDropdown(){
+  document.querySelectorAll('.nav-dropdown-menu.open').forEach(m=>m.classList.remove('open'));
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', closeDropdown);
+
+function toggleDark(){
+  const d=document.documentElement.classList.toggle('dark');
+  localStorage.setItem('hibi-dark',d?'1':'0');
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const target=document.getElementById('page-'+id);
+  if(target){
+    target.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  const map={'home':'','jp-guide':'nav-jp','japan-hub':'nav-japan','japan-blog':'nav-japan', 'japan-guides-themed':'nav-japan', 'japan-arrival':'nav-japan','personal':'nav-personal'};
+  const navId=map[id];
+  if(navId){const el=document.getElementById(navId);if(el)el.classList.add('active');}
+}
+
+function highlightToc(el){
+  document.querySelectorAll('.toc-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function highlightArrivalToc(el, sectionId){
+  document.querySelectorAll('#arrival-toc .toc-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  const section = document.getElementById(sectionId);
+  if(section) {
+    section.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+
+function scrollToFaq(){
+  const el=document.getElementById('faq-section');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function toggleFaq(btn){
+  const item=btn.closest('.faq-item');
+  const isOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i=>i.classList.remove('open'));
+  if(!isOpen)item.classList.add('open');
+}
+
+// ── Background Scroll-Responsive falling leaves (Hojas con balanceo 3D avanzado y modo noche rojizo completo) ──
+window.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('ambient-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const particles = [];
+  const maxParticles = 38;
+
+  class Leaf {
+    constructor() {
+      this.reset();
+      this.y = Math.random() * height;
+    }
+
+    reset() {
+      this.x = Math.random() * width;
+      this.y = -20;
+      this.size = Math.random() * 8 + 5;
+      this.speedY = Math.random() * 0.35 + 0.3;
+      this.speedX = Math.random() * 0.25 - 0.125;
+      this.rotation = Math.random() * Math.PI * 2;
+      this.spinSpeed = Math.random() * 0.012 - 0.006;
+      this.opacity = Math.random() * 0.3 + 0.18;
+      this.swaySpeed = Math.random() * 0.015 + 0.005;
+      this.swayValue = Math.random() * Math.PI;
+      this.type = Math.random() > 0.45 ? 'sakura' : 'momiji';
+      this.flip = 1;
+      this.flipSpeed = Math.random() * 0.02 + 0.01;
+    }
+
+    update(windY) {
+      this.swayValue += this.swaySpeed;
+      this.x += Math.sin(this.swayValue) * 0.22 + this.speedX;
+      this.y += this.speedY + windY;
+      this.rotation += this.spinSpeed;
+      this.flip = Math.sin(this.y * this.flipSpeed);
+
+      if (this.y > height + 20 || this.x < -20 || this.x > width + 20) {
+        this.reset();
+      }
+    }
+
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+      ctx.scale(1, this.flip);
+      ctx.globalAlpha = this.opacity;
+
+      const isDark = document.documentElement.classList.contains('dark');
+      ctx.beginPath();
+
+      if (isDark) {
+        ctx.fillStyle = '#e65a4e';
+      } else {
+        ctx.fillStyle = this.type === 'sakura' ? '#8B6F47' : '#5A8A72';
+      }
+
+      if (this.type === 'sakura') {
+        ctx.moveTo(0, -this.size);
+        ctx.bezierCurveTo(this.size * 0.55, -this.size * 0.5, this.size * 0.55, this.size * 0.5, 0, this.size);
+        ctx.bezierCurveTo(-this.size * 0.55, this.size * 0.5, -this.size * 0.55, -this.size * 0.5, 0, -this.size);
+      } else {
+        ctx.moveTo(0, -this.size);
+        ctx.quadraticCurveTo(this.size * 0.75, -this.size * 0.35, 0, this.size);
+        ctx.quadraticCurveTo(-this.size * 0.75, -this.size * 0.35, 0, -this.size);
+      }
+
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  for (let i = 0; i < maxParticles; i++) {
+    particles.push(new Leaf());
+  }
+
+  let lastScrollY = window.scrollY;
+  let scrollVelocity = 0;
+  let targetScrollVelocity = 0;
+
+  window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    const diff = Math.abs(currentScrollY - lastScrollY);
+    targetScrollVelocity = Math.min(diff * 0.15, 5.0);
+    lastScrollY = currentScrollY;
+  });
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    scrollVelocity += (targetScrollVelocity - scrollVelocity) * 0.08;
+    targetScrollVelocity *= 0.92;
+
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].update(scrollVelocity);
+      particles[i].draw();
+    }
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+});
+</script>
+</head>
+<body>
+
+<!-- Ambient canvas behind all layout structures -->
+<canvas id="ambient-canvas"></canvas>
+
+<!-- ═══════════════════════════════════════
+     NAV (Barra de navegación principal limpia)
+════════════════════════════════════════ -->
+<nav class="main-nav">
+  <a class="nav-brand" onclick="showPage('home')" href="#">
+    <div class="hanko">日々</div>
+    <div class="nav-title">
+      <span class="jp">日々</span>
+      <span class="sub">Hibi — notas diarias</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li>
+      <button class="nav-link" id="nav-jp" onclick="showPage('jp-guide')">
+        Guías de Japonés
+      </button>
+    </li>
+    <li class="nav-dropdown" id="dropdown-japan">
+      <button class="nav-link" id="nav-japan" onclick="toggleDropdown('dropdown-japan', event)">Japón ▾</button>
+      <div class="nav-dropdown-menu" id="menu-japan">
+        <button class="dropdown-main-link" onclick="showPage('japan-hub');closeDropdown()">Guías y Blog (Hub)</button>
+        <div class="divider"></div>
+        <button class="dropdown-sub-link" onclick="showPage('japan-arrival');closeDropdown()">↳ Guía de Llegada</button>
+        <button class="dropdown-sub-link" onclick="showPage('japan-guides-themed');closeDropdown()">↳ Guías Temáticas</button>
+        <button class="dropdown-sub-link" onclick="showPage('japan-blog');closeDropdown()">↳ El Blog</button>
+      </div>
+    </li>
+    <li><button class="nav-link" id="nav-personal" onclick="showPage('personal')">Personal</button></li>
+    <li>
+      <button class="mode-btn" onclick="toggleDark()" aria-label="Cambiar modo">
+        <span class="mode-kanji kanji-moon">月</span>
+        <span class="mode-kanji kanji-sun">日</span>
+        <span class="label-dark">Noche</span>
+        <span class="label-light">Día</span>
+      </button>
+    </li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     PAGE: HOME
+════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+
+  <!-- Hero (Glow original e iluminación restablecida) -->
+<div class="hero-wrapper">
+  <svg class="hero-bg" viewBox="0 0 1400 520" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Brillo fotorrealista autocontenido para evitar cortes de borde -->
+      <radialGradient id="wash1" cx="50%" cy="50%" r="48%">
+        <stop offset="0%" stop-color="#C8B89A" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="#C8B89A" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="wash2" cx="50%" cy="50%" r="48%">
+        <stop offset="0%" stop-color="#8B6F47" stop-opacity="0.10"/>
+        <stop offset="100%" stop-color="#8B6F47" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="100%" height="100%" fill="none" />
+    <ellipse cx="1050" cy="200" rx="420" ry="280" fill="url(#wash1)"/>
+    <ellipse cx="140" cy="420" rx="320" ry="200" fill="url(#wash2)"/>
+
+    <!-- WATERMARK KANJI: Visibilidad asegurada en modo oscuro con fill var(--ink) -->
+    <text x="820" y="340" font-family="Noto Serif JP,serif" font-size="260" font-weight="300" fill="var(--ink)" fill-opacity="0.04" transform="rotate(-6 820 340)">語</text>
+    <text x="1080" y="180" font-family="Noto Serif JP,serif" font-size="160" font-weight="300" fill="var(--ink)" fill-opacity="0.03" transform="rotate(4 1080 180)">道</text>
+    <text x="60" y="280" font-family="Noto Serif JP,serif" font-size="200" font-weight="300" fill="var(--ink)" fill-opacity="0.03" transform="rotate(-3 60 280)">記</text>
+  </svg>
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Guías de japonés · Vida en Japón · Reflexiones</div>
+        <div class="hero-headline">
+          <span class="line1">日々の記録</span>
+          <span class="line2">días, palabras, vida en japón</span>
+        </div>
+        <p class="hero-desc">Guías para aprender japonés de verdad, no solo pasar exámenes. Vida en Japón tal como es. Notas honestas de alguien que sigue aprendiendo.</p>
+      </div>
+      <div class="hero-right"><span class="hero-kanji-stack">言葉と生活</span></div>
+    </div>
+  </div>
+
+  <div class="home-with-sidebar">
+    <div class="home-main-col">
+
+      <!-- Japanese Guide Feature (Contenedor con bordes matemáticamente calculados) -->
+      <div class="jp-guide-block" style="margin-top:3rem">
+        <div class="jp-guide-header">
+          <div class="jp-guide-header-left">
+            <div class="jp-guide-eyebrow">Obra principal</div>
+            <h2 class="jp-guide-title">
+              Guía Completa de Japonés
+              <span class="jp-guide-subtitle">日本語完全ガイド</span>
+            </h2>
+            <p class="jp-guide-desc">Una guía de principio a fin para aprender japonés como se debe — sin atajos, sin métodos mágicos, con comprensión real del idioma.</p>
+            <div class="jp-guide-meta">
+              <span><strong>6</strong> partes</span>
+              <span><strong>1 FAQ</strong> dedicada</span>
+              <span><strong>~4h</strong> lectura total</span>
+              <span><strong>N5 → N2</strong> progresión</span>
+            </div>
+          </div>
+          <div class="jp-guide-kanji">語</div>
+        </div>
+
+        <!-- Rejilla con líneas perfectas, sin dobles líneas en los bordes exteriores ni traslapes -->
+        <div class="jp-parts-strip">
+          <div class="jp-part-tile" onclick="showPage('jp-guide')">
+            <span class="jp-part-num">PARTE 01</span>
+            <span class="jp-part-title">Fundamentos y sistemas de escritura</span>
+            <span class="jp-part-desc">Hiragana, katakana, kanji: por qué y cómo</span>
+          </div>
+          <div class="jp-part-tile" onclick="showPage('jp-guide')">
+            <span class="jp-part-num">PARTE 02</span>
+            <span class="jp-part-title">Gramática base sin humo</span>
+            <span class="jp-part-desc">Estructura de oraciones, partículas, verbos</span>
+          </div>
+          <div class="jp-part-tile" onclick="showPage('jp-guide')">
+            <span class="jp-part-num">PARTE 03</span>
+            <span class="jp-part-title">Vocabulario y método Anki</span>
+            <span class="jp-part-desc">Qué aprender, en qué orden, con qué herramienta</span>
+          </div>
+          <div class="jp-part-tile" onclick="showPage('jp-guide')">
+            <span class="jp-part-num">PARTE 04</span>
+            <span class="jp-part-title">Inmersión y comprensión auditiva</span>
+            <span class="jp-part-desc">Cómo usar input real para progresar de verdad</span>
+          </div>
+          <div class="jp-part-tile" onclick="showPage('jp-guide')">
+            <span class="jp-part-num">PARTE 05</span>
+            <span class="jp-part-title">Hablar y producción oral</span>
+            <span class="jp-part-desc">Saltar el bloqueo, keigo, naturalidad</span>
+          </div>
+          <div class="jp-part-tile" onclick="showPage('jp-guide')">
+            <span class="jp-part-num">PARTE 06</span>
+            <span class="jp-part-title">JLPT y exámenes oficiales</span>
+            <span class="jp-part-desc">Si decides presentarte, cómo hacerlo bien</span>
+          </div>
+        </div>
+
+        <div class="jp-guide-footer">
+          <span>Actualizado junio 2026 · Lectura libre</span>
+          <button class="jp-start-btn" onclick="showPage('jp-guide')">Empezar desde el principio →</button>
+        </div>
+      </div>
+
+      <!-- Two column: Japan Life -->
+      <div class="home-grid">
+        <!-- Japan Guide column -->
+        <div>
+          <div class="home-col-header">
+            <span class="col-title">La Guía de Japón</span>
+            <button class="col-link" onclick="showPage('japan-hub')">Ver todo →</button>
+          </div>
+          <div class="japan-guide-card" onclick="showPage('japan-arrival')">
+            <div class="guide-card-tag">Guía Esencial</div>
+            <div class="guide-card-title">Llegando a Japón por primera vez</div>
+            <div class="guide-card-meta">Aeropuerto · Transporte · Primeros días</div>
+          </div>
+          <div class="japan-guide-card" onclick="showPage('japan-guides-themed')">
+            <div class="guide-card-tag">Guía Esencial</div>
+            <div class="guide-card-title">Alquilar piso siendo extranjero</div>
+            <div class="guide-card-meta">Garantías · Contratos · Key money</div>
+          </div>
+          <div class="japan-guide-card" onclick="showPage('japan-guides-themed')">
+            <div class="guide-card-tag">Guía Práctica</div>
+            <div class="guide-card-title">Trámites, burocracia y visa</div>
+            <div class="guide-card-meta">My Number · Residencia · Banco</div>
+          </div>
+          <div class="japan-guide-card" onclick="showPage('japan-guides-themed')">
+            <div class="guide-card-tag">Guía Práctica</div>
+            <div class="guide-card-title">Vida cotidiana en Japón</div>
+            <div class="guide-card-meta">Konbini · Transporte · Salud</div>
+          </div>
+        </div>
+        <!-- Japan Blog column -->
+        <div>
+          <div class="home-col-header">
+            <span class="col-title">El Blog de Japón</span>
+            <button class="col-link" onclick="showPage('japan-blog')">Ver todo →</button>
+          </div>
+          <div class="blog-post-item" onclick="showPage('japan-blog')">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Por qué el konbini arruinó cualquier otro país para mí</div>
+            <div class="bp-meta">Mayo 2026 · 5 min</div>
+          </div>
+          <div class="blog-post-item" onclick="showPage('japan-blog')">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">El primer verano japonés: calor, cicadas, y aprender a sudar</div>
+            <div class="bp-meta">Julio 2025 · 4 min</div>
+          </div>
+          <div class="blog-post-item" onclick="showPage('japan-blog')">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Tomar el shinkansen por primera vez tiene algo especial</div>
+            <div class="bp-meta">Marzo 2025 · 3 min</div>
+          </div>
+          <div class="blog-post-item" onclick="showPage('japan-blog')">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Los supermercados municipales a las 8pm son otra dimensión</div>
+            <div class="bp-meta">Enero 2025 · 3 min</div>
+          </div>
+          <div class="blog-post-item" onclick="showPage('japan-blog')">
+            <div class="bp-tag">Blog</div>
+            <div class="bp-title">Intenté hablar japonés por primera vez con un desconocido</div>
+            <div class="bp-meta">Noviembre 2024 · 6 min</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Section en Homepage -->
+      <div class="personal-section">
+        <!-- Cabecera de Cuaderno de Viaje con el sello y botón "Ver todo" perfectamente alineados a la derecha -->
+        <div class="journal-header-row">
+          <div class="journal-header-left">
+            <span class="journal-num">№ 03</span>
+            <h2 class="journal-title">Notas de Campo e Impresiones</h2>
+          </div>
+          <div class="journal-header-right">
+            <div class="journal-stamp-seal">旅</div>
+            <button class="journal-ver-todo" onclick="showPage('personal')">Ver todo →</button>
+          </div>
+        </div>
+
+        <div class="personal-grid">
+          <div class="personal-card" onclick="showPage('personal')">
+            <div class="pc-date">Abril 2026</div>
+            <div class="pc-title">Seis meses después: lo que me equivoqué sobre mudarme a Japón</div>
+            <div class="pc-excerpt">Las cosas que ningún blog de expats te dice.</div>
+          </div>
+          <div class="personal-card" onclick="showPage('personal')">
+            <div class="pc-date">Febrero 2026</div>
+            <div class="pc-title">Sobre la soledad en el extranjero y por qué te hace mejor en idiomas</div>
+            <div class="pc-excerpt">Un efecto secundario que nadie menciona.</div>
+          </div>
+          <div class="personal-card" onclick="showPage('personal')">
+            <div class="pc-date">Enero 2026</div>
+            <div class="pc-title">Lo que me llevo del primer año: japonés, Japón, y yo</div>
+            <div class="pc-excerpt">Balance honesto de doce meses aprendiendo.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /home-main-col -->
+
+    <!-- Sidebar -->
+    <aside class="home-sidebar">
+      <div class="about-card">
+        <div class="about-top">
+          <div class="about-avatar">人</div>
+          <div>
+            <div class="about-name">Tu nombre aquí</div>
+            <div class="about-loc">Japón, en algún lugar</div>
+          </div>
+        </div>
+        <p class="about-tagline">Escribo sobre japonés y vida en Japón desde adentro. No soy profesor. Solo alguien que presta atención.</p>
+        <div class="about-tags">
+          <span class="about-tag">N2</span>
+          <span class="about-tag">Tokio</span>
+          <span class="about-tag">3 años aquí</span>
+        </div>
+      </div>
+
+      <!-- Billete Kippu (Palabra de la semana sin encimamientos, libre de cuadrículas y con alto contraste) -->
+      <div class="vocab-feature sidebar-block kippu-ticket">
+        <div class="kippu-left-cover"></div>
+        <div class="kippu-right-cover"></div>
+        <div class="kippu-notch"></div>
+        <div class="kippu-stars">✦ ✦ ✦</div>
+
+        <div class="vocab-header">
+          <div class="vocab-header-left">
+            <svg class="vocab-header-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="4" width="18" height="15" rx="4" />
+              <rect x="5" y="7" width="14" height="6" rx="1" />
+              <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+              <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+              <path d="M 4,21 L 2,23 M 20,21 L 22,23" />
+            </svg>
+            <span>Palabra de la semana</span>
+          </div>
+          <span class="vocab-jp">今週の単語</span>
+        </div>
+
+        <div class="vocab-body">
+          <div class="vocab-word">侘寂</div>
+          <div class="vocab-reading">wabi-sabi</div>
+          <div class="vocab-meaning">la belleza en la imperfección y lo efímero</div>
+
+          <!-- Troquel horizontal justo encima del quote de ejemplo -->
+          <div class="ticket-stub-border-horizontal"></div>
+
+          <div class="vocab-example">
+            <div class="jp-line">この古い茶碗に侘寂を感じる。</div>
+            Siento wabi-sabi en este viejo cuenco de té.
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-block">
+        <div class="section-label">Explorar por tema</div>
+        <div class="tag-cloud">
+          <span class="tag-pill">Gramática</span><span class="tag-pill">Kanji</span>
+          <span class="tag-pill">JLPT</span><span class="tag-pill">Anki</span>
+          <span class="tag-pill">Hablar</span><span class="tag-pill">Tokio</span>
+          <span class="tag-pill">Comida</span><span class="tag-pill">Vivienda</span>
+          <span class="tag-pill">Visa</span><span class="tag-pill">Cultura</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block">
+        <div class="now-card">
+          <div class="section-label" style="margin-bottom:.4rem">現在 — Ahora mismo</div>
+          <p>
+            Leyendo: <span class="val">夜は短し歩けよ乙女</span><br>
+            Estudiando: <span class="val">patrones N1</span><br>
+            Escuchando: <span class="jp">太陽とシスコムーン</span><br>
+            Humor: <span class="jp">梅雨 de la...</span>
+          </p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div><!-- /page-home -->
+
+<!-- ═══════════════════════════════════════
+     PAGE: JAPANESE GUIDE HUB
+════════════════════════════════════════ -->
+<div class="page" id="page-jp-guide">
+  <div class="guide-page">
+    <div class="guide-page-header">
+      <div>
+        <div class="guide-page-eyebrow">Obra principal · Guía completa</div>
+        <h1 class="guide-page-title">Guía Completa de Japonés</h1>
+        <span class="guide-page-jp">日本語完全ガイド</span>
+        <p class="guide-page-desc">Una guía de principio a fin para aprender japonés de verdad. No un curso, no una lista de recursos — un cuerpo de trabajo estructurado que puedes seguir en orden o consultar por secciones.</p>
+        <div class="guide-stats">
+          <div class="guide-stat"><span class="stat-val">6</span><span class="stat-label">Partes</span></div>
+          <div class="guide-stat"><span class="stat-val">32</span><span class="stat-label">Secciones</span></div>
+          <div class="guide-stat"><span class="stat-val">~4h</span><span class="stat-label">Lectura</span></div>
+          <div class="guide-stat"><span class="stat-val">N5→N2</span><span class="stat-label">Nivel</span></div>
+        </div>
+      </div>
+      <div class="guide-page-kanji">語</div>
+    </div>
+
+    <div class="guide-body">
+      <!-- TOC (Con estilo de checkboxes de libreta) -->
+      <div class="guide-toc" role="navigation" aria-label="Tabla de contenidos">
+        <div class="toc-label">Puntos de control</div>
+        <ul class="toc-list">
+          <li class="toc-item active" onclick="highlightToc(this)">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">01</span>
+            <span class="toc-item-title">Fundamentos y escritura</span>
+          </li>
+          <li class="toc-item" onclick="highlightToc(this)">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">02</span>
+            <span class="toc-item-title">Gramática base</span>
+          </li>
+          <li class="toc-item" onclick="highlightToc(this)">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">03</span>
+            <span class="toc-item-title">Vocabulario y Anki</span>
+          </li>
+          <li class="toc-item" onclick="highlightToc(this)">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">04</span>
+            <span class="toc-item-title">Inmersión y listening</span>
+          </li>
+          <li class="toc-item" onclick="highlightToc(this)">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">05</span>
+            <span class="toc-item-title">Hablar y producción</span>
+          </li>
+          <li class="toc-item" onclick="highlightToc(this)">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">06</span>
+            <span class="toc-item-title">JLPT y exámenes</span>
+          </li>
+        </ul>
+        <div class="toc-faq" onclick="scrollToFaq()">
+          <div class="toc-faq-label">FAQ</div>
+          <div class="toc-faq-sub">Preguntas frecuentes</div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="guide-content">
+        <div class="guide-intro">
+          <div class="guide-intro-title">Sobre esta guía</div>
+          <p>Esta guía existe porque la mayoría de recursos en español para aprender japonés están fragmentados — un post aquí, un hilo de Reddit allá, un canal de YouTube con consejos contradictorios. Lo que falta es una visión completa y honesta del proceso.</p>
+          <p>No voy a venderte velocidad. El japonés toma tiempo. Pero hay formas de invertir ese tiempo bien o mal, y esta guía intenta explicar la diferencia.</p>
+        </div>
+
+        <div class="philosophy-box">
+          <p>La premisa central: aprender un idioma no es acumular vocabulario hasta que "encaje". Es construir un modelo mental del idioma que eventualmente funciona de forma automática. Todo lo que sigue parte de esa idea.</p>
+        </div>
+
+        <!-- Cabecera de Cuaderno de Viaje -->
+        <div class="journal-header-row" style="margin-top: 1rem;">
+          <div class="journal-header-left">
+            <span class="journal-num">№ 01</span>
+            <h2 class="journal-title">Estructura del Manual de Estudio</h2>
+          </div>
+          <div class="journal-header-right">
+            <div class="journal-stamp-seal">学</div>
+          </div>
+        </div>
+
+        <!-- Parts (Bordes perimetrales continuos recuperados e impecables) -->
+        <div class="parts-list">
+          <div class="part-card">
+            <span class="part-card-num">PARTE 01</span>
+            <div class="part-card-body">
+              <div class="part-card-title">Fundamentos y sistemas de escritura<span class="part-card-jp">基礎と文字</span></div>
+              <div class="part-card-desc">Por qué el japonés usa tres sistemas de escritura, cómo aprenderlos en el orden correcto, y qué es realmente el kanji y por qué no deberías tenerle miedo.</div>
+              <div class="part-card-topics">
+                <span class="part-topic">Hiragana</span>
+                <span class="part-topic">Katakana</span>
+                <span class="part-topic">Kanji</span>
+                <span class="part-topic">Radicals</span>
+                <span class="part-topic">RTK vs KKLC</span>
+              </div>
+            </div>
+            <span class="part-status done">Lista</span>
+          </div>
+          <div class="part-card">
+            <span class="part-card-num">PARTE 02</span>
+            <div class="part-card-body">
+              <div class="part-card-title">Gramática base sin humo<span class="part-card-jp">文法の本質</span></div>
+              <div class="part-card-desc">Estructura SOV, partículas は が を に で, conjugación verbal, y por qué aprender gramática desde el contexto funciona mejor que memorizar reglas.</div>
+              <div class="part-card-topics">
+                <span class="part-topic">は vs が</span>
+                <span class="part-topic">Partículas</span>
+                <span class="part-topic">Verbos</span>
+                <span class="part-topic">Te-form</span>
+                <span class="part-topic">Condicionales</span>
+              </div>
+            </div>
+            <span class="part-status done">Lista</span>
+          </div>
+          <div class="part-card">
+            <span class="part-card-num">PARTE 03</span>
+            <div class="part-card-body">
+              <div class="part-card-title">Vocabulario y método Anki<span class="part-card-jp">単語とアンキ</span></div>
+              <div class="part-card-desc">Qué decks usar, cómo configurar Anki para japonés, en qué orden atacar el vocabulario, y cómo mantener la práctica sin que se convierta en tortura diaria.</div>
+              <div class="part-card-topics">
+                <span class="part-topic">Anki setup</span>
+                <span class="part-topic">Core 2k/6k</span>
+                <span class="part-topic">Mining</span>
+                <span class="part-topic">SRS theory</span>
+              </div>
+            </div>
+            <span class="part-status done">Lista</span>
+          </div>
+          <div class="part-card">
+            <span class="part-card-num">PARTE 04</span>
+            <div class="part-card-body">
+              <div class="part-card-title">Inmersión y comprensión auditiva<span class="part-card-jp">インプット</span></div>
+              <div class="part-card-desc">Cómo usar anime, podcasts, dramas y manga como material de estudio real. La teoría del input comprensible aplicada al japonés y cómo hacer la transición de material con subtítulos a sin ellos.</div>
+              <div class="part-card-topics">
+                <span class="part-topic">Anime</span>
+                <span class="part-topic">Podcasts</span>
+                <span class="part-topic">Shadowing</span>
+                <span class="part-topic">Manga</span>
+                <span class="part-topic">i+1</span>
+              </div>
+            </div>
+            <span class="part-status done">Lista</span>
+          </div>
+          <div class="part-card">
+            <span class="part-card-num">PARTE 05</span>
+            <div class="part-card-body">
+              <div class="part-card-title">Hablar y producción oral<span class="part-card-jp">話す練習</span></div>
+              <div class="part-card-desc">El salto de entender a producir, cómo encontrar intercambios de idiomas en Japón y online, keigo y registro formal, y qué hacer cuando tu cerebro se bloquea hablando.</div>
+              <div class="part-card-topics">
+                <span class="part-topic">Keigo</span>
+                <span class="part-topic">Shadowing</span>
+                <span class="part-topic">HelloTalk</span>
+                <span class="part-topic">Registro</span>
+              </div>
+            </div>
+            <span class="part-status draft">Borrador</span>
+          </div>
+          <div class="part-card">
+            <span class="part-card-num">PARTE 06</span>
+            <div class="part-card-body">
+              <div class="part-card-title">JLPT y exámenes oficiales<span class="part-card-jp">JLPT対策</span></div>
+              <div class="part-card-desc">Si decides presentarte al JLPT, cómo actuar en consecuencia. Por qué el JLPT no mide lo que crees que mide, y cómo usarlo como herramienta sin que se convierta en el objetivo.</div>
+              <div class="part-card-topics">
+                <span class="part-topic">N5 → L1</span>
+                <span class="part-topic">Timing</span>
+                <span class="part-topic">Materiales</span>
+                <span class="part-topic">Estrategia</span>
+              </div>
+            </div>
+            <span class="part-status soon">Próximamente</span>
+          </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="faq-section" id="faq-section">
+          <!-- Cabecera de Cuaderno de Viaje -->
+          <div class="journal-header-row">
+            <div class="journal-header-left">
+              <span class="journal-num">№ 02</span>
+              <h2 class="journal-title">Preguntas Frecuentes y Dudas</h2>
+            </div>
+            <div class="journal-header-right">
+              <div class="journal-stamp-seal">問</div>
+            </div>
+          </div>
+
+          <div class="faq-list">
+            <div class="faq-item">
+              <button class="faq-q" onclick="toggleFaq(this)">
+                ¿Cuánto tiempo se tarda en aprender japonés?
+                <span class="faq-chevron">▾</span>
+              </button>
+              <div class="faq-a">
+                <p>La respuesta honesta: entre 2000 y 4000 horas para alcanzar un nivel de conversación fluida, dependiendo de tu método, consistencia y definición de "aprender". El Foreign Service Institute de EE.UU. lo clasifica como idioma de categoría IV — el más difícil para hablantes de español/inglés.</p>
+                <p>Pero esa cifra puede ser desmotivante si se entiende mal. <span class="jp-note">毎日少しずつ</span> — un poco cada día — a ritmo de 1-2 horas diarias, estás hablando de 3-5 años para un nivel sólido. Mucha gente lo consigue. La clave es no abandonar el método después de 3 meses.</p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-q" onclick="toggleFaq(this)">
+                ¿Necesito vivir en Japón para aprender bien?
+                <span class="faq-chevron">▾</span>
+              </button>
+              <div class="faq-a">
+                <p>No. La inmersión ayuda, pero no es ninguna varita mágica — hay gente que lleva 10 años en Japón y sigue sin superar el N3. Lo que importa es la calidad y cantidad del input, no la ubicación geográfica.</p>
+                <p>Lo que sí te da vivir aquí es contexto, motivación, y acceso a material natural. Todo eso se puede replicar online con suficiente disciplina. Yo aprendí la mitad de mi japonés antes de venir.</p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-q" onclick="toggleFaq(this)">
+                ¿Genki, Minna no Nihongo, o Bunpro?
+                <span class="faq-chevron">▾</span>
+              </button>
+              <div class="faq-a">
+                <p>Depende de cómo aprendes. Genki está bien estructurado y tiene muchos ejercicios — bueno si te gusta seguir un libro con formato de clase. Minna no Nihongo tiene textos completamente en japonés desde el principio, lo que lo hace más difícil pero más útil a largo plazo.</p>
+                <p>Bunpro es distinto — es un SRS para gramática, no un libro. Complementa bien a cualquiera de los dos. Si tuviera que elegir: Genki I y II para la base, Bunpro para reforzar, y luego recursos más naturales lo antes posible.</p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-q" onclick="toggleFaq(this)">
+                ¿Cuándo empezar a hablar?
+                <span class="faq-chevron">▾</span>
+              </button>
+              <div class="faq-a">
+                <p>Antes de lo que crees que estás listo. El error más común es esperar a "saber suficiente" antes de intentar hablar — ese momento nunca llega solo. Hablar mal y corregirse es parte del proceso, no un estado previo al proceso.</p>
+              </div>
+            </div>
+            <div class="faq-item">
+              <button class="faq-q" onclick="toggleFaq(this)">
+                ¿El japonés de anime es "malo" para aprender?
+                <span class="faq-chevron">▾</span>
+              </button>
+              <div class="faq-a">
+                <p>Es un mito exagerado. Sí, ciertos géneros (shonen de acción, fantasía) usan vocabulario y expresiones que no usarás en conversaciones normales. Pero el japonés casual del anime de slice-of-life, comedia, o drama es bastante representativo del habla coloquial real.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /guide-content -->
+    </div><!-- /guide-body -->
+  </div><!-- /guide-page -->
+</div><!-- /page-jp-guide -->
+
+<!-- ═══════════════════════════════════════
+     PAGE: JAPAN ARRIVAL GUIDE
+════════════════════════════════════════ -->
+<div class="page" id="page-japan-arrival">
+  <div class="guide-page">
+    <div class="guide-page-header">
+      <div>
+        <div class="guide-page-eyebrow" style="color:var(--green)">Guías de Japón · Llegada</div>
+        <h1 class="guide-page-title">Guía de Llegada a Japón</h1>
+        <span class="guide-page-jp" style="color:var(--green)">日本到着 de la base</span>
+        <p class="guide-page-desc">Un compendio directo y práctico de los pasos cruciales y burocráticos necesarios para aterrizar, instalarte y sobrevivir tus primeras 72 horas en el país.</p>
+        <div class="guide-stats">
+          <div class="guide-stat"><span class="stat-val">4</span><span class="stat-label">Fases</span></div>
+          <div class="guide-stat"><span class="stat-val">10</span><span class="stat-label">Pasos</span></div>
+          <div class="guide-stat"><span class="stat-val">~12 min</span><span class="stat-label">Lectura</span></div>
+          <div class="guide-stat"><span class="stat-val">Esencial</span><span class="stat-label">Importancia</span></div>
+        </div>
+      </div>
+      <div class="guide-page-kanji" style="color:var(--green)">到</div>
+    </div>
+
+    <div class="guide-body">
+      <!-- Arrival Guide TOC (Estilo checklist de viajero) -->
+      <div class="guide-toc" role="navigation" aria-label="Navegación guía de llegada">
+        <div class="toc-label">Pasos de llegada</div>
+        <ul class="toc-list" id="arrival-toc">
+          <li class="toc-item active" onclick="highlightArrivalToc(this, 'sec-preflight')">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">01</span>
+            <span class="toc-item-title">Antes de despegar</span>
+          </li>
+          <li class="toc-item" onclick="highlightArrivalToc(this, 'sec-airport')">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">02</span>
+            <span class="toc-item-title">En el aeropuerto</span>
+          </li>
+          <li class="toc-item" onclick="highlightArrivalToc(this, 'sec-commute')">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">03</span>
+            <span class="toc-item-title">Camino al centro</span>
+          </li>
+          <li class="toc-item" onclick="highlightArrivalToc(this, 'sec-settle')">
+            <span class="toc-item-stamp"></span>
+            <span class="toc-item-num">04</span>
+            <span class="toc-item-title">Trámites iniciales</span>
+          </li>
+        </ul>
+        <div class="toc-faq" onclick="showPage('japan-hub')">
+          <div class="toc-faq-label">← Volver</div>
+          <div class="toc-faq-sub">Todas las Guías</div>
+        </div>
+      </div>
+
+      <!-- Arrival Content -->
+      <div class="guide-content">
+        <div class="guide-intro" style="border-color: var(--green);">
+          <div class="guide-intro-title" style="color: var(--green);">La llegada sin fricción</div>
+          <p>Mudar de país o viajar por primera vez a un entorno con un alfabeto diferente causa un choque comprensible. Esta guía general de llegada compila respuestas directas, evitando tecnicismos complejos para agilizar tu instalación.</p>
+        </div>
+
+        <!-- Section 1 -->
+        <div id="sec-preflight" class="arrival-section">
+          <!-- Cabecera de Cuaderno de Viaje -->
+          <div class="journal-header-row">
+            <div class="journal-header-left">
+              <span class="journal-num">№ 01</span>
+              <h2 class="journal-title">Fase de Preparación y Vuelo</h2>
+            </div>
+            <div class="journal-header-right">
+              <div class="journal-stamp-seal">前</div>
+            </div>
+          </div>
+          <p class="post-excerpt">La preparación previa al viaje reduce considerablemente las colas habituales que se forman al descender del avión.</p>
+
+          <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom: 1.8rem;">
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Visit Japan Web</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">Regístrate obligatoriamente unos días antes en el portal web gubernamental. Al rellenar los datos de aduana e inmigración, obtendrás dos códigos QR individuales. Escanearlos en las terminales del aeropuerto te ahorrará las tradicionales tarjetas físicas de papel.</p>
+            </div>
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">La conectividad de datos (eSIM)</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">Adquiere una eSIM local de datos antes de volar mediante operadores confiables (como Airalo o Ubigi). Actívala justo antes de despegar. Al posarse la aeronave, ya tendrás internet 4G/5G en el preciso instante en que tus ruedas toquen la pista.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div id="sec-airport" class="arrival-section">
+          <!-- Cabecera de Cuaderno de Viaje -->
+          <div class="journal-header-row">
+            <div class="journal-header-left">
+              <span class="journal-num">№ 02</span>
+              <h2 class="journal-title">Aduana e Inmigración en Tierra</h2>
+            </div>
+            <div class="journal-header-right">
+              <div class="journal-stamp-seal">陸</div>
+            </div>
+          </div>
+          <p class="post-excerpt">Pasos fundamentales que debes ejecutar antes de cruzar las puertas hacia el vestíbulo principal del aeropuerto de Narita o Haneda.</p>
+
+          <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom: 1.8rem;">
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Obtención de la Zairyū Card (Tarjeta de Residencia)</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">Si entras con visa de largo plazo (estudiante, trabajo o Working Holiday), el agente de inmigración procesará e imprimirá tu tarjeta física al instante. Verifica exhaustivamente que la ortografía de tu nombre coincida con el pasaporte antes de abandonar la ventanilla.</p>
+            </div>
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Retiro inteligente de yenes en efectivo</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">Aunque los métodos digitales han avanzado, Japón continúa operando significativamente en efectivo. Dirígete a los cajeros automáticos de <strong>Seven Bank</strong> en la terminal. Con tarjetas internacionales enfocadas al viajero, podrás retirar efectivo con comisiones mínimas o nulas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3 -->
+        <div id="sec-commute" class="arrival-section">
+          <!-- Cabecera de Cuaderno de Viaje -->
+          <div class="journal-header-row">
+            <div class="journal-header-left">
+              <span class="journal-num">№ 03</span>
+              <h2 class="journal-title">Traslado a la Metrópolis</h2>
+            </div>
+            <div class="journal-header-right">
+              <div class="journal-stamp-seal">駅</div>
+            </div>
+          </div>
+          <p class="post-excerpt">Tokio cuenta con redes de metro y tren extensas pero muy estructuradas. Aquí verás cómo moverte inicialmente con comodidad.</p>
+
+          <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom: 1.8rem;">
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Adquirir Tarjetas IC de transporte (Suica / Pasmo)</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">A raíz de la escasez de chips para tarjetas clásicas, busca las versiones físicas para turistas <em>Welcome Suica</em> o <em>Pasmo Passport</em> en las máquinas expendedoras rojas del aeropuerto. Si posees un iPhone, puedes agregar una tarjeta Suica digital de forma gratuita directamente en Apple Wallet.</p>
+            </div>
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Elección de transporte y envío de equipaje (Takkyubin)</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">Para traslados cómodos, el servicio <strong>Takkyubin</strong> (generalmente operado por Yamato Transport con el logotipo del gato negro) enviará tus maletas directamente al hotel o alojamiento por unos 2,000–3,000 yenes. Así podrás abordar con tranquilidad el tren expreso (Keisei Skyliner para el este de Tokio, o Narita Express para el oeste) libre de cargas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4 -->
+        <div id="sec-settle" class="arrival-section">
+          <!-- Cabecera de Cuaderno de Viaje -->
+          <div class="journal-header-row">
+            <div class="journal-header-left">
+              <span class="journal-num">№ 04</span>
+              <h2 class="journal-title">Asentamiento y Trámites Legales</h2>
+            </div>
+            <div class="journal-header-right">
+              <div class="journal-stamp-seal">届</div>
+            </div>
+          </div>
+          <p class="post-excerpt">Para residentes de largo plazo, cumplir los siguientes tres trámites prioritarios durante los primeros días facilitará la posterior firma de cualquier servicio contratado.</p>
+
+          <div style="display:flex; flex-direction:column; gap:1rem;">
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Registro de domicilio oficial (Kuyakusho)</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">Acude al ayuntamiento de tu distrito o localidad dentro de los primeros 14 días con tu pasaporte y Zairyū Card. El personal imprimirá tu dirección física en la parte trasera de tu tarjeta de residencia. En este mismo mostrador deberás inscribirte en el Seguro de Salud Nacional (Kokumin Kenkō Hoken).</p>
+            </div>
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Línea telefónica e internet local</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">No podrás abrir una cuenta bancaria sin un número móvil de contacto local (con prefijos 070, 080 o 090). Empresas orientadas a extranjeros como Mobal, Sakura Mobile, o LINEMO tramitan solicitudes de forma digital y sin periodos restrictivos de permanencia obligatoria.</p>
+            </div>
+            <div style="border-left: 3px solid var(--green); padding-left: 1.2rem;">
+              <strong style="color:var(--ink); display:block; margin-bottom:0.3rem;">Apertura de cuenta en JP Post Bank (Yūcho)</strong>
+              <p style="font-size:13.5px; color:var(--ink-soft); line-height: 1.7;">Casi todas las entidades financieras japonesas exigen una estancia mínima de 6 meses en territorio nipón para abrir una cuenta corriente. El <strong>JP Post Bank</strong> (Yūcho), asociado al servicio postal público, es la única excepción donde cualquier residente con domicilio ya registrado y línea telefónica propia puede abrir una cuenta corriente sin tiempos de espera previos.</p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /guide-content -->
+    </div><!-- /guide-body -->
+  </div><!-- /guide-page -->
+</div><!-- /page-japan-arrival -->
+
+<!-- ═══════════════════════════════════════
+     PAGE: JAPAN LIFE HUB
+════════════════════════════════════════ -->
+<div class="page" id="page-japan-hub">
+  <div class="japan-hub">
+    <div class="japan-hub-header">
+      <div class="guide-page-eyebrow" style="color:var(--green)">Guía de Japón <span style="color:var(--green);height:1px;width:24px;background:var(--green);opacity:.5;display:inline-block;vertical-align:middle;margin-left:8px"></span></div>
+      <h1 class="guide-page-title">Vivir en Japón</h1>
+      <span class="guide-page-jp" style="color:var(--green);opacity:.8">日本での生活</span>
+      <p class="guide-page-desc" style="margin-top:.8rem">Guías prácticas para llegar, instalarse y vivir en Japón. Escritas desde la experiencia, no desde la teoría. Cada guía es independiente — puedes leerlas en cualquier orden.</p>
+    </div>
+
+    <!-- BILLETE "KIPPU" DESTACADO PARA LA GUÍA DE LLEGADA -->
+    <div class="jh-hero-card kippu-ticket" onclick="showPage('japan-arrival')">
+      <div class="kippu-left-cover"></div>
+      <div class="kippu-right-cover"></div>
+      <div class="kippu-notch"></div>
+      <div class="ticket-stub-border"></div>
+      <div class="kippu-stars">✦ ✦ ✦</div>
+
+      <!-- Sello de de tinta tradicional de estación (Eki Stamp) -->
+      <div class="eki-stamp-seal">
+        <svg viewBox="0 0 100 100" width="96" height="96">
+          <circle cx="50" cy="50" r="46" class="eki-stamp-circle" stroke-width="2" stroke-dasharray="140 2 60 4 20 2" />
+          <circle cx="50" cy="50" r="41" class="eki-stamp-circle" stroke-width="1" />
+          <text x="50" y="44" class="eki-stamp-text" font-size="18" text-anchor="middle" font-weight="600">到着</text>
+          <text x="50" y="61" class="eki-stamp-text" font-size="11" text-anchor="middle" letter-spacing="1">乗車記念</text>
+          <text x="50" y="75" class="eki-stamp-date" text-anchor="middle">2026.06.12</text>
+        </svg>
+      </div>
+
+      <div class="jh-hero-content" style="width: 100%;">
+        <div class="kippu-header-meta">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" style="color: var(--stamp); opacity: 0.85;">
+              <rect x="3" y="4" width="18" height="15" rx="4" />
+              <rect x="5" y="7" width="14" height="6" rx="1" />
+              <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+              <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+              <path d="M 4,21 L 2,23 M 20,21 L 22,23" />
+            </svg>
+            <span class="serial">№ 7702</span>
+          </div>
+          <span class="ticket-type">日本移住切符 · ENTRY TICKET</span>
+        </div>
+        <span class="jh-hero-badge" style="display: inline-block; margin-bottom: 0.5rem;">Eje Principal · Guía General de Supervivencia</span>
+        <h2 class="jh-hero-title">Llegando a Japón por primera vez</h2>
+        <p class="jh-hero-desc">La hoja de ruta definitiva para tus primeros pasos en el país. Evita los errores clásicos de llegada: resolvemos de manera clara qué hacer con el visado, el transporte ferroviario inicial, la compra de datos de internet, la obtención del teléfono local y tu primera cuenta bancaria desde el primer día.</p>
+        <div class="jh-hero-meta">
+          <span><strong>FASE 1:</strong> Pre-vuelo</span>
+          <span class="dot">•</span>
+          <span><strong>FASE 2:</strong> Inmigración</span>
+          <span class="dot">•</span>
+          <span><strong>FASE 3:</strong> Tren</span>
+          <span class="dot">•</span>
+          <span><strong>FASE 4:</strong> Burocracia</span>
+        </div>
+      </div>
+      <div class="jh-hero-visual">
+        <div class="jh-hero-kanji">到着</div>
+        <span class="jh-hero-btn">Leer Guía de Supervivencia →</span>
+      </div>
+    </div>
+
+    <div class="japan-hub-grid">
+      <!-- Guides column -->
+      <div>
+        <div class="home-col-header" style="border-bottom:1px solid var(--border-lt); padding-bottom:.8rem; margin-bottom:1.5rem;">
+          <div class="japan-hub-col-title" style="border:none;padding:0;margin:0;">
+            Guías Temáticas
+            <small>Evergreen · Desarrolladas a fondo</small>
+          </div>
+          <button class="col-link" onclick="showPage('japan-guides-themed')">Ver todo →</button>
+        </div>
+
+        <div class="jh-guide-card" onclick="showPage('japan-guides-themed')">
+          <div class="jh-guide-card-inner">
+            <div class="jh-guide-icon">家</div>
+            <div class="jh-guide-body">
+              <div class="jh-guide-title">Alquilar piso siendo extranjero</div>
+              <div class="jh-guide-sub">Key money, garantías, agencias inmobiliarias, cómo leer un contrato en japonés, y qué significa 礼金 y 敷金 en la práctica.</div>
+            </div>
+          </div>
+          <div class="jh-guide-topics">
+            <span class="jh-topic">Contratos</span>
+            <span class="jh-topic">Key money</span>
+            <span class="jh-topic">Agencias</span>
+            <span class="jh-topic">Garantía</span>
+            <span class="jh-topic">Zonas</span>
+          </div>
+        </div>
+
+        <div class="jh-guide-card" onclick="showPage('japan-guides-themed')">
+          <div class="jh-guide-card-inner">
+            <div class="jh-guide-icon">証</div>
+            <div class="jh-guide-body">
+              <div class="jh-guide-title">Trámites, residencia y My Number</div>
+              <div class="jh-guide-sub">Registro en el ayuntamiento, tarjeta de residencia, My Number card, cuenta bancaria (JP Bank vs Rakuten), seguro de salud nacional.</div>
+            </div>
+          </div>
+          <div class="jh-guide-topics">
+            <span class="jh-topic">My Number</span>
+            <span class="jh-topic">Jūminhyō</span>
+            <span class="jh-topic">Banco</span>
+            <span class="jh-topic">Seguro</span>
+          </div>
+        </div>
+
+        <div class="jh-guide-card" onclick="showPage('japan-guides-themed')">
+          <div class="jh-guide-card-inner">
+            <div class="jh-guide-icon">通</div>
+            <div class="jh-guide-body">
+              <div class="jh-guide-title">Transporte: tren, bici y más</div>
+              <div class="jh-guide-sub">IC cards, Suica vs Pasmo, Google Maps en Japón, JR Pass (cuándo tiene sentido), alquiler de bicicleta y moverse por ciudades pequeñas.</div>
+            </div>
+          </div>
+          <div class="jh-guide-topics">
+            <span class="jh-topic">Suica</span>
+            <span class="jh-topic">JR Pass</span>
+            <span class="jh-topic">Metro</span>
+            <span class="jh-topic">Bicicleta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blog column -->
+      <div>
+        <div class="home-col-header" style="border-bottom:1px solid var(--border-lt); padding-bottom:.8rem; margin-bottom:1.5rem;">
+          <div class="japan-hub-col-title" style="border:none;padding:0;margin:0;">
+            El Blog
+            <small>Crónicas personales · Sin pretensiones</small>
+          </div>
+          <button class="col-link" onclick="showPage('japan-blog')">Ver todo →</button>
+        </div>
+
+        <div class="jh-blog-item">
+          <div class="jh-blog-tag">Crónica</div>
+          <div class="jh-blog-title">Por qué el konbini arruinó cualquier otro país para mí</div>
+          <div class="jh-blog-meta"><span>Mayo 2026</span><span>·</span><span>5 min</span></div>
+          <div class="jh-blog-excerpt">Comida caliente a las 2am, onigiri perfecto y una impresora funcional. No es conveniencia — es una filosofía de vida.</div>
+        </div>
+        <div class="jh-blog-item">
+          <div class="jh-blog-tag">Temporadas</div>
+          <div class="jh-blog-title">El primer verano japonés: calor, cicadas, y aprender a sudar</div>
+          <div class="jh-blog-meta"><span>Julio 2025</span><span>·</span><span>4 min</span></div>
+          <div class="jh-blog-excerpt">Nadie te prepara para 38°C con 90% de humedad. Pero tampoco para los matsuri de verano.</div>
+        </div>
+        <div class="jh-blog-item">
+          <div class="jh-blog-tag">Transporte</div>
+          <div class="jh-blog-title">Tomar el shinkansen por primera vez tiene algo especial</div>
+          <div class="jh-blog-meta"><span>Marzo 2025</span><span>·</span><span>3 min</span></div>
+          <div class="jh-blog-excerpt">Puntualidad al segundo, ekiben, y la vista del Fuji desde el asiento A. Sigue siendo mágico la décima vez.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: JAPAN THEMED GUIDES (Refinada y Espaciosa)
+════════════════════════════════════════ -->
+<div class="page" id="page-japan-guides-themed">
+  <div class="japan-hub">
+    <div class="japan-hub-header">
+      <div class="guide-page-eyebrow" style="color:var(--green)">Guías</div>
+      <h1 class="guide-page-title">Guías Temáticas de Japón</h1>
+      <span class="guide-page-jp" style="color:var(--green);opacity:.8">テーマ別ガイド</span>
+      <p class="guide-page-desc" style="margin-top:.8rem">Una colección de manuales prácticos enfocados en los pilares de la vida diaria: vivienda, trámites y movilidad.</p>
+    </div>
+
+    <div class="archive-grid">
+      <div class="archive-card" onclick="showPage('japan-arrival')">
+        <div class="archive-card-top">
+          <div class="guide-card-tag">Burocracia</div>
+          <h2 class="post-title" style="margin-top: 0.5rem;">Llegando a Japón por primera vez</h2>
+          <p class="post-excerpt" style="font-size: 13.5px;">Paso a paso de tu aterrizaje: aduanas, My Number, el registro de domicilio y tu cuenta bancaria inicial.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Esencial · 12 min</span>
+          <span class="archive-card-action">Leer Guía →</span>
+        </div>
+      </div>
+
+      <div class="archive-card" onclick="showPage('japan-hub')">
+        <div class="archive-card-top">
+          <div class="guide-card-tag">Vivienda</div>
+          <h2 class="post-title" style="margin-top: 0.5rem;">Alquilar piso siendo extranjero</h2>
+          <p class="post-excerpt" style="font-size: 13.5px;">Garantías, contratos inmobiliarios, y el desglose real de lo que implican el Key Money (reikin) y el depósito (shikikin).</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Práctico · 10 min</span>
+          <span class="archive-card-action">Leer Guía →</span>
+        </div>
+      </div>
+
+      <div class="archive-card" onclick="showPage('japan-hub')">
+        <div class="archive-card-top">
+          <div class="guide-card-tag">Trámites</div>
+          <h2 class="post-title" style="margin-top: 0.5rem;">Trámites, residencia y My Number</h2>
+          <p class="post-excerpt" style="font-size: 13.5px;">La ruta de oficinas gubernamentales: registro de firmas, seguro médico nacional y tarjetas de identificación.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Burocracia · 8 min</span>
+          <span class="archive-card-action">Leer Guía →</span>
+        </div>
+      </div>
+
+      <div class="archive-card" onclick="showPage('japan-hub')">
+        <div class="archive-card-top">
+          <div class="guide-card-tag">Movilidad</div>
+          <h2 class="post-title" style="margin-top: 0.5rem;">Transporte: tren, bici y redes urbanas</h2>
+          <p class="post-excerpt" style="font-size: 13.5px;">Cómo dominar el uso de IC Cards (Suica/Pasmo), mapas ferroviarios complejos y la normativa para bicicletas en ciudades.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Logística · 7 min</span>
+          <span class="archive-card-action">Leer Guía →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: JAPAN BLOG (Refinada y Espaciosa)
+════════════════════════════════════════ -->
+<div class="page" id="page-japan-blog">
+  <div class="japan-hub">
+    <div class="japan-hub-header">
+      <div class="guide-page-eyebrow" style="color:var(--green)">Blog</div>
+      <h1 class="guide-page-title">El Blog de Japón</h1>
+      <span class="guide-page-jp" style="color:var(--green);opacity:.8">日本ブログ</span>
+      <p class="guide-page-desc" style="margin-top:.8rem">Crónicas personales, observaciones de la vida cotidiana, y todo lo que no encaja en una guía estructurada. Subjetivo por diseño.</p>
+    </div>
+
+    <div class="archive-grid">
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag">Crónica</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">Por qué el konbini arruinó cualquier otro país para mí</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Comida caliente a las 2am, onigiri perfecto y una impresora funcional. No es conveniencia — es una filosofía de vida.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Mayo 2026 · 5 min</span>
+          <span class="archive-card-action">Leer Entrada →</span>
+        </div>
+      </div>
+
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag">Temporadas</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">El primer verano japonés: calor, cicadas, y aprender a sudar</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Nadie te prepara para 38°C con 90% de humedad. Pero tampoco para la magia de los festivales (matsuri) de verano.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Julio 2025 · 4 min</span>
+          <span class="archive-card-action">Leer Entrada →</span>
+        </div>
+      </div>
+
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag">Transporte</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">Tomar el shinkansen por primera vez tiene algo especial</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Puntualidad medida al segundo, el ritual del ekiben, y la silueta del Monte Fuji desfilando por tu ventana.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Marzo 2025 · 3 min</span>
+          <span class="archive-card-action">Leer Entrada →</span>
+        </div>
+      </div>
+
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag">Comida</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">Los supermercados municipales a las 8pm son otra dimensión</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Los descuentos de último momento en sushi y bento son un deporte. Hay estrategia, tiempos y miradas involucradas.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Enero 2025 · 3 min</span>
+          <span class="archive-card-action">Leer Entrada →</span>
+        </div>
+      </div>
+
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag">Idioma</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">Intenté hablar japonés por primera vez con un desconocido</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Fue un desastre hermoso. El señor de la ferretería tuvo paciencia infinita, y yo una timidez insuperable.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Noviembre 2024 · 6 min</span>
+          <span class="archive-card-action">Leer Entrada →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: PERSONAL (Refinada y Espaciosa)
+════════════════════════════════════════ -->
+<div class="page" id="page-personal">
+  <div class="japan-hub">
+    <div class="japan-hub-header">
+      <div class="guide-page-eyebrow" style="color:var(--brown)">Personal</div>
+      <h1 class="guide-page-title">Reflexiones Personales</h1>
+      <span class="guide-page-jp" style="color:var(--brown-lt);opacity:.8">個人的な記録</span>
+      <p class="guide-page-desc" style="margin-top:.8rem">Ensayos cortos sobre los procesos internos, el silencio, el aprendizaje consciente y el impacto de vivir a miles de kilómetros del hogar.</p>
+    </div>
+
+    <div class="archive-grid">
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag" style="color:var(--brown);">Personal</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">Seis meses después: lo que me equivoqué sobre mudarme a Japón</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Las cosas que ningún blog de expatriados te dice, escritas en un punto de honestidad absoluta con el entorno.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Abril 2026 · 6 min</span>
+          <span class="archive-card-action">Leer Ensayo →</span>
+        </div>
+      </div>
+
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag" style="color:var(--brown);">Reflexión</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">Sobre la soledad en el extranjero y por qué te hace mejor en idiomas</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Un efecto secundario silencioso: cuando no tienes a nadie con quien hablar en tu lengua materna, tu cerebro aprende a escuchar de otra manera.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Febrero 2026 · 5 min</span>
+          <span class="archive-card-action">Leer Ensayo →</span>
+        </div>
+      </div>
+
+      <div class="archive-card">
+        <div class="archive-card-top">
+          <div class="jh-blog-tag" style="color:var(--brown);">Balance</div>
+          <h2 class="post-title" style="margin-top:0.5rem;">Lo que me llevo del primer año: japonés, Japón, y yo</h2>
+          <p class="post-excerpt" style="font-size:13.5px;">Balance honesto y sin rodeos tras doce meses conviviendo con la complejidad lingüística en su propio terreno.</p>
+        </div>
+        <div class="archive-card-bottom">
+          <span class="recent-date">Enero 2026 · 7 min</span>
+          <span class="archive-card-action">Leer Ensayo →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER (Billete-Recibo limpio) -->
+<footer>
+  <div class="footer-receipt">
+    <div class="footer-stub">
+      <span class="footer-jp">日々記録 · REGISTRO DIARIO</span>
+      <span class="footer-note">Hibi Blog — Publicación independiente en español</span>
+    </div>
+    <div class="footer-stamp-hanko">検</div>
+    <div class="footer-fare">
+      <span>GRACIAS POR VISITAR</span>
+      <span class="fare-jp">ご愛読ありがとうございました</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
