@@ -83,7 +83,8 @@
         ctx.beginPath();
 
         if (isDark) {
-          ctx.fillStyle = '#e65a4e';
+          // night: petals catch the lantern light, pale pink sakura and amber momiji
+          ctx.fillStyle = this.type === 'sakura' ? '#f2b8b0' : '#e0a25c';
         } else {
           ctx.fillStyle = this.type === 'sakura' ? '#8B6F47' : '#5A8A72';
         }

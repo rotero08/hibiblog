@@ -1,0 +1,23 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import PageHeader from '../../../components/PageHeader.astro';
+import NotasHub from '../../../components/NotasHub.astro';
+import { topics } from '../../../data/topics';
+
+// One page per tag of src/data/topics.ts: the same list of notes, filtered.
+export function getStaticPaths() {
+  return topics.map((topic) => ({ params: { topic: topic.slug }, props: { topic } }));
+}
+
+const { topic } = Astro.props;
+---
+
+<Layout title={`${topic.label} · Japonés · Hibi`} description={topic.description}>
+  <div class="japan-hub">
+    <PageHeader eyebrow="Japonés · notas" title={topic.label} ja={topic.ja} color="var(--purple)">
+      {topic.description}
+    </PageHeader>
+    <NotasHub topic={topic.slug} />
+    <p><a class="entry-all" href="/japones/">← Japonés</a></p>
+  </div>
+</Layout>

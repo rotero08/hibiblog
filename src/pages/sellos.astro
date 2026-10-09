@@ -1,0 +1,1301 @@
+---
+import Layout from '../layouts/Layout.astro';
+import EkiStamp from '../components/EkiStamp.astro';
+import Daruma from '../components/Daruma.astro';
+import NameHanko from '../components/NameHanko.astro';
+import { lines, stationCode, totalStations } from '../data/guides';
+
+// each stamp lands at its own slight angle
+const tilt = [-7, 5, -3, 9, -10, 3, -5, 7];
+const first = lines[0].stations[0];
+---
+
+<Layout title="Libreta de sellos · Hibi" description="Cada capítulo de las guías es una estación con su sello. Léelo hasta el final y queda estampado en tu libreta.">
+  <div class="japan-hub">
+    <header class="top">
+      <div>
+        <div class="guide-page-eyebrow" style="color:var(--stamp)">Stamp rally · スタンプラリー</div>
+        <h1 class="guide-page-title">
+          Libreta de sellos<span class="book-owner" data-owner-show> de <span data-owner-name></span></span>
+        </h1>
+      </div>
+      {/* the switch comes first, so it is easy to find; while off, the book below is blurred */}
+      <p class="switch">
+        <span class="when-off">Sellos desactivados. Los que tienes se conservan.</span>
+        <button type="button" data-stamps-toggle>
+          <span class="when-on">Desactivar</span><span class="when-off">Activar los sellos</span>
+        </button>
+      </p>
+    </header>
+
+    {/* before the book: what it is, and whose it is */}
+    <div class="front">
+      <div class="como">
+        <p class="como-intro">
+        En Japón casi todas las estaciones tienen un sello de goma junto a los tornos, y la gente lleva una libreta
+        para coleccionarlos. Aquí cada capítulo de las guías es una estación.
+      </p>
+      {/* 壱 弐 参 are the formal numerals 1 2 3 */}
+      <ol class="how-steps" aria-label="Cómo funciona">
+        <li>
+          <span class="how-n" aria-hidden="true">壱</span>
+          <b>Abre una guía</b>
+          <span>Cada capítulo es una estación de su línea.</span>
+        </li>
+        <li>
+          <span class="how-n" aria-hidden="true">弐</span>
+          <b>Lee hasta el final</b>
+          <span>No hay que pulsar nada: basta con llegar al pie de la página.</span>
+        </li>
+        <li>
+          <span class="how-n" aria-hidden="true">参</span>
+          <b>El sello se estampa solo</b>
+          <span>Queda guardado aquí, en este navegador. Sin cuentas ni registros.</span>
+        </li>
+      </ol>
+      </div>
+      <div class="owner" id="nombre">
+        <NameHanko />
+      </div>
+    </div>
+
+    {/* スタンプ帳: a book. The front board, with the left page glued inside it,
+        turns on the spine; the back board and the right page stay on the desk.
+        Both lines fit on the one spread, so every stamp is in view at once. */}
+    <div class="book is-closed is-3d is-shut is-fresh" data-book data-spread>
+      {
+        lines.map((line, n) => (
+          <div class:list={['side', n === 0 ? 'side-l' : 'side-r']}>
+            <section class="leaf" style={`--c:${line.color}`} data-stamp-scope>
+              <h2 class="leaf-head">
+                <span class="leaf-badge">{line.code}</span>
+                <span class="leaf-ja">{line.ja}</span>
+                <span class="leaf-name">{line.name}</span>
+                <span class="leaf-tally">
+                  <b data-stamp-count>0</b>/{line.stations.length}
+                </span>
+                <span class="leaf-done" lang="ja" title="Línea completa">完</span>
+              </h2>
+              <ol class="slots">
+                {line.stations.map((s, i) => (
+                  <li
+                    class="slot"
+                    data-stamp-key={s.href}
+                    data-code={stationCode(line, i)}
+                    data-ja={s.ja}
+                    data-label={s.label}
+                    style={`--tilt:${tilt[i % tilt.length]}deg;--n:${i}`}
+                  >
+                    <a href={s.href} data-astro-reload aria-label={`${stationCode(line, i)} ${s.ja}: ${s.label}`}>
+                      <span class="slot-pad">
+                        <span class="slot-empty" aria-hidden="true">
+                          <b>{stationCode(line, i)}</b>
+                        </span>
+                        <span class="slot-stamp">
+                          <EkiStamp line={line} index={i} />
+                        </span>
+                      </span>
+                      <span class="slot-cap" aria-hidden="true">{s.ja}</span>
+                      <span data-stamped-on hidden />
+                    </a>
+                  </li>
+                ))}
+              </ol>
+
+              {/* the shorter line leaves room for the goal and the next station */}
+              {n === 0 && (
+                <div class="prog">
+                  <div class="prog-daruma" title="達磨: se le pinta un ojo al fijarse una meta y el otro al cumplirla">
+                    <Daruma total={totalStations} />
+                  </div>
+                  <div class="prog-main">
+                    <p class="prog-count">
+                      <b data-prog-count>0</b><span>/ {totalStations}</span><small>sellos</small>
+                    </p>
+                    <div class="prog-bar" role="progressbar" aria-label="Sellos conseguidos" aria-valuemin="0" aria-valuemax={totalStations} aria-valuenow="0" data-prog-bar>
+                      <i><span class="prog-train" aria-hidden="true" /></i>
+                    </div>
+                    <p class="prog-note" data-prog-note>El daruma espera tu primer sello.</p>
+                  </div>
+                  <a class="prog-next" href={first.href} data-astro-reload data-prog-next>
+                    <span class="prog-label" data-prog-label>Tu próxima estación</span>
+                    <span class="prog-next-row">
+                      <span class="prog-code" data-prog-code>{stationCode(lines[0], 0)}</span>
+                      <b data-prog-ja>{first.ja}</b>
+                      <span class="prog-next-es" data-prog-es>{first.label}</span>
+                    </span>
+                    <span class="prog-go" data-prog-go>Leer y sellar →</span>
+                  </a>
+                </div>
+              )}
+            </section>
+            {/* the outside of the front board: only seen with the book closed */}
+            {n === 0 && (
+              <button type="button" class="cover" data-book-open aria-label="Abrir la libreta">
+                {/* cloth with a woven pattern, a stamp pressed blind into it, and a gilt frame */}
+                <span class="cover-emblem" aria-hidden="true" />
+                {/* 題箋: the paper title slip pasted on the cover of a Japanese notebook */}
+                <span class="cover-slip">
+                  <span class="cover-ja" lang="ja">スタンプ帳</span>
+                </span>
+                <span class="cover-title">Libreta de sellos</span>
+                <span class="cover-owner" data-owner-show>de <span data-owner-name /></span>
+                {/* the line the book travels: a gilt track with its stations */}
+                <span class="cover-track" aria-hidden="true"><i /><i /><i /><i /><i /></span>
+                <span class="cover-seal" lang="ja" aria-hidden="true">日々</span>
+                <span class="cover-hint">Toca para abrir</span>
+              </button>
+            )}
+          </div>
+        ))
+      }
+    </div>
+
+    {/* on the desk, under the book: the station under the pointer, and the way to close it */}
+    <div class="desk">
+      <p class="cap" data-cap role="status">
+        <span data-cap-text>Pasa por un sello para ver su estación. Pulsa uno conseguido para volver a estamparlo; los huecos llevan al capítulo.</span>
+      </p>
+      <button type="button" class="shut" data-book-toggle>
+        <span class="if-open">Cerrar la libreta</span><span class="if-shut">Abrir la libreta</span>
+      </button>
+    </div>
+
+    <p class="data">
+      <span>Los sellos y tu nombre se guardan solo en este navegador.</span>
+      <button type="button" data-name-reset>Borrar mi nombre</button>
+      <button type="button" data-stamps-reset>Empezar una libreta nueva</button>
+      <button type="button" data-all-reset>Borrar todo</button>
+    </p>
+  </div>
+</Layout>
+
+<script is:inline define:vars={{ total: totalStations }}>
+  // Fill in the progress panel whenever the stamps change (event from /scripts/hibi.js).
+  function refresh(count) {
+    var bar = document.querySelector('[data-prog-bar]');
+    if (!bar) return;
+    bar.style.setProperty('--p', String(count / total));
+    bar.setAttribute('aria-valuenow', String(count));
+    document.querySelector('[data-prog-count]').textContent = String(count);
+
+    var note = document.querySelector('[data-prog-note]');
+    var left = total - count;
+    note.textContent =
+      count === 0
+        ? 'El daruma espera tu primer sello.'
+        : left > 0
+          ? 'Ya tiene un ojo. ' + (left === 1 ? 'Falta 1 sello' : 'Faltan ' + left + ' sellos') + ' para el otro.'
+          : '¡Meta cumplida! Ya tiene los dos ojos.';
+
+    var next = document.querySelector('.slot:not(.is-stamped)');
+    var cta = document.querySelector('[data-prog-next]');
+    var set = function (sel, text) {
+      cta.querySelector(sel).textContent = text;
+    };
+    cta.classList.toggle('is-complete', !next);
+    if (next) {
+      cta.href = next.querySelector('a').getAttribute('href');
+      set('[data-prog-label]', count === 0 ? 'Empieza por aquí' : 'Tu próxima estación');
+      set('[data-prog-code]', next.dataset.code);
+      set('[data-prog-ja]', next.dataset.ja);
+      set('[data-prog-es]', next.dataset.label);
+      set('[data-prog-go]', 'Leer y sellar →');
+    } else {
+      cta.href = '/';
+      set('[data-prog-label]', 'Libreta completa');
+      set('[data-prog-code]', '祝');
+      set('[data-prog-ja]', '満願');
+      set('[data-prog-es]', 'Todas las estaciones.');
+      set('[data-prog-go]', 'Volver a la portada →');
+    }
+  }
+  document.addEventListener('hibi:stamps', function (e) {
+    refresh(e.detail.count);
+  });
+  // already known when this page comes in through the router
+  if (window.hibiStamps) refresh(Object.keys(window.hibiStamps.read()).length);
+
+  /* ---- the book ---- */
+  if (!window.__hibiBook) {
+    window.__hibiBook = true;
+    var still = function () {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    };
+    // /sellos/#nombre (the stamp menu links to it) puts the cursor in the name box
+    var toName = function () {
+      var input = location.hash === '#nombre' && document.querySelector('[data-nh-input]');
+      if (input) input.focus();
+    };
+    toName();
+    window.addEventListener('hashchange', toName);
+    document.addEventListener('astro:page-load', toName);
+
+    // The cover. The book comes in closed and opens after a moment; it can be
+    // closed again. The classes on [data-book]:
+    //   is-closed  the front board is turned over onto the back one
+    //   is-3d      the 3D is on (while turning, and while closed)
+    //   is-shut    closed and at rest: the cover is laid flat (crisp), and lifts under the pointer
+    //   is-fresh   not opened yet: the stamps wait to be pressed in
+    var TURN = 1150;
+    var turnTimer;
+    var setBook = function (book, shut) {
+      clearTimeout(turnTimer);
+      if (book.classList.contains('is-shut')) {
+        // from the flat picture back into 3D, without animating the swap
+        book.classList.add('is-snap');
+        book.classList.remove('is-shut');
+        void book.offsetWidth;
+        book.classList.remove('is-snap');
+      }
+      book.classList.add('is-3d');
+      void book.offsetWidth; // the turn starts from where the book is now
+      book.classList.toggle('is-closed', shut);
+      if (!shut) book.classList.remove('is-fresh');
+      // what is under the cover can't be tabbed to
+      book.querySelectorAll('.leaf').forEach(function (leaf) { leaf.inert = shut; });
+      turnTimer = setTimeout(
+        function () {
+          if (shut) book.classList.add('is-shut');
+          else book.classList.remove('is-3d'); // open and at rest, the pages are flat again
+        },
+        still() ? 0 : TURN + 80
+      );
+    };
+    var openSoon = function () {
+      var book = document.querySelector('[data-book].is-fresh:not([data-opening])');
+      if (!book) return;
+      book.setAttribute('data-opening', '');
+      setTimeout(function () { setBook(book, false); }, still() ? 0 : 600);
+    };
+    openSoon();
+    document.addEventListener('astro:page-load', openSoon);
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest) return;
+      var book = document.querySelector('[data-book]');
+      if (!book) return;
+      if (e.target.closest('[data-book-open]')) setBook(book, false);
+      else if (e.target.closest('[data-book-toggle]')) setBook(book, !book.classList.contains('is-closed'));
+    });
+
+    // the caption names the stamp under the pointer, and when it was stamped
+    var describe = function (slot) {
+      var out = document.querySelector('[data-cap-text]');
+      if (!out) return;
+      var date = slot.querySelector('[data-stamped-on]').textContent;
+      var href = slot.querySelector('a').getAttribute('href');
+      out.textContent = '';
+      var b = document.createElement('b');
+      b.textContent = slot.dataset.code + ' ' + slot.dataset.ja;
+      var go = document.createElement('a');
+      go.href = href;
+      go.setAttribute('data-astro-reload', '');
+      go.textContent = date ? 'Releer →' : 'Leer y sellar →';
+      out.append(b, ' ' + slot.dataset.label + ' · ' + (date ? 'sellado el ' + date : 'sin sellar') + ' · ', go);
+      document.querySelectorAll('.slot.is-on').forEach(function (s) { s.classList.remove('is-on'); });
+      slot.classList.add('is-on');
+    };
+    var onSlot = function (e) {
+      var slot = e.target.closest && e.target.closest('.slot');
+      if (slot) describe(slot);
+    };
+    document.addEventListener('pointerover', onSlot);
+    document.addEventListener('focusin', onSlot);
+
+    // pressing a collected stamp stamps it again; an empty slot is a link to its chapter
+    var press = function (slot) {
+      slot.classList.remove('is-pressing', 'is-wiggle');
+      void slot.offsetWidth;
+      slot.classList.add('is-pressing');
+      var book = slot.closest('[data-book]');
+      if (book && !still()) {
+        book.classList.remove('is-thunk');
+        void book.offsetWidth;
+        book.classList.add('is-thunk');
+      }
+    };
+    document.addEventListener('click', function (e) {
+      var slot = e.target.closest && e.target.closest('.slot.is-stamped');
+      if (!slot || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      describe(slot);
+      press(slot);
+    });
+
+    // the stamps lean a little towards the pointer, like filings to a magnet
+    var raf = 0;
+    document.addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'touch' || raf || still()) return;
+      var spread = e.target.closest && e.target.closest('[data-spread]');
+      if (!spread || spread.classList.contains('is-3d')) return;
+      raf = requestAnimationFrame(function () {
+        raf = 0;
+        spread.querySelectorAll('.slot-pad').forEach(function (pad) {
+          var r = pad.getBoundingClientRect();
+          var dx = e.clientX - (r.left + r.width / 2);
+          var dy = e.clientY - (r.top + r.height / 2);
+          var d = Math.hypot(dx, dy);
+          var pull = Math.max(0, 1 - d / 190);
+          pad.style.setProperty('--px', (d ? (dx / d) * pull * 7 : 0).toFixed(2) + 'px');
+          pad.style.setProperty('--py', (d ? (dy / d) * pull * 7 : 0).toFixed(2) + 'px');
+          pad.style.setProperty('--near', pull.toFixed(3));
+        });
+      });
+    });
+    document.addEventListener('pointerout', function (e) {
+      var spread = e.target.closest && e.target.closest('[data-spread]');
+      if (!spread || spread.contains(e.relatedTarget)) return;
+      spread.querySelectorAll('.slot-pad').forEach(function (pad) {
+        pad.style.removeProperty('--px');
+        pad.style.removeProperty('--py');
+        pad.style.removeProperty('--near');
+      });
+    });
+
+    // now and then one of the stamps gives a little wiggle, so the page is never quite still
+    setInterval(function () {
+      if (still() || document.hidden) return;
+      var stamped = document.querySelectorAll('[data-spread]:not(.is-3d) .slot.is-stamped:not(.is-on)');
+      if (!stamped.length) return;
+      var one = stamped[Math.floor(Math.random() * stamped.length)];
+      one.classList.remove('is-wiggle', 'is-pressing');
+      void one.offsetWidth;
+      one.classList.add('is-wiggle');
+    }, 3200);
+  }
+</script>
+
+<style>
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.6rem 1.5rem;
+    /* the same column as the book */
+    max-width: 66rem;
+    margin: 0 auto 1.4rem;
+    padding-top: 2.2rem;
+  }
+  .top .guide-page-title {
+    margin-bottom: 0;
+  }
+  .book-owner {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+  .book-owner span {
+    color: var(--stamp);
+  }
+  .switch {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.9rem;
+    margin: 0;
+    font: italic 400 0.9rem 'Lora', serif;
+    color: var(--ink-soft);
+  }
+  .switch button {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font: 500 11px 'Inter', sans-serif;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .switch button:hover,
+  :global(html[data-stamps-off]) .switch button {
+    border-color: var(--stamp);
+    color: var(--stamp);
+  }
+  .when-off,
+  :global(html[data-stamps-off]) .when-on {
+    display: none;
+  }
+  :global(html[data-stamps-off]) .when-off {
+    display: inline;
+  }
+  :global(html[data-stamps-off]) .book,
+  :global(html[data-stamps-off]) .desk {
+    filter: blur(5px) grayscale(0.6);
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ---- the book ----
+     Two boards joined at the spine. The left one is the front cover, with the
+     first page glued inside it: it turns over onto the right one to close the
+     book. Open and at rest nothing is transformed, so the pages stay crisp;
+     the 3D only exists while .is-3d is set (turning, or closed). */
+  .book {
+    --cover: color-mix(in oklab, var(--stamp) 78%, black);
+    --gilt: #f0d9a2;
+    --turn: 1.15s;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    max-width: 66rem;
+    margin-inline: auto;
+  }
+  :global(:root[data-theme='dark']) .book {
+    --cover: #5a1c2c;
+  }
+  .side {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), var(--lift);
+  }
+  /* each board darkens towards the spine */
+  .side-l {
+    padding: 0.7rem 0 1.15rem 0.7rem;
+    border-radius: 12px 0 0 12px;
+    background: linear-gradient(270deg, rgba(0, 0, 0, 0.32), transparent 16px), var(--cover);
+  }
+  .side-r {
+    padding: 0.7rem 0.7rem 1.15rem 0;
+    border-radius: 0 12px 12px 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.32), transparent 16px), var(--cover);
+  }
+  .slot-pad :global(svg) {
+    display: block;
+  }
+
+  /* the pages: dyed paper ruled into small squares */
+  .leaf,
+  .owner {
+    --paper:
+      linear-gradient(var(--sheet-rule) 1px, transparent 1px) 0 0 / 100% 19px,
+      linear-gradient(90deg, var(--sheet-rule) 1px, transparent 1px) 0 0 / 19px 100%,
+      var(--sheet);
+    position: relative;
+    border-radius: 5px;
+    background: var(--paper);
+    color: var(--sheet-ink);
+    transition: background-color 0.35s, color 0.35s;
+  }
+  .leaf {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.2rem clamp(1rem, 2.4vw, 1.9rem) 1rem;
+    /* the edges of the pages underneath, at the foot of the block */
+    box-shadow:
+      0 1.5px 0 var(--sheet), 0 2.5px 0 rgba(0, 0, 0, 0.28),
+      0 4px 0 var(--sheet), 0 5px 0 rgba(0, 0, 0, 0.28),
+      0 6.5px 0 var(--sheet), 0 7.5px 0 rgba(0, 0, 0, 0.3);
+  }
+  /* each page dips into the gutter and falls away towards its outer edge */
+  .side-l .leaf {
+    border-radius: 5px 0 0 5px;
+    background:
+      linear-gradient(270deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1) 5px, transparent 26px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.05), transparent 12%),
+      var(--paper);
+  }
+  .side-r .leaf {
+    border-radius: 0 5px 5px 0;
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1) 5px, transparent 26px),
+      linear-gradient(270deg, rgba(0, 0, 0, 0.05), transparent 12%),
+      var(--paper);
+  }
+  /* the book takes the knock of each stamp */
+  .book.is-thunk {
+    animation: thunk 0.4s var(--ease-out);
+  }
+  @keyframes thunk {
+    30% { translate: 0 3px; }
+  }
+
+  /* ---- the cover, and closing the book (wide screens; on phones it is just open) ---- */
+  .cover,
+  .shut,
+  .if-shut {
+    display: none;
+  }
+  @media (min-width: 761px) {
+    .book {
+      --open-delay: 0.95s;
+      transition: translate var(--turn) var(--ease-io);
+    }
+    .book.is-3d {
+      /* seen from in front of the spine */
+      perspective: 3200px;
+    }
+    /* closed, the book is half as wide: it moves over to stay in the middle */
+    .book.is-closed {
+      translate: -25% 0;
+    }
+    .side-l {
+      z-index: 2;
+      transform-origin: 100% 50%;
+      transition: transform var(--turn) var(--ease-io);
+    }
+    .book.is-3d .side-l {
+      transform-style: preserve-3d;
+    }
+    .book.is-closed .side-l {
+      transform: rotateY(180deg);
+    }
+    /* The page is on the inside of the board, the cover on the outside.
+       `isolation` keeps everything on the page in one layer with it: without
+       it Firefox lets the page's raised pieces show through the cover. */
+    .book.is-3d .side-l > .leaf {
+      isolation: isolate;
+      backface-visibility: hidden;
+    }
+    .book.is-3d .cover {
+      display: grid;
+    }
+    /* The outside of the front board: cloth with a woven ring pattern, a
+       station stamp pressed blind into it, a double gilt frame, the paper title
+       slip, and the line the book travels along the foot. Its colours are its
+       own, the same by day and by night: it is an object, not a panel. */
+    .cover {
+      --ink: #2c2118;
+      --slip: #f4ecd8;
+      container-type: inline-size;
+      position: absolute;
+      inset: 0;
+      align-content: center;
+      justify-items: center;
+      gap: 0.55rem;
+      padding: 0;
+      border: 0;
+      border-radius: 2px 12px 12px 2px;
+      background:
+        /* darker towards the spine */
+        linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent 22px),
+        /* 七宝: rings woven into the cloth, tone on tone */
+        radial-gradient(circle at 50% 50%, transparent 0 9px, rgba(255, 255, 255, 0.055) 9.5px 10.5px, transparent 11px) 0 0 / 28px 28px,
+        radial-gradient(circle at 50% 50%, transparent 0 9px, rgba(0, 0, 0, 0.09) 9.5px 10.5px, transparent 11px) 14px 14px / 28px 28px,
+        var(--cover);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      color: #f6e9dc;
+      cursor: pointer;
+      overflow: hidden;
+      transform: rotateY(180deg);
+      backface-visibility: hidden;
+    }
+    /* a double gilt frame */
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 1rem 1rem 1rem 1.9rem;
+      border: 1.5px solid color-mix(in oklab, var(--gilt) 75%, transparent);
+      border-radius: 7px;
+      outline: 1px solid color-mix(in oklab, var(--gilt) 38%, transparent);
+      outline-offset: -6px;
+      pointer-events: none;
+    }
+    /* everything on the cover is centred in the frame, not on the board */
+    .cover > * {
+      translate: 0.45rem 0;
+    }
+    /* 空押し: the rings of a station stamp, pressed into the cloth without ink */
+    .cover-emblem {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      width: 76cqw;
+      aspect-ratio: 1;
+      margin: -38cqw 0 0 -38cqw;
+      border-radius: 50%;
+      background: radial-gradient(
+        closest-side,
+        transparent 0 55%,
+        rgba(0, 0, 0, 0.16) 55.3% 55.9%,
+        transparent 56.2% 87%,
+        rgba(0, 0, 0, 0.16) 87.3% 87.9%,
+        rgba(255, 255, 255, 0.05) 88.2% 88.8%,
+        transparent 89.1% 96.6%,
+        rgba(0, 0, 0, 0.2) 96.9% 99.2%,
+        rgba(255, 255, 255, 0.06) 99.4% 100%
+      );
+      pointer-events: none;
+    }
+    /* between its rings, the tick marks of a date stamp */
+    .cover-emblem::before {
+      content: '';
+      position: absolute;
+      inset: 6.4%;
+      border-radius: 50%;
+      background: repeating-conic-gradient(rgba(0, 0, 0, 0.17) 0 1.2deg, transparent 1.2deg 15deg);
+      mask: radial-gradient(closest-side, transparent 0 68%, #000 68.5% 79%, transparent 79.5%);
+    }
+    .cover-slip {
+      position: relative;
+      padding: 1.05rem 0.6rem 0.9rem;
+      background: var(--slip);
+      color: var(--ink);
+      /* a ruled border printed just inside the edge of the paper */
+      box-shadow:
+        inset 0 0 0 4px var(--slip),
+        inset 0 0 0 5px color-mix(in oklab, var(--ink) 55%, transparent),
+        0 2px 7px rgba(0, 0, 0, 0.4);
+      writing-mode: vertical-rl;
+      transition: rotate 0.5s var(--spring);
+    }
+    .cover-ja {
+      font: 600 clamp(1.45rem, 6.2cqw, 2.25rem) / 1.25 'Noto Serif JP', serif;
+      letter-spacing: 0.16em;
+    }
+    .cover-title {
+      position: relative;
+      margin-top: 0.5rem;
+      font: 500 0.78rem 'Inter', sans-serif;
+      letter-spacing: 4px;
+      text-indent: 4px;
+      text-transform: uppercase;
+      color: var(--gilt);
+    }
+    .cover-owner {
+      position: relative;
+      font: italic 400 1.05rem 'Lora', serif;
+    }
+    /* the line: a gilt track, its stations, and a train that runs it under the pointer */
+    .cover-track {
+      position: absolute;
+      left: 16%;
+      right: 16%;
+      bottom: 4.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 2px;
+      background: color-mix(in oklab, var(--gilt) 70%, transparent);
+    }
+    .cover-track i {
+      width: 9px;
+      height: 9px;
+      border: 2px solid var(--gilt);
+      border-radius: 50%;
+      background: var(--cover);
+    }
+    .cover-track i:first-child,
+    .cover-track i:last-child {
+      background: var(--gilt);
+    }
+    .cover-track::after {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: -8px;
+      width: 16px;
+      height: 10px;
+      border-radius: 3px 5px 5px 3px;
+      background: var(--gilt);
+      box-shadow: inset -4px 0 0 var(--cover), inset -5px 0 0 var(--gilt);
+      transition: left 1.3s var(--ease-io);
+    }
+    .cover:hover .cover-track::after,
+    .cover:focus-visible .cover-track::after {
+      left: calc(100% - 8px);
+    }
+    .cover-seal {
+      position: absolute;
+      right: 15%;
+      bottom: 5.6rem;
+      padding: 0.3rem 0.45rem;
+      border: 2px solid var(--gilt);
+      border-radius: 5px;
+      color: var(--gilt);
+      font: 600 0.95rem 'Noto Serif JP', serif;
+      rotate: -6deg;
+      transition: rotate 0.5s var(--spring), scale 0.5s var(--spring);
+    }
+    .cover:hover .cover-seal {
+      rotate: 5deg;
+      scale: 1.1;
+    }
+    .cover:hover .cover-slip {
+      rotate: -1.5deg;
+    }
+    .cover-hint {
+      position: absolute;
+      bottom: 2.1rem;
+      font: 500 10px 'Inter', sans-serif;
+      letter-spacing: 2.5px;
+      text-indent: 2.5px;
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+    /* Light. The cover throws a shadow on the page it comes down on (late in
+       the turn, and gone early when it lifts), and each face of the turning
+       board is darker the further it leans away from flat. */
+    .side-r::after,
+    .book.is-3d .side-l > .leaf::after,
+    .cover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+    /* above what is on the page (the two boards are separate layers already) */
+    .book.is-3d .side-l > .leaf::after {
+      z-index: 3;
+    }
+    .side-r::after {
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.16));
+      opacity: 0;
+      transition: opacity calc(var(--turn) * 0.5) ease-out;
+    }
+    .book.is-closed .side-r::after {
+      opacity: 1;
+      transition: opacity calc(var(--turn) * 0.5) ease-in calc(var(--turn) * 0.4);
+    }
+    .book.is-3d .side-l > .leaf::after {
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.42));
+      opacity: 0;
+      transition: opacity var(--turn) var(--ease-io);
+    }
+    .book.is-closed .side-l > .leaf::after {
+      opacity: 1;
+    }
+    .cover::after {
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
+      opacity: 1;
+      transition: opacity var(--turn) var(--ease-io);
+    }
+    .book.is-closed .cover::after {
+      opacity: 0;
+    }
+    /* Closed and at rest, the 3D is swapped for the same picture laid flat, so
+       the cover is as crisp as the pages (.is-snap makes the swap instant).
+       Under the pointer it lifts a little off the desk. */
+    .book.is-shut .side-l {
+      background: none;
+      box-shadow: none;
+      transform: translateX(100%);
+      transform-style: flat;
+      transition: translate 0.45s var(--spring);
+    }
+    .book.is-shut .side-l > .leaf {
+      visibility: hidden;
+    }
+    .book.is-shut .cover {
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), var(--lift);
+      transform: none;
+      backface-visibility: visible;
+      transition: box-shadow 0.4s;
+    }
+    .book.is-shut .side-l:hover,
+    .book.is-shut .side-l:focus-within {
+      translate: 0 -5px;
+    }
+    .book.is-shut .side-l:hover .cover {
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 26px 34px -22px rgba(44, 33, 24, 0.6);
+    }
+    .book.is-snap .side-l,
+    .book.is-snap .cover {
+      transition: none !important;
+    }
+    /* the stamps wait for the book to open before they are pressed in */
+    .book.is-fresh .slot.is-stamped .slot-stamp {
+      animation: none;
+      opacity: 0;
+    }
+    .shut {
+      display: inline-block;
+    }
+    .book.is-closed + .desk .if-open {
+      display: none;
+    }
+    .book.is-closed + .desk .if-shut {
+      display: inline;
+    }
+    .book.is-closed + .desk .cap {
+      visibility: hidden;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .book,
+    .side-l,
+    .side-r::after,
+    .side-l > .leaf::after,
+    .cover::after {
+      transition: none !important;
+    }
+  }
+
+  .leaf-head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .leaf-badge {
+    display: grid;
+    place-content: center;
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--c);
+    border-radius: 50%;
+    background: #fbf7ee;
+    color: #2c2118;
+    font: 700 11px 'Inter', sans-serif;
+  }
+  .leaf-ja {
+    font: 600 1rem 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+  .leaf-name {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--sheet-soft);
+  }
+  .leaf-tally {
+    margin-left: auto;
+    font: 500 0.82rem 'JetBrains Mono', monospace;
+    color: var(--sheet-soft);
+  }
+  .slots {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem 0.7rem;
+    margin: 0.9rem 0;
+    list-style: none;
+  }
+  .slot a {
+    display: grid;
+    gap: 0.15rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .slot-pad {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+  }
+  .slot-empty {
+    position: absolute;
+    inset: 5%;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.3rem;
+    border: 1.5px dashed var(--sheet-dash);
+    border-radius: 50%;
+    color: var(--sheet-soft);
+    transition: border-color 0.25s, color 0.25s, scale 0.5s var(--spring);
+  }
+  .slot-empty b {
+    font: 500 0.72rem 'JetBrains Mono', monospace;
+  }
+  .slot a:hover .slot-empty,
+  .slot a:focus-visible .slot-empty {
+    border-color: var(--stamp);
+    color: var(--stamp);
+    scale: 1.05;
+  }
+  /* the next station to read in each line */
+  .slot.is-next .slot-empty {
+    border-color: var(--stamp);
+    color: var(--stamp);
+    animation: slot-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes slot-pulse {
+    50% {
+      box-shadow: 0 0 0 5px color-mix(in oklab, var(--stamp) 16%, transparent);
+    }
+  }
+  .slot-stamp {
+    /* a block with no line box under the drawing, or the pad stops being square */
+    display: block;
+    line-height: 0;
+    width: 100%;
+    rotate: var(--tilt);
+    opacity: 0;
+    mix-blend-mode: var(--stamp-blend);
+    transition: rotate 0.6s var(--spring);
+  }
+  .slot.is-stamped .slot-stamp {
+    opacity: 0.92;
+    animation: press 0.6s var(--ease-out) both;
+    animation-delay: calc(var(--n) * 0.07s + var(--open-delay, 0.3s));
+  }
+  .slot.is-stamped .slot-empty {
+    opacity: 0;
+    animation: none;
+  }
+  .slot.is-stamped a:hover .slot-stamp {
+    rotate: 0deg;
+  }
+  @keyframes press {
+    0% { opacity: 0; scale: 1.7; filter: blur(5px); }
+    45% { opacity: 1; scale: 0.94; filter: blur(0); }
+    72% { scale: 1.02; }
+    100% { opacity: 0.92; scale: 1; }
+  }
+  /* alive: each pad drifts towards the pointer (--px / --py / --near, set by the script) */
+  .slot-pad {
+    translate: var(--px, 0) var(--py, 0);
+    scale: calc(1 + var(--near, 0) * 0.06);
+    transition: translate 0.25s var(--ease-out), scale 0.25s var(--ease-out);
+  }
+  /* a hole shows, faintly, the stamp that is waiting there */
+  .slot:not(.is-stamped) a:hover .slot-stamp,
+  .slot:not(.is-stamped) a:focus-visible .slot-stamp {
+    opacity: 0.2;
+    filter: grayscale(1);
+  }
+  /* pressed again: the stamp comes down, and a ring of ink spreads from it */
+  .slot.is-stamped a {
+    cursor: grab;
+  }
+  .slot.is-stamped a:active {
+    cursor: grabbing;
+  }
+  .slot.is-pressing .slot-stamp {
+    animation: press 0.55s var(--ease-out) both;
+    animation-delay: 0s;
+  }
+  .slot-pad::after {
+    content: '';
+    position: absolute;
+    inset: 8%;
+    border: 2px solid var(--ink-n);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .slot.is-pressing .slot-pad::after {
+    animation: ink 0.7s var(--ease-out) 0.18s;
+  }
+  @keyframes ink {
+    0% { opacity: 0.55; scale: 0.9; }
+    100% { opacity: 0; scale: 1.5; }
+  }
+  .slot.is-wiggle .slot-stamp {
+    animation: wiggle 0.8s var(--ease-out);
+  }
+  @keyframes wiggle {
+    25% { rotate: calc(var(--tilt) + 9deg); }
+    55% { rotate: calc(var(--tilt) - 6deg); }
+    80% { rotate: calc(var(--tilt) + 2deg); }
+  }
+  /* 完: the seal of a finished line */
+  .leaf-done {
+    display: none;
+    place-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--ink-n);
+    border-radius: 4px;
+    color: var(--ink-n);
+    font: 600 0.8rem 'Noto Serif JP', serif;
+    rotate: 8deg;
+  }
+  .leaf.is-complete .leaf-done {
+    display: grid;
+    animation: press 0.6s var(--ease-out) 0.6s both;
+  }
+
+  /* the station under the pointer comes forward */
+  .slot {
+    transition: scale 0.4s var(--spring);
+  }
+  .slot.is-on {
+    scale: 1.1;
+    z-index: 1;
+  }
+  .slot-cap {
+    font: 600 0.72rem 'Noto Serif JP', serif;
+    letter-spacing: 1px;
+    text-align: center;
+    color: var(--sheet-soft);
+  }
+  .slot.is-stamped .slot-cap {
+    color: var(--sheet-ink);
+  }
+
+  /* ---- the goal and the next station, at the foot of the left page ---- */
+  .prog {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.8rem 1rem;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1.5px dashed var(--sheet-dash);
+  }
+  .prog-daruma {
+    width: 3.6rem;
+    cursor: help;
+  }
+  .prog-count {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    font: 400 0.9rem 'JetBrains Mono', monospace;
+    color: var(--sheet-soft);
+  }
+  .prog-count b {
+    font-size: 1.7rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ink-n);
+  }
+  .prog-count small {
+    font: 600 10px 'Inter', sans-serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .prog-bar {
+    position: relative;
+    height: 8px;
+    margin: 0.45rem 0 0.4rem;
+    border-radius: 3px;
+    background: var(--sheet-rule);
+    box-shadow: inset 0 0 0 1px var(--sheet-rule);
+    overflow: hidden;
+  }
+  .prog-bar i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--p, 0) * 100%);
+    border-radius: 3px;
+    background: var(--ink-n);
+    transition: width 0.9s var(--ease-out);
+  }
+  /* a little train at the head of the track */
+  .prog-train {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 14px;
+    border-radius: 3px 5px 5px 3px;
+    background: var(--sheet-ink);
+    box-shadow: inset -3px 0 0 var(--sheet);
+    animation: chug 1.6s ease-in-out infinite;
+  }
+  @keyframes chug {
+    50% { translate: 2px 0; }
+  }
+  .prog-note {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--sheet-soft);
+  }
+  .prog-next {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.2rem 1rem;
+    padding: 0.6rem 0.8rem;
+    border: 1.5px dashed var(--ink-n);
+    border-radius: 7px;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.25s;
+  }
+  .prog-next:hover {
+    background: var(--sheet-rule);
+  }
+  .prog-label {
+    grid-column: 1 / -1;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-n);
+  }
+  .prog-next-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.6rem;
+    min-width: 0;
+  }
+  .prog-code {
+    font: 500 0.72rem 'JetBrains Mono', monospace;
+    color: var(--sheet-soft);
+  }
+  .prog-next b {
+    font: 500 1.15rem / 1.2 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+  }
+  .prog-next-es {
+    font: 400 0.88rem 'Lora', serif;
+    color: var(--sheet-soft);
+  }
+  .prog-go {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-n);
+    white-space: nowrap;
+  }
+
+  /* ---- on the desk, under the book ---- */
+  .desk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    max-width: 66rem;
+    margin: 1.1rem auto 0;
+    padding-inline: 0.3rem;
+  }
+  .cap {
+    flex: 1;
+    min-width: min(100%, 18rem);
+    margin: 0;
+    font: 400 0.92rem / 1.45 'Lora', serif;
+    color: var(--ink-soft);
+  }
+  .cap :global(a) {
+    color: var(--stamp);
+    font: 600 0.78rem 'Inter', sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  .cap :global(b) {
+    margin-right: 0.2em;
+    font: 600 0.95rem 'Noto Serif JP', serif;
+    letter-spacing: 1px;
+    color: var(--stamp);
+  }
+  .shut {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font: 500 11px 'Inter', sans-serif;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .shut:hover {
+    border-color: var(--stamp);
+    color: var(--stamp);
+  }
+
+  /* ---- before the book: how it works, and the owner's line ---- */
+  .front {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 1.2rem 2rem;
+    align-items: center;
+    max-width: 66rem;
+    margin: 0 auto 1.4rem;
+  }
+  .como-intro {
+    margin: 0 0 0.9rem;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .how-steps {
+    display: grid;
+    gap: 0.55rem;
+    list-style: none;
+  }
+  .how-steps li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.7rem;
+    align-items: center;
+  }
+  .how-n {
+    grid-row: 1 / span 2;
+    display: grid;
+    place-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--stamp);
+    border-radius: 50%;
+    color: var(--stamp);
+    font: 600 0.85rem 'Noto Serif JP', serif;
+    rotate: -8deg;
+    transition: rotate 0.5s var(--spring), scale 0.5s var(--spring);
+  }
+  .how-steps li:hover .how-n {
+    rotate: 6deg;
+    scale: 1.12;
+  }
+  .how-steps b {
+    font: 500 0.95rem 'Lora', serif;
+    color: var(--ink);
+  }
+  .how-steps li > span:last-child {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+  }
+  .owner {
+    padding: 1.2rem 1.4rem;
+    box-shadow: var(--paper-shadow);
+    scroll-margin-top: 6rem;
+  }
+  .data {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 1.4rem;
+    max-width: 66rem;
+    margin: 1.2rem auto 0;
+    font: italic 400 0.88rem 'Lora', serif;
+    color: var(--muted);
+  }
+  .data button {
+    font: 500 0.82rem 'Inter', sans-serif;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--stamp);
+    cursor: pointer;
+  }
+
+  @media (max-width: 760px) {
+    .book {
+      grid-template-columns: 1fr;
+    }
+    .side-l {
+      padding: 0.6rem 0.6rem 0;
+      border-radius: 12px 12px 0 0;
+      background: var(--cover);
+    }
+    .side-r {
+      padding: 0 0.6rem 1rem;
+      border-radius: 0 0 12px 12px;
+      background: var(--cover);
+    }
+    .side-l .leaf {
+      border-radius: 5px 5px 0 0;
+      background: var(--paper);
+      box-shadow: none;
+    }
+    .side-r .leaf {
+      border-top: 1.5px dashed var(--sheet-dash);
+      border-radius: 0 0 5px 5px;
+      background: var(--paper);
+    }
+  }
+  @media (max-width: 900px) {
+    .front {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slot.is-wiggle .slot-stamp,
+    .slot.is-pressing .slot-stamp {
+      animation: none;
+    }
+  }
+</style>

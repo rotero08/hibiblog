@@ -1,0 +1,121 @@
+---
+/**
+ * Daruma: 達磨, the round red doll you buy with blank eyes. You paint one eye
+ * when you set yourself a goal and the other when you reach it. They are
+ * weighted to roll back upright: 七転び八起き, "fall seven times, get up eight".
+ *
+ * Here the goal is the stamp book. /scripts/hibi.js sets `data-eyes` on the
+ * element marked [data-daruma]: 0 = nothing yet, 1 = first stamp collected,
+ * 2 = every stamp collected.
+ *
+ * `as="g"` renders just the drawing, to place inside a larger <svg>.
+ */
+interface Props {
+  /** How many stamps complete the goal. */
+  total: number;
+  as?: 'svg' | 'g';
+  class?: string;
+}
+const { total, as = 'svg', class: className } = Astro.props;
+const Tag = as;
+const attrs = as === 'svg' ? { viewBox: '0 0 100 112', role: 'img', 'aria-label': 'Daruma' } : {};
+---
+
+<Tag class:list={['daruma', className]} data-daruma data-total={total} data-eyes="0" {...attrs}>
+  <g class="daruma-roll">
+    <ellipse class="d-shadow" cx="50" cy="107" rx="30" ry="4"></ellipse>
+    <path class="d-body" d="M50 5 C22 5 7 30 7 58 C7 88 26 106 50 106 C74 106 93 88 93 58 C93 30 78 5 50 5 Z"></path>
+    <path class="d-shine" d="M24 24 C30 14 40 10 48 10 C38 14 30 22 26 34 Z"></path>
+    <path class="d-gold" d="M15 62 C19 82 29 96 42 101 M85 62 C81 82 71 96 58 101" fill="none"></path>
+    <text class="d-fuku" x="50" y="97" text-anchor="middle">福</text>
+    <path class="d-face" d="M50 21 C31 21 21 33 21 49 C21 64 34 73 50 73 C66 73 79 64 79 49 C79 33 69 21 50 21 Z"></path>
+    <path class="d-brow" d="M27 39 Q36 29 46 37 M73 39 Q64 29 54 37" fill="none"></path>
+    <circle class="d-eye" cx="36.5" cy="49" r="8"></circle>
+    <circle class="d-eye" cx="63.5" cy="49" r="8"></circle>
+    {/* first eye painted: the doll's left, which is on the right as you look at it */}
+    <circle class="d-pupil d-pupil--1" cx="63.5" cy="49.5" r="4.8"></circle>
+    <circle class="d-pupil d-pupil--2" cx="36.5" cy="49.5" r="4.8"></circle>
+    <path class="d-nose" d="M47 58 Q50 61 53 58" fill="none"></path>
+    <path class="d-whisker" d="M46 63 Q36 63 29 68 M54 63 Q64 63 71 68" fill="none"></path>
+  </g>
+</Tag>
+
+<style>
+  .daruma {
+    overflow: visible;
+  }
+  svg.daruma {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .daruma-roll {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+  /* it rocks and rights itself */
+  .daruma:hover .daruma-roll,
+  .daruma:focus-visible .daruma-roll {
+    animation: daruma-rock 1.5s cubic-bezier(0.3, 0, 0.3, 1);
+  }
+  @keyframes daruma-rock {
+    0% { rotate: 0deg; }
+    15% { rotate: -16deg; }
+    38% { rotate: 11deg; }
+    58% { rotate: -6deg; }
+    78% { rotate: 3deg; }
+    100% { rotate: 0deg; }
+  }
+  .d-shadow {
+    fill: rgba(0, 0, 0, 0.18);
+  }
+  .d-body {
+    fill: #c8372d;
+  }
+  .d-shine {
+    fill: rgba(255, 255, 255, 0.28);
+  }
+  .d-gold {
+    stroke: #e3b23c;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+  .d-fuku {
+    fill: #e3b23c;
+    font: 600 17px 'Noto Serif JP', serif;
+  }
+  .d-face {
+    fill: #f6ead6;
+  }
+  .d-brow {
+    stroke: #2c2118;
+    stroke-width: 4.4;
+    stroke-linecap: round;
+  }
+  .d-eye {
+    fill: #fff;
+    stroke: #2c2118;
+    stroke-width: 1.4;
+  }
+  .d-pupil {
+    fill: #1c1410;
+    transform-box: fill-box;
+    transform-origin: center;
+    scale: 0;
+    transition: scale 0.6s var(--spring);
+  }
+  .daruma[data-eyes='1'] .d-pupil--1,
+  .daruma[data-eyes='2'] .d-pupil {
+    scale: 1;
+  }
+  .d-nose {
+    stroke: #2c2118;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+  .d-whisker {
+    stroke: #2c2118;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+  }
+</style>

@@ -1,0 +1,250 @@
+---
+/**
+ * GuideTicket: a small 切符 (ticket) that links to a guide.
+ *
+ * Two pieces of card stock joined by a perforation: the body, and a numbered
+ * stub. Hovering lifts the ticket, starts tearing the stub off and punches it.
+ *
+ * The main guide of a group can be `featured`: a larger ticket with a red edge,
+ * a short description and a red stub, so it reads as the one to start from.
+ *
+ * The link itself never moves (only the paper inside it does), so the pointer
+ * can't "fall off" a lifted card and make it flicker.
+ */
+interface Props {
+  href: string;
+  /** Small uppercase label, e.g. "Guía esencial". */
+  tag: string;
+  title: string;
+  /** One line of detail under the title. */
+  meta: string;
+  /** Number printed on the stub, e.g. "01". */
+  num: string;
+  /** The main guide of the group: larger, red edge and stub, with `desc` under the title. @default false */
+  featured?: boolean;
+  /** Short description shown on a featured ticket only. */
+  desc?: string;
+  /** Force a full page load (needed when linking to a Starlight guide). */
+  reload?: boolean;
+}
+
+const { href, tag, title, meta, num, featured = false, desc, reload = false } = Astro.props;
+const linkAttrs = reload ? { 'data-astro-reload': true } : {};
+---
+
+<a class:list={['gt', { 'gt--featured': featured }]} href={href} data-reveal="left" {...linkAttrs}>
+  <span class="gt-lift">
+    <span class="gt-piece gt-main">
+      <span class="gt-bg" aria-hidden="true"><i></i></span>
+      <span class="gt-tag">{tag}</span>
+      <span class="gt-title"><span>{title}</span></span>
+      {featured && desc && <span class="gt-desc">{desc}</span>}
+      <span class="gt-meta">{meta}</span>
+    </span>
+    <span class="gt-piece gt-stub" aria-hidden="true">
+      <span class="gt-bg"><i></i></span>
+      <span class="gt-kanji">切符</span>
+      <b class="gt-num">{num}</b>
+      <span class="gt-punch"></span>
+    </span>
+  </span>
+</a>
+
+<style>
+  .gt {
+    --bite: 7px;
+    --edge: var(--border);
+    display: block;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: inherit;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .gt-lift {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 4.1rem;
+    transition: translate 0.45s var(--spring);
+  }
+  .gt:hover .gt-lift,
+  .gt:focus-visible .gt-lift {
+    translate: 0 -3px;
+  }
+  .gt:active .gt-lift {
+    translate: 0 0;
+    transition-duration: 0.08s;
+  }
+
+  /* ---- the two pieces of card ---- */
+  .gt-piece {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 7.4rem;
+    padding: 1.3rem 1.5rem;
+  }
+  /* the paper is a layer of its own, so its outline doesn't smudge the text */
+  .gt-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    filter: drop-shadow(0 0 0.7px var(--edge)) drop-shadow(0 0 0.7px var(--edge));
+    transition: filter 0.3s;
+  }
+  .gt-bg i {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px 0 0 8px;
+    background:
+      radial-gradient(circle at 0 0, transparent 5.5px, var(--jimon) 6px 6.8px, transparent 7.3px) 0 0 / 14px 14px,
+      radial-gradient(circle at 7px 7px, transparent 5.5px, var(--jimon) 6px 6.8px, transparent 7.3px) 0 0 / 14px 14px,
+      var(--cream2);
+    /* half-round bites where the perforation meets the edges */
+    -webkit-mask:
+      radial-gradient(circle var(--bite) at 100% 0, transparent 97%, #000) 0 0 / 100% 51% no-repeat,
+      radial-gradient(circle var(--bite) at 100% 100%, transparent 97%, #000) 0 100% / 100% 51% no-repeat;
+    mask:
+      radial-gradient(circle var(--bite) at 100% 0, transparent 97%, #000) 0 0 / 100% 51% no-repeat,
+      radial-gradient(circle var(--bite) at 100% 100%, transparent 97%, #000) 0 100% / 100% 51% no-repeat;
+    transition: background-color 0.35s;
+  }
+  .gt-stub .gt-bg i {
+    border-radius: 0 8px 8px 0;
+    -webkit-mask:
+      radial-gradient(circle var(--bite) at 0 0, transparent 97%, #000) 0 0 / 100% 51% no-repeat,
+      radial-gradient(circle var(--bite) at 0 100%, transparent 97%, #000) 0 100% / 100% 51% no-repeat;
+    mask:
+      radial-gradient(circle var(--bite) at 0 0, transparent 97%, #000) 0 0 / 100% 51% no-repeat,
+      radial-gradient(circle var(--bite) at 0 100%, transparent 97%, #000) 0 100% / 100% 51% no-repeat;
+  }
+  .gt:hover .gt-bg,
+  .gt:focus-visible .gt-bg {
+    filter: drop-shadow(0 0 0.7px var(--green)) drop-shadow(0 0 0.7px var(--edge)) drop-shadow(0 12px 10px rgba(30, 20, 30, 0.16));
+  }
+
+  /* ---- body ---- */
+  .gt-tag {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--green);
+  }
+  .gt-title {
+    font: 500 1.05rem / 1.35 'Lora', serif;
+    color: var(--ink);
+  }
+  .gt-title span {
+    background: linear-gradient(var(--stamp), var(--stamp)) 0 100% / 0 1.5px no-repeat;
+    transition: background-size 0.5s var(--ease-out);
+  }
+  .gt:hover .gt-title span,
+  .gt:focus-visible .gt-title span {
+    background-size: 100% 1.5px;
+  }
+  .gt-meta {
+    font-size: 13.5px;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+
+  /* ---- stub ---- */
+  .gt-stub {
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.8rem 0;
+    transform-origin: 0 100%;
+    transition: rotate 0.5s var(--spring), translate 0.5s var(--spring);
+  }
+  /* the perforation */
+  .gt-stub::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: calc(var(--bite) + 3px);
+    bottom: calc(var(--bite) + 3px);
+    border-left: 2px dashed var(--edge);
+  }
+  .gt-kanji {
+    font: 500 10px 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+  .gt-num {
+    font: 500 1rem 'JetBrains Mono', monospace;
+    color: var(--green);
+  }
+  /* 入鋏, the conductor's punch */
+  .gt-punch {
+    width: 9px;
+    height: 9px;
+    margin-top: 0.25rem;
+    border-radius: 50%;
+    background: var(--cream);
+    box-shadow: inset 0 1px 1.5px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--edge);
+    scale: 0;
+    transition: scale 0.35s var(--spring) 0.12s;
+  }
+  .gt:hover .gt-stub,
+  .gt:focus-visible .gt-stub {
+    rotate: 3.5deg;
+    translate: 3px -1px;
+  }
+  .gt:hover .gt-punch,
+  .gt:focus-visible .gt-punch {
+    scale: 1;
+  }
+
+  /* ---- featured: the one to start from ---- */
+  .gt--featured {
+    --edge: var(--stamp);
+    margin-bottom: 1.4rem;
+  }
+  .gt--featured .gt-piece {
+    min-height: 11rem;
+    padding: 1.8rem 1.9rem;
+  }
+  .gt--featured .gt-lift {
+    grid-template-columns: minmax(0, 1fr) 5rem;
+  }
+  .gt--featured .gt-tag {
+    align-self: flex-start;
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    background: var(--stamp);
+    color: var(--on-stamp);
+  }
+  .gt--featured .gt-title {
+    font-size: 1.55rem;
+    line-height: 1.25;
+  }
+  .gt-desc {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 38rem;
+  }
+  .gt--featured .gt-num,
+  .gt--featured .gt-kanji {
+    color: var(--stamp);
+  }
+  .gt--featured .gt-num {
+    font-size: 1.4rem;
+  }
+
+  @media (max-width: 600px) {
+    .gt-lift {
+      grid-template-columns: minmax(0, 1fr) 3.4rem;
+    }
+    .gt-piece {
+      padding: 1.1rem 1.15rem;
+      min-height: 6.6rem;
+    }
+    .gt-stub {
+      padding: 0.8rem 0;
+    }
+  }
+</style>

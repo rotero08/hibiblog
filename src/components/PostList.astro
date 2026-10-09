@@ -1,0 +1,54 @@
+---
+/**
+ * PostList: the posts of a shelf, newest first, in one of the card shapes of
+ * {@link PostCard}. Give it a `limit` to show only the latest few.
+ *
+ *   <PostList shelf="blog" />                             the whole blog, as cards
+ *   <PostList shelf="blog" shape="row" limit={5} />       the five latest, as rows
+ *   <PostList shelf="personal" shape="note" limit={3} />  the three latest notes
+ */
+import PostCard from './PostCard.astro';
+import { SHELVES, getPosts, type Shelf } from '../lib/posts';
+
+interface Props {
+  shelf: Shelf;
+  shape?: 'card' | 'row' | 'summary' | 'note' | 'peek';
+  /** Only the notes of this mini blog (a slug from src/data/topics.ts). */
+  topic?: string;
+  /** Show at most this many. */
+  limit?: number;
+}
+
+const { shelf, shape = 'card', topic, limit } = Astro.props;
+const posts = (await getPosts(shelf, topic)).slice(0, limit);
+// cards and notes sit in a grid; rows just follow one another
+const grid = { card: 'archive-grid', note: 'personal-grid', peek: 'peek-grid', row: undefined, summary: undefined }[shape];
+---
+
+{
+  posts.length === 0 ? (
+    <p class="post-empty">{SHELVES[shelf].empty}</p>
+  ) : grid ? (
+    <div class={grid}>
+      {posts.map((post) => (
+        <PostCard post={post} shape={shape} />
+      ))}
+    </div>
+  ) : (
+    posts.map((post) => <PostCard post={post} shape={shape} />)
+  )
+}
+
+<style>
+  .peek-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr));
+    gap: 1.6rem 1.5rem;
+    padding: 0.2rem 0.6rem 0.6rem 0.1rem;
+  }
+  .post-empty {
+    padding: 1.6rem 0;
+    font: italic 400 1rem / 1.6 'Lora', serif;
+    color: var(--muted);
+  }
+</style>

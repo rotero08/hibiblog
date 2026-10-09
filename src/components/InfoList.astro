@@ -4,6 +4,16 @@
  * title and a body paragraph. Used for the step-by-step blocks in the guides
  * (e.g. the arrival guide) so that MDX can describe them with typed data
  * instead of raw HTML.
+ *
+ * @example
+ * ```mdx
+ * <InfoList
+ *   items={[
+ *     { title: 'Visit Japan Web', body: 'Regístrate unos días antes y guarda los códigos QR.' },
+ *     { title: 'Efectivo', body: 'Lleva yenes para las primeras horas.' },
+ *   ]}
+ * />
+ * ```
  */
 interface InfoItem {
   /** Bold heading for this entry. */

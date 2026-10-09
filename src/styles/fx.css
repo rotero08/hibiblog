@@ -1,0 +1,1667 @@
+/* ─────────────────────────────────────────
+   FX: tickets, stamps, trains, motion.
+   Loaded after global.css on every page (custom pages + Starlight guides).
+   Colours come from the Hibi tokens, so everything follows day / night.
+───────────────────────────────────────── */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-io: cubic-bezier(0.65, 0, 0.25, 1);
+  --ease-brake: cubic-bezier(0.1, 0.6, 0.15, 1);
+  --spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159,
+    1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%,
+    0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1
+  );
+  --paper-shadow: 0 0 0 1px rgba(44, 33, 24, 0.12), 0 16px 30px -18px rgba(44, 33, 24, 0.42);
+  --lift: 0 16px 30px -20px rgba(44, 33, 24, 0.5);
+  --lantern: transparent;
+  --jimon: rgba(110, 87, 54, 0.06);
+  /* "paper objects" (stamp book, slips, name boards): white paper on the cream
+     page by day. --sheet-dash is for dashed outlines, --sheet-line for lines
+     that have to be found (an input, a button outline). */
+  --sheet: #fcf9f1;
+  --sheet-ink: #2c2118;
+  --sheet-soft: #4f3d2e;
+  --sheet-rule: rgba(44, 33, 24, 0.075);
+  --sheet-dash: rgba(44, 33, 24, 0.42);
+  --sheet-line: rgba(44, 33, 24, 0.58);
+  --ink-n: #a82a12;
+  --ink-l: #2a6045;
+  --stamp-blend: multiply;
+}
+:root[data-theme='dark'] {
+  --paper-shadow: 0 0 0 1px rgba(255, 225, 245, 0.13), 0 18px 34px -18px rgba(0, 0, 0, 0.8);
+  --lift: 0 18px 36px -18px rgba(0, 0, 0, 0.85);
+  --lantern: rgba(255, 150, 190, 0.1);
+  --jimon: rgba(236, 208, 143, 0.05);
+  /* and dyed plum paper at night, stamped in bright ink */
+  --sheet: #2a1f33;
+  --sheet-ink: #f7eff3;
+  --sheet-soft: #d6c7d4;
+  --sheet-rule: rgba(255, 225, 245, 0.065);
+  --sheet-dash: rgba(255, 225, 245, 0.4);
+  --sheet-line: rgba(255, 225, 245, 0.55);
+  --ink-n: #ff8b97;
+  --ink-l: #8cdcba;
+  --stamp-blend: normal;
+}
+
+/* ── Night atmosphere: lantern light instead of flat black ── */
+:root[data-theme='dark'] body {
+  background-image:
+    radial-gradient(60rem 30rem at 85% -6rem, rgba(255, 123, 160, 0.09), transparent 70%),
+    radial-gradient(46rem 26rem at -8% 30%, rgba(200, 170, 245, 0.07), transparent 70%);
+  background-attachment: fixed;
+}
+:root[data-theme='dark'] .hero-wrapper {
+  background:
+    radial-gradient(34rem 20rem at 78% 30%, rgba(255, 130, 170, 0.14), transparent 70%),
+    radial-gradient(28rem 18rem at 8% 100%, rgba(220, 184, 110, 0.08), transparent 70%),
+    var(--cream2);
+}
+:root[data-theme='dark'] :is(.archive-card, .about-card, .now-card, .jh-guide-card, .personal-card, .doc-toc-item) {
+  box-shadow: 0 1px 0 rgba(255, 236, 200, 0.07) inset;
+}
+:root[data-theme='dark'] .jp-guide-block {
+  box-shadow: 0 0 0 1px rgba(255, 220, 240, 0.04), 0 30px 60px -40px rgba(255, 110, 160, 0.3);
+}
+/* the leaves fall behind the content, so at night they can be a little stronger */
+:root[data-theme='dark'] #ambient-canvas {
+  opacity: 0.55;
+}
+:root[data-theme='dark'] ::selection {
+  background: var(--stamp);
+  color: var(--on-stamp);
+}
+::selection {
+  background: var(--stamp);
+  color: #fff;
+}
+
+/* ─────────────────────────────────────────
+   切符, the ticket
+   Markup comes from KippuTicket.astro. The paper is its own layer so the side
+   notches are real cut-outs (whatever is behind shows through), and the outline
+   follows them.
+───────────────────────────────────────── */
+.kippu-ticket {
+  --notch: 11px;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  position: relative;
+  isolation: isolate;
+  margin-top: 20px;
+  padding: 2.2rem;
+  border-radius: 12px;
+  transform: perspective(900px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition: transform 0.5s var(--ease-out);
+}
+.hibi-site .kippu-ticket {
+  padding: 2.2rem;
+}
+.kippu-ticket:hover {
+  transform: perspective(900px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(-3px);
+}
+.kippu-paper {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* two thin shadows trace the cut shape, a soft one lifts it off the page */
+  filter: drop-shadow(0 0 0.8px var(--brown-lt)) drop-shadow(0 0 0.8px var(--border)) drop-shadow(0 14px 16px rgba(44, 33, 24, 0.14));
+  transition: filter 0.4s;
+}
+:root[data-theme='dark'] .kippu-paper {
+  filter: drop-shadow(0 0 0.8px #7b6590) drop-shadow(0 0 0.8px #7b6590) drop-shadow(0 18px 22px rgba(0, 0, 0, 0.55));
+}
+.kippu-ticket:hover .kippu-paper {
+  filter: drop-shadow(0 0 0.7px var(--stamp)) drop-shadow(0 0 0.7px var(--border)) drop-shadow(0 22px 22px rgba(44, 33, 24, 0.16));
+}
+.kippu-paper i {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  /* 地紋, the faint repeating pattern printed on ticket stock */
+  background:
+    radial-gradient(circle at 0 0, transparent 5.5px, var(--jimon) 6px 6.8px, transparent 7.3px) 0 0 / 14px 14px,
+    radial-gradient(circle at 7px 7px, transparent 5.5px, var(--jimon) 6px 6.8px, transparent 7.3px) 0 0 / 14px 14px,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 30%),
+    var(--cream2);
+  -webkit-mask:
+    radial-gradient(circle var(--notch) at 0 50%, transparent 97%, #000) 0 0 / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% 50%, transparent 97%, #000) 100% 0 / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle var(--notch) at 0 50%, transparent 97%, #000) 0 0 / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% 50%, transparent 97%, #000) 100% 0 / 51% 100% no-repeat;
+  transition: background-color 0.35s;
+}
+:root[data-theme='dark'] .kippu-paper i {
+  background:
+    radial-gradient(circle at 0 0, transparent 5.5px, var(--jimon) 6px 6.8px, transparent 7.3px) 0 0 / 14px 14px,
+    radial-gradient(circle at 7px 7px, transparent 5.5px, var(--jimon) 6px 6.8px, transparent 7.3px) 0 0 / 14px 14px,
+    linear-gradient(180deg, rgba(255, 236, 200, 0.05), transparent 40%),
+    var(--cream2);
+}
+/* a sheen that crosses the ticket when you pick it up */
+.kippu-paper i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  translate: -100% 0;
+  transition: translate 0s;
+}
+:root[data-theme='dark'] .kippu-paper i::after {
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 220, 170, 0.1) 50%, transparent 60%);
+}
+.kippu-ticket:hover .kippu-paper i::after {
+  translate: 100% 0;
+  transition: translate 0.9s var(--ease-out);
+}
+
+/* 入鋏, the conductor's punch. Clipped out of the bottom edge when the ticket
+   scrolls into view; the little offcut drops away. */
+.kippu-notch {
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  z-index: 3;
+  width: 16px;
+  height: 9px;
+  margin-left: -8px;
+  border-radius: 4px 4px 0 0;
+  background: var(--cream);
+  box-shadow: inset 0 1.5px 0 var(--border), inset 1.5px 0 0 var(--border), inset -1.5px 0 0 var(--border);
+  transform-origin: 50% 100%;
+  transition: background-color 0.35s;
+}
+.kippu-notch::after {
+  content: '';
+  position: absolute;
+  inset: 1px 2px 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--cream2);
+  opacity: 0;
+}
+.fx .kippu-ticket:not(.is-in) .kippu-notch {
+  scale: 1 0;
+}
+.fx .kippu-ticket.is-in .kippu-notch {
+  animation: punch 0.45s var(--spring) 0.5s both;
+}
+.fx .kippu-ticket.is-in .kippu-notch::after {
+  animation: chad 0.9s cubic-bezier(0.4, 0, 0.9, 0.6) 0.62s both;
+}
+@keyframes punch {
+  from {
+    scale: 1 0;
+  }
+}
+@keyframes chad {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  100% {
+    opacity: 0;
+    translate: 9px 46px;
+    rotate: 150deg;
+  }
+}
+
+.kippu-stars {
+  position: absolute;
+  top: 12px;
+  left: 1.5rem;
+  z-index: 4;
+  display: flex;
+  gap: 5px;
+  color: var(--stamp);
+  font-size: 11px;
+  line-height: 1;
+  user-select: none;
+}
+.kippu-stars span {
+  display: inline-block;
+  animation: twinkle 3.6s ease-in-out infinite;
+}
+.kippu-stars span:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.kippu-stars span:nth-child(3) {
+  animation-delay: 1s;
+}
+@keyframes twinkle {
+  0%,
+  70%,
+  100% {
+    scale: 1;
+    opacity: 0.9;
+  }
+  80% {
+    scale: 1.5;
+    opacity: 1;
+    rotate: 45deg;
+  }
+}
+
+/* perforations */
+.ticket-stub-border {
+  position: absolute;
+  right: 80px;
+  top: 6px;
+  bottom: 6px;
+  width: 0;
+  border-left: 2px dashed var(--border);
+  pointer-events: none;
+  transition: border-color 0.35s;
+}
+.ticket-stub-border-horizontal {
+  grid-column: 1 / -1;
+  border-top: 2px dashed var(--border);
+  margin: 1.2rem -1.4rem;
+  transition: border-color 0.35s;
+}
+/* vertical print on the stub */
+.kippu-stub-text {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  writing-mode: vertical-rl;
+  font: 500 11px 'Noto Serif JP', serif;
+  letter-spacing: 4px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.kippu-stub-text b {
+  font: 500 11px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  color: var(--stamp);
+}
+
+.jh-hero-content {
+  width: 100%;
+}
+.kippu-header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.kippu-header-meta .serial {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--stamp);
+  letter-spacing: 1px;
+}
+.kippu-header-meta .ticket-type {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* 区間, the big "from → to" line every ticket has */
+.kippu-route {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin: 0.2rem 0 0.9rem;
+  font: 400 clamp(1.3rem, 2.6vw, 1.7rem) / 1.2 'Noto Serif JP', serif;
+  letter-spacing: 3px;
+  color: var(--ink);
+}
+.kippu-route small {
+  display: block;
+  font: 500 10px 'Inter', sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.kippu-route .arrow {
+  color: var(--stamp);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0;
+  transition: translate 0.5s var(--spring);
+}
+.kippu-ticket:hover .kippu-route .arrow {
+  translate: 6px 0;
+}
+
+/* vocab ticket */
+.vocab-feature.kippu-ticket,
+.hibi-site .vocab-feature.kippu-ticket {
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  background: transparent;
+}
+.vocab-feature .vocab-header {
+  border-radius: 12px 12px 0 0;
+}
+/* the stars sit on the dark header in both themes */
+.vocab-feature .kippu-stars {
+  color: var(--feat-btn);
+}
+:root[data-theme='dark'] .vocab-feature .kippu-stars {
+  color: var(--stamp);
+}
+:root[data-theme='dark'] .vocab-body {
+  background-color: transparent;
+}
+.vocab-word {
+  transition: color 0.35s, letter-spacing 0.6s var(--ease-out);
+}
+.vocab-feature:hover .vocab-word {
+  letter-spacing: 3px;
+}
+
+/* 駅スタンプ, the station stamp on a ticket */
+.eki-stamp-seal {
+  position: absolute;
+  right: 100px;
+  top: -16px;
+  z-index: 15;
+  rotate: -9deg;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.85;
+}
+.has-ink .eki-stamp-seal svg,
+.has-ink .ink {
+  filter: url(#hibi-ink);
+}
+.eki-stamp-circle {
+  stroke: var(--stamp);
+  fill: none;
+  transition: stroke 0.35s;
+}
+.eki-stamp-text {
+  fill: var(--stamp);
+  font-family: 'Noto Serif JP', serif;
+  font-weight: 600;
+  transition: fill 0.35s;
+}
+.eki-stamp-date {
+  fill: var(--stamp);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  transition: fill 0.35s;
+}
+.fx .kippu-ticket:not(.is-in) .eki-stamp-seal {
+  opacity: 0;
+}
+.fx .kippu-ticket.is-in .eki-stamp-seal {
+  animation: stamp-press 0.6s var(--ease-out) 0.9s both;
+}
+@keyframes stamp-press {
+  0% {
+    opacity: 0;
+    scale: 2;
+    rotate: -30deg;
+    filter: blur(5px);
+  }
+  45% {
+    opacity: 1;
+    scale: 0.92;
+    rotate: -9deg;
+    filter: blur(0);
+  }
+  70% {
+    scale: 1.03;
+  }
+  100% {
+    opacity: 0.85;
+    scale: 1;
+  }
+}
+
+/* ─────────────────────────────────────────
+   Cards that lift on hover
+   A lifted card moves out from under the pointer when you hover its bottom
+   edge, drops, gets hovered again and flickers. While hovered, each of these
+   grows an invisible skirt below itself so the pointer stays inside.
+   (The small guide tickets solve it differently: see GuideTicket.astro.)
+───────────────────────────────────────── */
+:is(.archive-card, .jh-guide-card, .kippu-ticket, .tag-pill):hover::after,
+.personal-card:hover::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 -10px;
+  z-index: -1;
+}
+:is(.archive-card, .jh-guide-card, .tag-pill, .personal-card) {
+  position: relative;
+}
+
+/* ── list rows: the ㊞ presses in when you point at a post ── */
+.blog-post-item,
+.jh-blog-item {
+  transition: opacity 0.2s, border-color 0.35s, padding-left 0.45s var(--spring);
+}
+.blog-post-item:hover,
+.jh-blog-item:hover {
+  opacity: 1;
+  padding-left: 32px;
+}
+.jh-blog-item:hover {
+  padding-left: 8px;
+}
+.bp-tag::before,
+.jh-blog-tag::before {
+  transition: scale 0.45s var(--spring), rotate 0.45s var(--spring);
+}
+.blog-post-item:hover .bp-tag::before,
+.jh-blog-item:hover .jh-blog-tag::before {
+  scale: 1.7;
+  rotate: -14deg;
+}
+.blog-post-item .bp-title,
+.jh-blog-title,
+.personal-card .pc-title,
+.archive-card .post-title {
+  background: linear-gradient(var(--stamp), var(--stamp)) 0 100% / 0 1.5px no-repeat;
+  display: inline;
+  transition: background-size 0.5s var(--ease-out), color 0.35s;
+}
+:is(.blog-post-item, .jh-blog-item, .personal-card, .archive-card):hover
+  :is(.bp-title, .jh-blog-title, .pc-title, .post-title) {
+  background-size: 100% 1.5px;
+}
+.blog-post-item .bp-meta,
+.jh-blog-meta {
+  margin-top: 0.3rem;
+}
+
+/* ── cards: postcards with a corner stamp ── */
+.personal-card {
+  position: relative;
+  transition: transform 0.5s var(--spring), border-color 0.2s, box-shadow 0.3s, background 0.35s;
+}
+.personal-card:hover {
+  transform: translateY(-4px) rotate(0.5deg);
+  box-shadow: var(--lift);
+}
+.personal-card:nth-child(even):hover {
+  transform: translateY(-4px) rotate(-0.5deg);
+}
+.personal-card::after {
+  content: '記';
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  display: grid;
+  place-content: center;
+  width: 26px;
+  height: 30px;
+  border: 1.5px solid var(--stamp);
+  outline: 1px dashed var(--border);
+  outline-offset: 3px;
+  color: var(--stamp);
+  font: 600 12px 'Noto Serif JP', serif;
+  opacity: 0;
+  scale: 1.6;
+  rotate: 14deg;
+  transition: opacity 0.25s, scale 0.45s var(--spring), rotate 0.45s var(--spring);
+}
+.personal-card:hover::after {
+  opacity: 0.85;
+  scale: 1;
+  rotate: 6deg;
+}
+.personal-card .pc-date {
+  padding-right: 2.4rem;
+}
+
+.archive-card {
+  position: relative;
+  transition: background 0.25s, border-color 0.25s, transform 0.5s var(--spring), box-shadow 0.3s;
+}
+.archive-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--lift);
+}
+.archive-card-bottom {
+  border-top: 2px dashed var(--border);
+}
+.archive-card-action {
+  transition: color 0.2s, letter-spacing 0.4s var(--ease-out);
+}
+.archive-card:hover .archive-card-action {
+  letter-spacing: 2.5px;
+}
+.jh-guide-card {
+  border-radius: 6px;
+  transition: background 0.2s, border-color 0.35s, transform 0.5s var(--spring), box-shadow 0.3s;
+}
+.jh-guide-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--lift);
+}
+.jh-guide-icon {
+  transition: background 0.35s, border-color 0.35s, color 0.35s, rotate 0.6s var(--spring), scale 0.6s var(--spring);
+}
+.jh-guide-card:hover .jh-guide-icon {
+  rotate: -8deg;
+  scale: 1.15;
+  border-color: var(--green);
+}
+.tag-pill,
+.about-tag,
+.jh-topic,
+.part-topic {
+  transition: color 0.2s, border-color 0.2s, background 0.35s, translate 0.4s var(--spring), rotate 0.4s var(--spring);
+}
+.tag-pill:hover {
+  translate: 0 -3px;
+  rotate: -3deg;
+  border-color: var(--stamp);
+  color: var(--stamp);
+}
+.tag-pill:nth-child(even):hover {
+  rotate: 3deg;
+}
+.about-avatar {
+  transition: border-color 0.35s, rotate 0.8s var(--spring);
+}
+.about-card:hover .about-avatar {
+  rotate: 360deg;
+}
+.jp-start-btn {
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.2s, translate 0.4s var(--spring), box-shadow 0.3s;
+}
+.jp-start-btn:hover {
+  opacity: 1;
+  translate: 0 -2px;
+  box-shadow: 0 10px 20px -10px var(--stamp);
+}
+.jp-start-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.35) 50%, transparent 65%);
+  translate: -110% 0;
+}
+.jp-start-btn:hover::after {
+  translate: 110% 0;
+  transition: translate 0.7s var(--ease-out);
+}
+.journal-ver-todo,
+.col-link {
+  transition: color 0.2s, letter-spacing 0.4s var(--ease-out) !important;
+}
+.journal-ver-todo:hover,
+.col-link:hover {
+  letter-spacing: 3px;
+}
+
+/* ── hero: the title is written in, the ghost kanji drift ── */
+.fx .hero-headline .line1 span {
+  display: inline-block;
+  animation: ink-in 0.9s var(--ease-out) both;
+  animation-delay: calc(var(--n) * 0.09s + 0.1s);
+}
+.fx .hero-eyebrow,
+.fx .hero-headline .line2,
+.fx .hero-desc,
+.fx .hero-clock {
+  animation: rise 0.8s var(--ease-out) both;
+}
+.fx .hero-headline .line2 {
+  animation-delay: 0.55s;
+}
+.fx .hero-desc {
+  animation-delay: 0.7s;
+}
+.fx .hero-clock {
+  animation-delay: 0.85s;
+}
+.hero-bg text {
+  transition: translate 0.2s linear;
+  translate: 0 calc(var(--scroll, 0) * var(--drift, -0.1px));
+}
+.hero-bg text:nth-of-type(1) {
+  --drift: -0.16px;
+}
+.hero-bg text:nth-of-type(2) {
+  --drift: 0.1px;
+}
+.hero-bg text:nth-of-type(3) {
+  --drift: -0.07px;
+}
+@keyframes ink-in {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    translate: 0 0.12em;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 0.8rem;
+  }
+}
+
+/* ── scroll reveals ──
+   Elements with [data-reveal] wait hidden until they scroll into view; hibi.js
+   then fades them in with the Web Animations API, which leaves each component's
+   own hover transitions alone. */
+.fx [data-reveal]:not(.is-in) {
+  opacity: 0;
+}
+
+/* ── the brand seal ──
+   Pointing at the logo gives the seal a light wash of ink and darkens its inner
+   ring. Nothing rotates or grows: a thin ring that moves shimmers, and next to
+   bright ink on a dark bar that reads as a flash. */
+.nav-brand .hanko-seal {
+  transition: border-color 0.35s, color 0.35s, background-color 0.3s, transform 0.12s !important;
+}
+.nav-brand .hanko-seal::before {
+  transition: opacity 0.3s, border-color 0.35s;
+}
+.nav-brand:hover .hanko-seal,
+.nav-brand:focus-visible .hanko-seal {
+  transform: rotate(var(--seal-rotation)) !important;
+  background-color: color-mix(in srgb, var(--stamp) 12%, transparent);
+}
+.nav-brand:hover .hanko-seal::before,
+.nav-brand:focus-visible .hanko-seal::before {
+  opacity: 0.9;
+}
+.nav-brand:active .hanko-seal {
+  transform: rotate(var(--seal-rotation)) scale(0.95) !important;
+}
+
+/* ── top nav: underline slides, dropdown unfolds ── */
+.nav-links .nav-link {
+  background: linear-gradient(var(--stamp), var(--stamp)) 0 100% / 0 1px no-repeat;
+  padding-bottom: 2px;
+  transition: color 0.2s, background-size 0.4s var(--ease-out);
+}
+.nav-links .nav-link:hover {
+  background-size: 100% 1px;
+}
+.nav-links .nav-link.active {
+  border-bottom: 0;
+  background-size: 100% 1px;
+}
+.nav-dropdown-menu,
+.nav-book-pop {
+  display: block;
+  visibility: hidden;
+  opacity: 0;
+  translate: 0 -8px;
+  border-radius: 6px;
+  margin-top: 10px;
+  transition: opacity 0.2s, translate 0.35s var(--spring), visibility 0s 0.2s, background 0.35s, border-color 0.35s;
+}
+.nav-dropdown-menu.open,
+.nav-book-pop.open {
+  visibility: visible;
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: 0s;
+}
+.mode-btn {
+  border-radius: 3px;
+  transition: color 0.2s, border-color 0.2s, background 0.35s, translate 0.4s var(--spring);
+}
+.mode-btn:hover {
+  translate: 0 -1px;
+}
+.mode-btn .mode-kanji {
+  transition: color 0.35s, scale 0.5s var(--spring);
+}
+.mode-btn:hover .mode-kanji {
+  scale: 1.35;
+}
+
+/* ── tools: the stamp book counter and its panel ──
+   A dashed ring while the book is empty, like an empty slot on its pages; an
+   inked one with the number of stamps once there are some. */
+.nav-links > .nav-book {
+  --tools-gap: min(1.4rem, var(--nav-gap));
+  margin-left: calc(var(--tools-gap) - var(--nav-gap));
+  padding-left: var(--tools-gap);
+  border-left: 1px solid var(--border);
+}
+.nav-links > .nav-mode {
+  margin-left: calc(0.7rem - var(--nav-gap));
+}
+.nav-book-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  margin: 0;
+  padding: 0 10px 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  background: none;
+  color: var(--ink-soft);
+  font: 500 11.5px / 1 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.3s;
+}
+.nav-book-chip:hover,
+.nav-book-chip[aria-expanded='true'],
+.nav-book-chip.active {
+  border-color: var(--stamp);
+  color: var(--ink);
+}
+.nav-book-chip[aria-expanded='true'] {
+  background-color: var(--cream2);
+}
+.nb-ring {
+  display: grid;
+  place-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px dashed var(--muted);
+  border-radius: 50%;
+  color: var(--muted);
+  /* Inter here: at this size the dotted zero of the mono face reads as an 8 */
+  font: 600 10.5px / 1 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+:root:is([data-stamps='some'], [data-stamps='all']) .nb-ring {
+  border-style: solid;
+  border-color: var(--stamp);
+  color: var(--stamp);
+  rotate: -8deg;
+}
+:root[data-stamps='all'] .nb-ring {
+  background: var(--stamp);
+  color: var(--on-stamp);
+}
+.nb-of {
+  color: var(--muted);
+}
+/* a new stamp lands in the counter too */
+.nav-book-chip.is-bump .nb-ring {
+  animation: nb-bump 0.7s var(--ease-out);
+}
+@keyframes nb-bump {
+  0% {
+    scale: 1.9;
+    opacity: 0;
+  }
+  45% {
+    scale: 0.9;
+    opacity: 1;
+  }
+  70% {
+    scale: 1.06;
+  }
+}
+/* phones only: see the mobile rules below */
+.nav-book-chip--bar {
+  display: none;
+}
+
+.nav-book-pop {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 300;
+  width: 16.5rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.8rem 0.9rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--cream);
+  box-shadow: var(--lift);
+  color: var(--ink-soft);
+  font-family: 'Inter', sans-serif;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.nav-book-pop :is(p, ul, ol, li) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nbp-kicker {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--stamp);
+}
+.nbp-kicker [lang='ja'] {
+  margin-right: 0.35em;
+  font: 600 12px 'Noto Serif JP', serif;
+  letter-spacing: 2px;
+}
+.nbp-owner {
+  margin-top: 0.15rem !important;
+  font: 400 0.88rem / 1.3 'Lora', serif;
+  color: var(--ink-soft);
+}
+.nbp-owner b {
+  font-weight: 500;
+  color: var(--ink);
+}
+.nbp-owner [lang='ja'] {
+  margin-left: 0.3em;
+  font: 500 0.82rem 'Noto Serif JP', serif;
+  letter-spacing: 1px;
+  color: var(--stamp);
+}
+.nbp-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin-top: 0.4rem !important;
+  font: 400 0.85rem 'JetBrains Mono', monospace;
+  color: var(--muted);
+}
+.nbp-count b {
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--stamp);
+}
+.nbp-count small {
+  font: 500 10.5px 'Inter', sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.nbp-bar {
+  position: relative;
+  height: 4px;
+  margin: 0.45rem 0 0.7rem;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--cream3);
+}
+.nbp-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--stamps, 0) / var(--all, 24) * 100%);
+  border-radius: 3px;
+  background: var(--stamp);
+  transition: width 0.8s var(--ease-out);
+}
+.nbp-hint {
+  margin-bottom: 0.7rem !important;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.nbp-label {
+  margin-bottom: 0.4rem !important;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* which of the three texts shows depends on how full the book is */
+.nbp-when-none,
+.nbp-when-all,
+:root[data-stamps='none'] .nbp-when-some,
+:root[data-stamps='all'] .nbp-when-some {
+  display: none;
+}
+:root[data-stamps='none'] .nbp-when-none,
+:root[data-stamps='all'] .nbp-when-all {
+  display: revert;
+}
+.nbp-lines {
+  display: grid;
+  gap: 0.35rem;
+}
+/* every station is in the list; only the next one to read on each line shows */
+.nbp-line li {
+  display: none;
+}
+.nbp-line li.is-next {
+  display: block;
+}
+.nbp-line a,
+.nav-book-pop .nbp-done {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border-lt);
+  border-radius: 6px;
+  background: var(--cream2);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.nbp-line a:hover,
+.nbp-line a:focus-visible {
+  border-color: var(--border);
+  background: var(--cream3);
+}
+.nbp-badge {
+  display: grid;
+  place-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--c);
+  border-radius: 50%;
+  background: #fbf7ee;
+  color: #2c2118;
+  font: 700 9.5px 'Inter', sans-serif;
+}
+.nbp-text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.nbp-code {
+  font: 500 9px 'JetBrains Mono', monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nbp-name {
+  font: 400 0.82rem / 1.3 'Lora', serif;
+  color: var(--ink-soft);
+}
+.nbp-name b {
+  margin-right: 0.3em;
+  font: 600 0.85rem 'Noto Serif JP', serif;
+  letter-spacing: 1px;
+  color: var(--ink);
+}
+.nbp-go {
+  color: var(--stamp);
+  transition: translate 0.4s var(--spring);
+}
+.nbp-line a:hover .nbp-go {
+  translate: 4px 0;
+}
+.nbp-line a {
+  display: grid;
+}
+.nbp-done {
+  display: none;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.nbp-line.is-complete .nbp-done {
+  display: grid;
+}
+.nbp-open {
+  display: inline-block;
+  margin-top: 0.7rem;
+  border-bottom: 1px solid currentColor;
+  color: var(--stamp);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+/* the owner's name, wherever it is shown, only once there is one */
+[data-owner-show] {
+  display: none !important;
+}
+:root[data-owner] [data-owner-show] {
+  display: revert !important;
+}
+
+/* reading progress: a line under the nav with a train on it */
+.nav-rail {
+  position: absolute;
+  inset: auto 0 -1.5px;
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.nav-rail.is-on {
+  opacity: 1;
+}
+.nav-rail i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--p, 0) * 100%);
+  background: var(--stamp);
+}
+.nav-rail b {
+  position: absolute;
+  top: -5px;
+  left: calc(var(--p, 0) * 100%);
+  width: 30px;
+  height: 12px;
+  margin-left: -30px;
+  border-radius: 3px 7px 3px 3px;
+  background:
+    linear-gradient(var(--cream), var(--cream)) 5px 3px / 5px 4px no-repeat,
+    linear-gradient(var(--cream), var(--cream)) 13px 3px / 5px 4px no-repeat,
+    linear-gradient(var(--cream), var(--cream)) 21px 3px / 5px 4px no-repeat,
+    var(--ink);
+  box-shadow: 0 0 0 2px var(--cream);
+}
+
+/* ── the bar when it gets narrow ── */
+.nav-burger {
+  display: none;
+}
+/* the tagline is the first thing to go */
+@media (max-width: 900px) {
+  .nav-title .sub {
+    display: none;
+  }
+  nav.main-nav {
+    gap: 1.2rem;
+  }
+  .nav-links {
+    --nav-gap: 1.3rem;
+  }
+  /* no room for the ㊞ mark between links; the underline still shows the page */
+  .nav-links .nav-link.active::before {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .nav-book-chip--bar {
+    display: inline-flex;
+    margin-left: auto;
+  }
+  .nav-burger {
+    display: grid;
+    place-content: center;
+    gap: 5px;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    margin: 0 -8px 0 -0.4rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .nav-burger span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: var(--ink);
+    transition: translate 0.35s var(--ease-out), rotate 0.35s var(--ease-out), opacity 0.2s;
+  }
+  .nav-burger[aria-expanded='true'] span:nth-child(1) {
+    translate: 0 6.5px;
+    rotate: 45deg;
+  }
+  .nav-burger[aria-expanded='true'] span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-burger[aria-expanded='true'] span:nth-child(3) {
+    translate: 0 -6.5px;
+    rotate: -45deg;
+  }
+  nav.main-nav .nav-links {
+    position: fixed;
+    inset: var(--sl-nav-height, 60px) 0 auto 0;
+    z-index: 99;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    max-height: calc(100dvh - var(--sl-nav-height, 60px));
+    margin: 0;
+    padding: 0.6rem clamp(1.5rem, 5vw, 4rem) 1.4rem;
+    overflow-y: auto;
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--border);
+    box-shadow: 0 30px 40px -30px rgba(0, 0, 0, 0.4);
+    visibility: hidden;
+    opacity: 0;
+    translate: 0 -12px;
+    transition: opacity 0.25s, translate 0.4s var(--ease-out), visibility 0s 0.25s;
+  }
+  nav.main-nav.menu-open .nav-links {
+    visibility: visible;
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 0s;
+  }
+  nav.main-nav .nav-links > li {
+    margin: 0;
+    padding: 0.9rem 0;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  nav.main-nav .nav-links > li:last-child {
+    border-bottom: 0;
+  }
+  nav.main-nav .nav-links .nav-link {
+    font-size: 14px;
+  }
+  nav.main-nav .nav-links .nav-link.active::before {
+    display: none;
+  }
+  nav.main-nav .nav-dropdown > button,
+  nav.main-nav .nav-book > .nav-book-chip {
+    display: none;
+  }
+  nav.main-nav :is(.nav-dropdown-menu, .nav-book-pop) {
+    position: static;
+    visibility: visible;
+    opacity: 1;
+    translate: none;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    /* !important: the night theme sets its own shadow on the desktop dropdown */
+    box-shadow: none !important;
+    background: none;
+  }
+  nav.main-nav .nav-dropdown-menu a {
+    padding: 0.5rem 0 !important;
+    font-size: 13px !important;
+  }
+  nav.main-nav .nav-dropdown-menu .dropdown-sub-link {
+    padding-left: 1rem !important;
+  }
+  nav.main-nav .nav-dropdown-menu .divider {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────
+   Page transitions
+───────────────────────────────────────── */
+/* between pages the old one parts down the middle, like train doors */
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: none;
+}
+::view-transition-old(root) {
+  z-index: 2;
+  animation: doors-open 0.6s var(--ease-io) both;
+}
+::view-transition-new(root) {
+  z-index: 1;
+  animation: doors-arrive 0.6s var(--ease-out) both;
+}
+@keyframes doors-open {
+  from {
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%, 0 0, 100% 0, 100% 100%, 50% 100%, 50% 0, 0 0);
+  }
+  to {
+    clip-path: polygon(0 0, 0% 0, 0% 100%, 0 100%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 0, 0 0);
+  }
+}
+@keyframes doors-arrive {
+  from {
+    scale: 0.985;
+    opacity: 0.5;
+  }
+}
+/* day ⇄ night: the new sky spreads out from the switch */
+html.theme-wipe::view-transition-old(root) {
+  z-index: 1;
+  animation: none;
+}
+html.theme-wipe::view-transition-new(root) {
+  z-index: 2;
+  animation: theme-wipe 0.75s var(--ease-io) both;
+}
+html.theme-wipe * {
+  transition: none !important;
+}
+@keyframes theme-wipe {
+  from {
+    clip-path: circle(0 at var(--tx, 100%) var(--ty, 0%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--tx, 100%) var(--ty, 0%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  .fx [data-reveal]:not(.is-in) {
+    opacity: 1;
+  }
+}
+
+/* hub entry ticket: keep the artwork clear of the tear-off stub */
+.jh-hero-card {
+  padding-right: calc(80px + 2rem) !important;
+}
+.jh-hero-card .jh-hero-kanji {
+  transition: scale 0.8s var(--spring), opacity 0.4s;
+}
+.jh-hero-card:hover .jh-hero-kanji {
+  scale: 1.08;
+  opacity: 0.2;
+}
+.footer-stamps {
+  color: var(--stamp);
+  border-bottom: 1px solid currentColor;
+}
+.footer-receipt {
+  opacity: 1;
+}
+@media (max-width: 768px) {
+  .jh-hero-card {
+    padding-right: 1.6rem !important;
+  }
+  .jh-hero-card .ticket-stub-border,
+  .jh-hero-card .kippu-stub-text {
+    display: none;
+  }
+  .eki-stamp-seal {
+    right: 12px;
+  }
+}
+
+:where(.kippu-ticket) {
+  display: block;
+}
+/* leave room for the station stamp in the ticket's top-right corner */
+.jh-hero-card .kippu-header-meta {
+  padding-right: 7.5rem;
+}
+@media (max-width: 768px) {
+  .jh-hero-card .kippu-header-meta {
+    padding-right: 5.5rem;
+  }
+}
+
+/* ── Guide pages: the same bar inside Starlight's header ──
+   Below 50rem Starlight shows its own menu button, fixed in the top corner, and
+   the site links move into its sidebar (see starlight/Sidebar.astro). The bar
+   keeps room for that button and holds, right to left of it: the stamp counter
+   and the search, as a square button. */
+header.header .nav-title .sub {
+  display: none;
+}
+@media (min-width: 75rem) {
+  header.header .nav-title .sub {
+    display: block;
+  }
+}
+@media (max-width: 68rem) {
+  header.header .main-nav {
+    gap: 1rem;
+  }
+  header.header .nav-links {
+    --nav-gap: 1.2rem;
+  }
+  header.header .nav-links .nav-link.active::before {
+    display: none;
+  }
+}
+@media (max-width: 49.99rem) {
+  :root {
+    --sl-nav-pad-x: 1rem;
+    --sl-menu-button-size: 2.5rem;
+  }
+  header.header .nav-burger,
+  header.header .nav-links {
+    display: none !important;
+  }
+  header.header .main-nav {
+    gap: 0.6rem;
+    padding-inline: 1.25rem calc(var(--sl-nav-pad-x) + var(--sl-menu-button-size) + 0.5rem);
+  }
+  header.header .nav-search {
+    flex: none;
+    width: 2.5rem;
+    min-width: 0;
+    margin-inline-start: auto;
+  }
+  header.header .nav-search button[data-open-modal] {
+    justify-content: center;
+    height: 2.5rem;
+    padding: 0;
+    font-size: 1.05rem;
+  }
+  header.header .nav-book-chip--bar {
+    display: inline-flex;
+    margin-left: 0;
+  }
+}
+/* Starlight's menu button, drawn like the one on the other pages: three plain
+   strokes in the page ink instead of a filled disc. */
+starlight-menu-button button {
+  --sl-icon-size: 1.5rem;
+  border-radius: 4px;
+  padding: 0;
+  place-content: center;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--ink);
+  box-shadow: none;
+}
+starlight-menu-button[aria-expanded='true'] button,
+:root[data-theme='light'] starlight-menu-button button,
+:root[data-theme='light'] starlight-menu-button[aria-expanded='true'] button {
+  background-color: transparent;
+  color: var(--ink);
+}
+starlight-menu-button[aria-expanded='true'] button {
+  color: var(--stamp);
+}
+
+/* text for screen readers only */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* skip link: first thing a keyboard reaches */
+.skip-link {
+  position: fixed;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 300;
+  padding: 0.6rem 1rem !important;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  translate: 0 -300%;
+}
+.skip-link:focus {
+  translate: 0 0;
+}
+/* the footer receipt sits right under the line map */
+.hibi-site footer {
+  border-top: 0;
+}
+.hibi-site main {
+  padding-bottom: 1rem;
+}
+
+/* ── a slip that slides up when a stamp is collected ── */
+.hibi-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.4rem;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  max-width: min(34rem, calc(100vw - 2rem));
+  padding: 0.8rem 1.1rem 0.8rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--cream2);
+  color: var(--ink-soft);
+  font: 400 13.5px / 1.4 'Inter', sans-serif;
+  box-shadow: var(--lift);
+  translate: -50% 160%;
+  opacity: 0;
+  transition: translate 0.6s var(--spring), opacity 0.3s;
+}
+.hibi-toast.is-in {
+  translate: -50% 0;
+  opacity: 1;
+}
+.hibi-toast b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.hibi-toast a {
+  flex: none;
+  color: var(--stamp);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+.hibi-toast-seal {
+  flex: none;
+  display: grid;
+  place-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 2px solid var(--stamp);
+  border-radius: 50%;
+  color: var(--stamp);
+  font: 600 0.95rem 'Noto Serif JP', serif;
+  rotate: -10deg;
+}
+.hibi-toast.is-in .hibi-toast-seal {
+  animation: stamp-press 0.6s var(--ease-out) 0.25s both;
+}
+
+/* ─────────────────────────────────────────
+   Guide prose
+   Starlight's own notices and tables, redrawn in the Hibi palette so a long
+   chapter reads as one sheet of paper rather than a set of coloured boxes.
+───────────────────────────────────────── */
+/* Nothing on the site scrolls sideways. A station stamp is pressed in from a
+   larger size, and on a phone that must not widen the page while it animates.
+   The clip on <main> also keeps that moment out of the page's measured width. */
+html,
+.hibi-site main {
+  overflow-x: clip;
+}
+
+/* figures (the Figura component) are numbered per page */
+.sl-markdown-content {
+  counter-reset: figura;
+}
+
+/* notices (:::note, :::tip, :::caution, :::danger): same build as the
+   「Desde Colombia」 box, with the accent standing in for the flag */
+.starlight-aside {
+  --aside-c: var(--purple);
+  padding: 1rem 1.2rem 1rem 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--aside-c) 28%, var(--border));
+  border-inline-start: 5px solid var(--aside-c);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--aside-c) 7%, var(--cream2));
+  color: var(--ink-soft);
+  transition: background 0.35s, border-color 0.35s;
+}
+.starlight-aside--tip {
+  --aside-c: var(--green);
+}
+.starlight-aside--caution {
+  --aside-c: var(--brown);
+}
+.starlight-aside--danger {
+  --aside-c: var(--stamp);
+}
+.starlight-aside__title {
+  gap: 0.5rem;
+  color: var(--aside-c);
+  font: 600 11px / 1.4 'JetBrains Mono', monospace;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.starlight-aside__icon {
+  font-size: 1.25em;
+}
+.starlight-aside__content {
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+.starlight-aside__content strong {
+  color: var(--ink);
+}
+.starlight-aside__content a {
+  color: var(--stamp);
+}
+
+/* tables: a timetable, not a spreadsheet */
+.sl-markdown-content table:not(:where(.not-content *)) {
+  font-size: 0.93rem;
+  line-height: 1.6;
+}
+.sl-markdown-content th:not(:where(.not-content *)) {
+  padding-block: 0.55rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--brown);
+  font: 600 10.5px / 1.6 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.sl-markdown-content td:not(:where(.not-content *)) {
+  padding-block: 0.65rem;
+  border-bottom: 1px dashed var(--border);
+}
+.sl-markdown-content tbody tr:last-child td:not(:where(.not-content *)) {
+  border-bottom-color: transparent;
+}
+.sl-markdown-content td:first-child:not(:where(.not-content *)) {
+  color: var(--ink);
+}
+
+/* a quotation: someone else's words, set apart in the serif */
+.sl-markdown-content blockquote:not(:where(.not-content *)) {
+  padding: 0.3rem 0 0.3rem 1.3rem;
+  border-inline-start: 3px solid var(--stamp);
+  color: var(--ink-soft);
+  font-family: 'Lora', serif;
+  font-style: italic;
+}
+
+/* ── stamps switched off: nothing about stamps is shown, except the way back ──
+   The stamps themselves are kept. The nav chip and its panel stay, dimmed, and
+   the panel says so and offers to turn them on again. */
+.footer-stamps-on {
+  display: none;
+  font: inherit;
+  background: none;
+  cursor: pointer;
+}
+html[data-stamps-off] .footer-stamps-on {
+  display: inline;
+}
+html[data-stamps-off] :is(
+  .footer-stamps:not(.footer-stamps-on),
+  .doc-toc-stamp,
+  .doc-toc-tally,
+  .st-status,
+  .sign-pad,
+  .sc-daruma,
+  .hibi-toast
+) {
+  display: none !important;
+}
+html[data-stamps-off] .nav-book-chip {
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+.nbp-off {
+  display: none;
+}
+html[data-stamps-off] .nbp-on {
+  filter: blur(4px);
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+}
+html[data-stamps-off] .nbp-off {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.8rem;
+  text-align: center;
+  padding: 1rem;
+}
+.nbp-off p {
+  margin: 0;
+  font: 500 0.95rem 'Lora', serif;
+  color: var(--ink);
+}
+.nbp-off button {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--stamp);
+  border-radius: 999px;
+  background: none;
+  font: 500 11px 'Inter', sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--stamp);
+  cursor: pointer;
+}
+/* small text actions under the panel: name, on / off, delete */
+.nav-book-pop .nbp-acts {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-lt);
+}
+/* a link and two buttons: the same box for all three, so they sit on one line */
+.nbp-acts :is(a, button) {
+  display: inline-block;
+  text-decoration: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 500 10px / 1.4 'Inter', sans-serif;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted);
+  cursor: pointer;
+}
+.nbp-acts :is(a, button):hover {
+  color: var(--stamp);
+}
+/* phones: the panel is part of the menu, so the notice replaces it instead of covering it */
+@media (max-width: 760px) {
+  html[data-stamps-off] nav.main-nav .nbp-on {
+    display: none;
+  }
+  html[data-stamps-off] nav.main-nav .nbp-off {
+    position: static;
+    justify-items: start;
+    padding: 0;
+  }
+}

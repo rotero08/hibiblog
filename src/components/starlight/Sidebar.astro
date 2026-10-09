@@ -15,6 +15,8 @@
  * (`Astro.locals.starlightRoute.sidebar`), so labels, hrefs and current-page
  * state stay in sync with Starlight.
  */
+import { totalStations } from '../../data/guides';
+
 type Link = { type: 'link'; href: string; label: string; isCurrent: boolean };
 type Group = { type: 'group'; label: string; entries: SidebarEntry[] };
 type SidebarEntry = Link | Group;
@@ -68,8 +70,35 @@ const chaptersOf = (g: Group): Link[] => {
     <span class="doc-back-jp" aria-hidden="true">戻る</span>
   </a>
 
+  {/* On phones the top bar has no room for the site links, the stamp book or
+      the day / night switch, so they live here. */}
+  <div class="doc-site">
+    <p class="doc-site-links">
+      <a href="/">Portada</a>
+      <a href="/japones/">Japonés</a>
+      <a href="/japon/">Japón</a>
+      <a href="/blog/">Blog</a>
+      <a href="/personal/">Personal</a>
+    </p>
+    <p class="doc-site-tools">
+      <a class="nav-book-chip" href="/sellos/">
+        <span class="nb-ring"><span data-stamp-count>0</span></span>
+        <span class="nb-of"><span class="vh"> de </span><span aria-hidden="true">/</span>{totalStations}</span>
+        <span class="doc-site-book">Libreta de sellos</span>
+      </a>
+      <button class="mode-btn" data-theme-toggle aria-label="Cambiar entre día y noche">
+        <span class="mode-kanji kanji-moon">月</span>
+        <span class="mode-kanji kanji-sun">日</span>
+        <span class="label-dark">Noche</span>
+        <span class="label-light">Día</span>
+      </button>
+    </p>
+  </div>
+
+  {/* counts and "next" marks are for this guide only (see markStamps in hibi.js) */}
+  <div data-stamp-scope>
   <ul class="doc-toc-list doc-nav-top">
-    <li>
+    <li data-stamp-key={inicioHref}>
       <a
         class="doc-toc-item"
         class:list={[{ 'is-active': inicioActive }]}
@@ -85,10 +114,15 @@ const chaptersOf = (g: Group): Link[] => {
 
   {groupsToRender.map((group) => (
     <div class="doc-nav-group">
-      <p class="doc-toc-label">{group.label}</p>
+      <p class="doc-toc-label">
+        {group.label}
+        <a class="doc-toc-tally" href="/sellos/" data-astro-reload title="Cada capítulo leído hasta el final te da un sello">
+          Sellos <span data-stamp-count>0</span>/{flattenLinks(group.entries).length} →
+        </a>
+      </p>
       <ul class="doc-toc-list">
         {chaptersOf(group).map((link, i) => (
-          <li>
+          <li data-stamp-key={link.href}>
             <a
               class="doc-toc-item"
               class:list={[{ 'is-active': link.isCurrent }]}
@@ -104,6 +138,7 @@ const chaptersOf = (g: Group): Link[] => {
       </ul>
     </div>
   ))}
+  </div>
 </nav>
 
 <style>
@@ -129,10 +164,10 @@ const chaptersOf = (g: Group): Link[] => {
     padding: 0.4rem 0.5rem;
     margin-bottom: 1.1rem;
     text-decoration: none;
-    color: var(--muted);
-    font-size: 12px;
+    color: var(--ink-soft);
+    font-size: 12.5px;
     letter-spacing: 1px;
-    border-bottom: 1px dashed var(--border-lt);
+    border-bottom: 1px dashed var(--border);
     border-radius: 0;
     transition: color 0.25s, border-color 0.35s;
   }
@@ -155,17 +190,17 @@ const chaptersOf = (g: Group): Link[] => {
   .doc-back-jp {
     margin-inline-start: auto;
     font-family: 'Noto Serif JP', serif;
-    font-size: 11px;
+    font-size: 11.5px;
     letter-spacing: 2px;
-    color: var(--brown-lt);
+    color: var(--brown);
   }
 
   .doc-toc-label {
-    font-size: 10px;
-    letter-spacing: 3px;
+    font-size: 10.5px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
     color: var(--muted);
-    font-weight: 500;
+    font-weight: 600;
     margin: 0 0 1rem;
   }
   .doc-toc-list {
@@ -191,6 +226,10 @@ const chaptersOf = (g: Group): Link[] => {
     text-decoration: none;
     color: var(--ink);
     transition: background 0.25s, border-color 0.35s, transform 0.15s;
+  }
+  .doc-toc-item.is-active .doc-toc-title {
+    color: var(--ink);
+    font-weight: 500;
   }
   .doc-toc-item:hover {
     background: var(--cream3);
@@ -236,11 +275,114 @@ const chaptersOf = (g: Group): Link[] => {
     text-align: center;
   }
   :global(:root[data-theme='dark']) .doc-toc-num {
-    color: #9a8abf;
+    color: #c8aaf5;
+  }
+  /* the chapters hang off one line, like stops on a route map */
+  .doc-nav-group .doc-toc-list {
+    position: relative;
+  }
+  .doc-nav-group .doc-toc-list::before {
+    content: '';
+    position: absolute;
+    inset: 1.4rem auto 1.4rem calc(1rem + 6px);
+    width: 2px;
+    background: var(--border);
+    z-index: 1;
+  }
+  .doc-toc-stamp {
+    z-index: 2;
+    background: var(--cream2);
+    transition: border-color 0.25s, background-color 0.25s, scale 0.45s var(--spring);
+  }
+  .doc-toc-item:hover .doc-toc-stamp {
+    scale: 1.25;
+    border-color: var(--stamp);
+  }
+  /* collected: a tiny 済 ("done") seal */
+  li.is-stamped .doc-toc-stamp {
+    width: 16px;
+    height: 16px;
+    margin: -1px;
+    border-color: var(--stamp);
+    background: var(--cream2);
+    rotate: -10deg;
+  }
+  li.is-stamped .doc-toc-stamp::after {
+    content: '済';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--stamp);
+    font: 600 8.5px 'Noto Serif JP', serif;
+  }
+  li.is-stamped .doc-toc-item.is-active .doc-toc-stamp::after {
+    color: var(--cream);
+  }
+  .doc-toc-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .doc-toc-tally {
+    color: var(--stamp);
+    text-decoration: none;
+    letter-spacing: 1.5px;
+    transition: letter-spacing 0.4s;
+  }
+  .doc-toc-tally:hover {
+    letter-spacing: 2.5px;
+  }
+  .doc-toc-item {
+    transition: background 0.25s, border-color 0.35s, transform 0.45s var(--spring);
+  }
+  .doc-toc-item:hover {
+    transform: translateX(4px);
+  }
+  .doc-site {
+    display: none;
+    margin: 0 0 1.4rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .doc-site-links,
+  .doc-site-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+  }
+  .doc-site-tools {
+    justify-content: space-between;
+    margin-top: 0.8rem;
+  }
+  .doc-site-links a {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+  .doc-site-book {
+    margin-left: 0.3rem;
+    font: 500 11.5px 'Inter', sans-serif;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  @media (max-width: 49.99rem) {
+    .doc-site {
+      display: block;
+    }
   }
   .doc-toc-title {
     font-size: 13.5px;
-    color: var(--muted);
+    color: var(--ink-soft);
     line-height: 1.4;
   }
 </style>

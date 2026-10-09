@@ -8,6 +8,15 @@
  * ink-stamp (駅スタンプ / eki-stamp). The actual ticket content is supplied
  * through the default slot, keeping the component reusable for the vocabulary
  * widget, the hub entry ticket, and future CMS-driven tickets.
+ *
+ * @example
+ * ```mdx
+ * <KippuTicket stars stub stubText="乗車券" serial="7702" stamp={{ title: '到着', date: '2026.06.12' }}>
+ *
+ * Lo que va dentro del boleto se escribe en Markdown.
+ *
+ * </KippuTicket>
+ * ```
  */
 interface Props {
   /** Render the three ✦ "validation" stars in the top-left corner. @default false */
@@ -26,6 +35,12 @@ interface Props {
     /** Monospaced date line, e.g. "2026.06.12". */
     date?: string;
   };
+  /** Vertical print on the stub (needs `stub`), e.g. "乗車券". */
+  stubText?: string;
+  /** Serial number printed under the stub text, e.g. "7702". */
+  serial?: string;
+  /** Lean towards the pointer on hover. @default true */
+  tilt?: boolean;
   /** Extra class names merged onto the ticket (layout / theme modifiers). */
   class?: string;
   /** When set, the entire ticket becomes a link pointing to this URL. */
@@ -38,7 +53,7 @@ interface Props {
   reload?: boolean;
 }
 
-const { stars = false, stub = false, stamp, class: className = '', href, reload = false } = Astro.props;
+const { stars = false, stub = false, stamp, stubText, serial, tilt = true, class: className = '', href, reload = false } = Astro.props;
 const Tag = href ? 'a' : 'div';
 // Spread (rather than a literal attribute) so the static checker doesn't warn
 // about data-astro-reload on the dynamic tag — it is only set on the <a> form.
@@ -48,13 +63,32 @@ const linkAttrs = href && reload ? { 'data-astro-reload': true } : {};
 <Tag
   class:list={['kippu-ticket', className, { 'as-link': href }]}
   href={href}
+  data-tilt={tilt ? '' : undefined}
+  data-inview
   {...linkAttrs}
 >
-  <div class="kippu-left-cover"></div>
-  <div class="kippu-right-cover"></div>
-  <div class="kippu-notch"></div>
-  {stub && <div class="ticket-stub-border"></div>}
-  {stars && <div class="kippu-stars">✦ ✦ ✦</div>}
+  {/* the paper: its own layer, so the side notches are real cut-outs */}
+  <span class="kippu-paper" aria-hidden="true"><i></i></span>
+  {/* 入鋏, the punch mark, clipped out when the ticket comes into view */}
+  <span class="kippu-notch" aria-hidden="true"></span>
+  {stub && <span class="ticket-stub-border" aria-hidden="true"></span>}
+  {
+    stub && stubText && (
+      <span class="kippu-stub-text" aria-hidden="true">
+        {stubText}
+        {serial && <b>{serial}</b>}
+      </span>
+    )
+  }
+  {
+    stars && (
+      <span class="kippu-stars" aria-hidden="true">
+        <span>✦</span>
+        <span>✦</span>
+        <span>✦</span>
+      </span>
+    )
+  }
   {
     stamp && (
       <div class="eki-stamp-seal">

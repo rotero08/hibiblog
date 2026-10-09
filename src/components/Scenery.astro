@@ -1,0 +1,559 @@
+---
+/**
+ * Scenery: a small shrine garden at the foot of every page, drawn as flat
+ * paper-cut shapes. Everything in it is a piece of Japan you can point at to
+ * learn its name, and a few things react:
+ *
+ *   灯籠  the stone lantern lights the night (it is a second day/night switch)
+ *   狐    the Inari foxes answer "kon!"
+ *   招き猫 the beckoning cat waves and meows
+ *   達磨  the daruma shows your stamp-book goal and links to it
+ *
+ * By day there is a sun; at night a moon with its rabbit, lit
+ * lanterns, fireflies and the foxes' eyes. The tree changes with the season.
+ */
+import Daruma from './Daruma.astro';
+import { currentKo } from '../data/koyomi';
+import { totalStations } from '../data/guides';
+
+const season = currentKo().season;
+const tree = {
+  spring: { ja: '桜', kana: 'さくら', es: 'sakura: el cerezo en flor. Salir a verlo se llama hanami.' },
+  summer: { ja: '青葉', kana: 'あおば', es: 'aoba: las hojas verdes y nuevas del verano.' },
+  autumn: { ja: '紅葉', kana: 'もみじ', es: 'momiji: el arce rojo del otoño. Salir a verlo se llama momijigari.' },
+  winter: { ja: '冬木立', kana: 'ふゆこだち', es: 'fuyukodachi: los árboles sin hojas del invierno.' },
+}[season];
+const fireflies = [
+  [300, 150], [352, 118], [410, 170], [476, 132], [540, 160], [1010, 140], [1080, 168], [1150, 120], [1235, 156],
+];
+const lanterns = ['祭', '日', '々', '夜', '桜', '月', '灯'];
+---
+
+<section class="scene" data-scene data-season={season} aria-label="Un jardín japonés: toca cada cosa para saber cómo se llama">
+  <svg viewBox="0 0 1440 240" preserveAspectRatio="xMidYMax slice" role="group">
+    {/* ── sky ── */}
+    <g class="sc-item sc-sky-body" tabindex="0" role="img" data-ja="月見" data-kana="つきみ" data-es="tsukimi: contemplar la luna de otoño. En Japón se dice que en la luna hay un conejo haciendo mochi." data-ja-day="太陽" data-kana-day="たいよう" data-es-day="taiyō: el sol. Japón se escribe 日本, que significa origen del sol.">
+      <circle class="sc-disc" cx="930" cy="54" r="30"></circle>
+      <g class="sc-rabbit">
+        <ellipse cx="925" cy="60" rx="9" ry="7"></ellipse>
+        <circle cx="934" cy="52" r="5"></circle>
+        <path d="M932 49 q-3 -11 1 -13 q3 3 2 12z M937 49 q2 -10 5 -10 q2 4 -2 12z"></path>
+        <rect x="940" y="60" width="9" height="7" rx="2"></rect>
+      </g>
+    </g>
+    <g class="sc-cloud">
+      <rect x="150" y="52" width="150" height="9" rx="4.5"></rect>
+      <rect x="190" y="66" width="190" height="9" rx="4.5"></rect>
+      <rect x="1090" y="78" width="170" height="9" rx="4.5"></rect>
+      <rect x="1060" y="92" width="120" height="9" rx="4.5"></rect>
+    </g>
+
+    {/* ── far: Mount Fuji and hills ── */}
+    <g class="sc-item" tabindex="0" role="img" data-ja="富士山" data-kana="ふじさん" data-es="Fuji-san: 3776 m. El san de su nombre es otra lectura de 山, montaña.">
+      <path class="sc-far" d="M330 214 C440 192 505 122 535 80 Q560 64 585 80 C615 122 680 192 790 214Z"></path>
+      <path class="sc-snow" d="M535 80 Q560 64 585 80 C592 90 599 100 606 110 L594 102 L586 114 L574 100 L562 116 L550 100 L540 112 L530 100 L516 108 C523 98 529 89 535 80Z"></path>
+    </g>
+    <path class="sc-far" d="M0 214 V172 Q110 138 240 170 T470 186 V214Z M900 214 V186 Q1040 150 1180 178 T1440 160 V214Z"></path>
+    <path class="sc-mid" d="M0 214 V194 Q160 172 330 196 T640 200 T960 198 T1440 190 V214Z"></path>
+
+    {/* ── bamboo ── */}
+    <g class="sc-item sc-bamboo" tabindex="0" role="img" data-ja="竹" data-kana="たけ" data-es="take: bambú. Crece recto y se dobla sin romperse, por eso simboliza la fortaleza.">
+      <rect class="sc-hit" x="268" y="40" width="80" height="176"></rect>
+      {
+        [[282, 60, -1], [304, 34, 1], [326, 72, -1]].map(([x, top, dir], i) => (
+          <g class="sc-stalk" style={`--d:${i * 0.7}s`}>
+            <path class="sc-green" d={`M${x} 214 V${top}`} stroke-width="7" fill="none" />
+            <path class="sc-joint" d={`M${x - 4} ${top + 38} h8 M${x - 4} ${top + 78} h8 M${x - 4} ${top + 118} h8`} fill="none" />
+            <path class="sc-leaf" d={`M${x} ${top + 4} q${dir * 22} -10 ${dir * 34} 4 q${-dir * 18} 2 ${-dir * 34} -4z M${x} ${top + 26} q${-dir * 20} -8 ${-dir * 32} 6 q${dir * 16} 2 ${dir * 32} -6z M${x} ${top + 50} q${dir * 18} -6 ${dir * 28} 8 q${-dir * 14} 0 ${-dir * 28} -8z`} />
+          </g>
+        ))
+      }
+    </g>
+
+    {/* ── the season's tree ── */}
+    <g class="sc-item sc-tree" tabindex="0" role="img" data-ja={tree.ja} data-kana={tree.kana} data-es={tree.es}>
+      <path class="sc-trunk" d="M1098 214 C1100 186 1092 170 1104 150 C1110 140 1108 128 1112 118 L1120 120 C1118 134 1122 144 1116 156 C1108 172 1114 190 1114 214Z M1108 160 C1090 150 1078 148 1066 136 L1070 132 C1084 142 1096 142 1110 150Z"></path>
+      <g class="sc-foliage">
+        <circle cx="1070" cy="118" r="30"></circle>
+        <circle cx="1112" cy="92" r="38"></circle>
+        <circle cx="1154" cy="122" r="30"></circle>
+        <circle cx="1108" cy="128" r="26"></circle>
+      </g>
+    </g>
+
+    {/* ── 灯籠: click to light the night ── */}
+    <g class="sc-item sc-toro" tabindex="0" role="button" data-theme-toggle aria-label="Linterna de piedra: cambiar entre día y noche" data-ja="灯籠" data-kana="とうろう" data-es="tōrō: linterna de piedra. Tócala para cambiar entre día y noche.">
+      <circle class="sc-halo" cx="560" cy="150" r="46"></circle>
+      <path class="sc-stone" d="M544 214 h32 v-8 h-8 l-3 -36 h-10 l-3 36 h-8z M542 170 h36 v-6 h-36z M548 164 v-24 h24 v24z M536 140 q24 -22 48 0 l6 2 q-4 6 -10 4 h-40 q-6 2 -10 -4z M556 118 q4 -10 8 0z"></path>
+      <rect class="sc-flame" x="554" y="145" width="12" height="14" rx="2"></rect>
+    </g>
+
+    {/* ── 鳥居, with the two foxes of Inari and a weather doll ── */}
+    <g class="sc-item" tabindex="0" role="img" data-ja="鳥居" data-kana="とりい" data-es="torii: la puerta de un santuario sintoísta. Marca el paso del mundo corriente al sagrado.">
+      <path class="sc-red" d="M686 214 L690 112 h12 L706 214Z M754 214 L758 112 h12 L774 214Z M672 126 h116 v9 h-116z M722 108 h16 v18 h-16z"></path>
+      <path class="sc-red" d="M652 92 Q730 106 808 92 L812 106 Q730 118 648 106Z"></path>
+      <path class="sc-dark" d="M650 90 Q730 103 810 90 L811 95 Q730 108 649 95Z M683 206 h26 v8 h-26z M751 206 h26 v8 h-26z"></path>
+    </g>
+    <g class="sc-item sc-fox" tabindex="0" role="button" data-sc="fox" data-say="コン！" data-ja="狐" data-kana="きつね" data-es="kitsune: el zorro, mensajero de la deidad Inari. En japonés su sonido es kon kon. Tócalo.">
+      <g transform="translate(640 204)">
+        <rect class="sc-stone" x="-17" y="0" width="34" height="10"></rect>
+        <path class="sc-tail sc-fur" d="M-12 0 C-28 -4 -28 -24 -16 -28 C-21 -17 -16 -8 -9 -6Z"></path>
+        <path class="sc-fur" d="M-12 0 C-14 -14 -8 -27 0 -31 L-2 -42 L4 -35 L9 -43 L10 -32 C16 -29 19 -25 23 -23 L12 -18 C12 -8 12 -4 12 0Z"></path>
+        <path class="sc-bib" d="M2 -22 L12 -18 L9 -9 L1 -13Z"></path>
+        <circle class="sc-eye" cx="10" cy="-30" r="1.5"></circle>
+      </g>
+    </g>
+    <g class="sc-item sc-fox" tabindex="0" role="button" data-sc="fox" data-say="コンコン！" data-ja="稲荷" data-kana="いなり" data-es="Inari: la deidad del arroz y los negocios. Sus santuarios se reconocen por las estatuas de zorros, y el inari-zushi lleva su nombre.">
+      <g transform="translate(820 204) scale(-1 1)">
+        <rect class="sc-stone" x="-17" y="0" width="34" height="10"></rect>
+        <path class="sc-tail sc-fur" d="M-12 0 C-28 -4 -28 -24 -16 -28 C-21 -17 -16 -8 -9 -6Z"></path>
+        <path class="sc-fur" d="M-12 0 C-14 -14 -8 -27 0 -31 L-2 -42 L4 -35 L9 -43 L10 -32 C16 -29 19 -25 23 -23 L12 -18 C12 -8 12 -4 12 0Z"></path>
+        <path class="sc-bib" d="M2 -22 L12 -18 L9 -9 L1 -13Z"></path>
+        <circle class="sc-eye" cx="10" cy="-30" r="1.5"></circle>
+      </g>
+    </g>
+    {/* ── 招き猫 ── */}
+    <g class="sc-item sc-neko" tabindex="0" role="button" data-sc="neko" data-say="にゃー" data-ja="招き猫" data-kana="まねきねこ" data-es="maneki-neko: el gato que llama con la pata a los clientes y a la buena suerte. Tócalo.">
+      <g transform="translate(888 214)">
+        <ellipse class="sc-cushion" cx="0" cy="0" rx="24" ry="5"></ellipse>
+        <path class="sc-white" d="M-17 0 C-21 -18 -14 -30 0 -30 C14 -30 21 -18 17 0Z"></path>
+        <g class="sc-paw"><rect class="sc-white" x="10" y="-52" width="10" height="24" rx="5"></rect></g>
+        <path class="sc-white" d="M-15 -34 L-16 -50 L-5 -44 Q0 -46 5 -44 L16 -50 L15 -34 C18 -24 10 -18 0 -18 C-10 -18 -18 -24 -15 -34Z"></path>
+        <path class="sc-patch" d="M-16 -50 L-5 -44 L-13 -40Z M16 -50 L5 -44 L13 -40Z"></path>
+        <path class="sc-face" d="M-8 -33 q2.5 -3 5 0 M3 -33 q2.5 -3 5 0 M-2 -28 h4 M0 -28 v3" fill="none"></path>
+        <path class="sc-bib" d="M-11 -20 Q0 -14 11 -20 L10 -16 Q0 -10 -10 -16Z"></path>
+        <circle class="sc-gold" cx="0" cy="-13" r="3"></circle>
+        <ellipse class="sc-gold" cx="-9" cy="-6" rx="5" ry="7"></ellipse>
+      </g>
+    </g>
+
+    {/* ── 達磨: the stamp-book goal ── */}
+    <a class="sc-item sc-daruma" href="/sellos/" aria-label="Daruma: abrir la libreta de sellos" data-ja="達磨" data-kana="だるま" data-es={`daruma: se le pinta un ojo al fijarse una meta y el otro al cumplirla. Aquí la meta son los ${totalStations} sellos de la libreta. Tócalo para abrirla.`}>
+      <g transform="translate(934 170) scale(0.42)"><Daruma as="g" total={totalStations} /></g>
+    </a>
+
+    {/* ── night only ── */}
+    <g class="sc-fireflies" aria-hidden="true">
+      {fireflies.map(([x, y], i) => <circle cx={x} cy={y} r="2" style={`--d:${(i * 0.83) % 5}s;--dx:${(i % 3) * 14 - 14}px`} />)}
+    </g>
+    <g class="sc-chochin" aria-hidden="true">
+      <path d="M380 0 Q720 58 1060 0" fill="none"></path>
+      {
+        lanterns.map((ch, i) => {
+          const t = (i + 0.5) / lanterns.length;
+          const x = 380 + 680 * t;
+          const y = 4 * 29 * t * (1 - t) + 3;
+          return (
+            <g class="sc-lamp" transform={`translate(${x.toFixed(0)} ${y.toFixed(0)})`} style={`--d:${i * 0.4}s`}>
+              <g>
+                <rect class="cap" x="-5" y="2" width="10" height="3"></rect>
+                <ellipse class:list={['paper', { alt: i % 2 }]} cx="0" cy="17" rx="10" ry="12.5"></ellipse>
+                <rect class="cap" x="-5" y="29" width="10" height="3"></rect>
+                <text x="0" y="21" text-anchor="middle">{ch}</text>
+              </g>
+            </g>
+          );
+        })
+      }
+    </g>
+
+    <path class="sc-ground" d="M0 240 V212 Q200 206 420 212 T860 211 T1440 213 V240Z"></path>
+  </svg>
+
+  <p class="scene-tip" data-scene-tip role="status" hidden>
+    <b></b><i></i><span></span>
+  </p>
+  <span class="scene-say" data-scene-say hidden></span>
+  <p class="scene-hint">庭 · Toca las cosas del jardín</p>
+</section>
+
+<script is:inline>
+  (function () {
+    function init() {
+      document.querySelectorAll('[data-scene]').forEach(function (scene) {
+        if (scene.dataset.ready) return;
+        scene.dataset.ready = '1';
+        var tip = scene.querySelector('[data-scene-tip]');
+        var say = scene.querySelector('[data-scene-say]');
+        var sayTimer;
+
+        function place(el, target, above) {
+          var r = target.getBoundingClientRect();
+          var s = scene.getBoundingClientRect();
+          el.hidden = false;
+          var w = el.offsetWidth;
+          var x = r.left + r.width / 2 - s.left - w / 2;
+          x = Math.max(8, Math.min(s.width - w - 8, x));
+          el.style.left = x + 'px';
+          el.style.top = Math.max(4, r.top - s.top - el.offsetHeight - above) + 'px';
+        }
+        function show(item) {
+          var night = document.documentElement.dataset.theme === 'dark';
+          var pick = function (k) { return (!night && item.getAttribute('data-' + k + '-day')) || item.getAttribute('data-' + k); };
+          tip.querySelector('b').textContent = pick('ja');
+          tip.querySelector('i').textContent = pick('kana');
+          tip.querySelector('span').textContent = pick('es');
+          place(tip, item, 10);
+          scene.classList.add('is-touched');
+        }
+        function hide() { tip.hidden = true; }
+
+        scene.querySelectorAll('.sc-item').forEach(function (item) {
+          item.addEventListener('pointerenter', function () { show(item); });
+          item.addEventListener('pointerleave', hide);
+          item.addEventListener('focus', function () { show(item); });
+          item.addEventListener('blur', hide);
+          var act = function (e) {
+            var kind = item.getAttribute('data-sc');
+            if (!kind) { if (e.type === 'click') show(item); return; }
+            var word = item.getAttribute('data-say');
+            if (word) {
+              say.textContent = word;
+              place(say, item, 2);
+              say.classList.remove('is-on');
+              void say.offsetWidth;
+              say.classList.add('is-on');
+              clearTimeout(sayTimer);
+              sayTimer = setTimeout(function () { say.hidden = true; }, 1300);
+            }
+            item.classList.remove('is-poked');
+            void item.getBoundingClientRect();
+            item.classList.add('is-poked');
+            show(item);
+          };
+          item.addEventListener('click', act);
+          item.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              if (item.tagName.toLowerCase() === 'a' || item.hasAttribute('data-theme-toggle')) {
+                if (item.hasAttribute('data-theme-toggle')) { e.preventDefault(); item.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
+                return;
+              }
+              e.preventDefault();
+              act(e);
+            }
+          });
+        });
+      });
+    }
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
+
+<style>
+  .scene {
+    --far: #e2d6bd;
+    --mid: #d3c5a6;
+    --ground: #bfae8b;
+    --stone: #f1e9d8;
+    --line: #4a3728;
+    --red: #c8402a;
+    --dark: #2c2118;
+    --green: #5f9272;
+    --leaf: #7aad8c;
+    --fur: #f3ecdd;
+    --disc: #e2543a;
+    --foliage: #7aad8c;
+    position: relative;
+    z-index: 5;
+    margin-top: 2.5rem;
+    margin-bottom: -1.4rem;
+    user-select: none;
+  }
+  .scene[data-season='spring'] { --foliage: #f0b7c3; }
+  .scene[data-season='summer'] { --foliage: #6fa67f; }
+  .scene[data-season='autumn'] { --foliage: #d9603a; }
+  .scene[data-season='winter'] { --foliage: transparent; }
+  :global(:root[data-theme='dark']) .scene {
+    --far: #36283f;
+    --mid: #281d31;
+    --ground: #1c1323;
+    --stone: #b9aac4;
+    --line: #150f19;
+    --red: #ff6f7f;
+    --dark: #0d0810;
+    --green: #4f9a7c;
+    --leaf: #6fbf9c;
+    --fur: #e9dfee;
+    --disc: #f6ecc4;
+  }
+  :global(:root[data-theme='dark']) .scene[data-season='spring'] { --foliage: #e79ab0; }
+  :global(:root[data-theme='dark']) .scene[data-season='summer'] { --foliage: #4f9a7c; }
+  :global(:root[data-theme='dark']) .scene[data-season='autumn'] { --foliage: #e0714f; }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: clamp(170px, 17vw, 250px);
+    overflow: visible;
+  }
+  .sc-far { fill: var(--far); }
+  .sc-mid { fill: var(--mid); }
+  .sc-ground { fill: var(--ground); }
+  .sc-snow { fill: var(--stone); opacity: 0.9; }
+  .sc-stone { fill: var(--stone); stroke: var(--line); stroke-width: 1.2; stroke-linejoin: round; }
+  .sc-red { fill: var(--red); }
+  .sc-dark { fill: var(--dark); }
+  .sc-green { stroke: var(--green); }
+  .sc-joint { stroke: var(--line); stroke-width: 1.4; opacity: 0.5; }
+  .sc-leaf { fill: var(--leaf); }
+  .sc-trunk { fill: var(--line); }
+  :global(:root[data-theme='dark']) .sc-trunk { fill: #3a2a40; }
+  .sc-foliage { fill: var(--foliage); }
+  .sc-fur, .sc-white { fill: var(--fur); stroke: var(--line); stroke-width: 1.2; stroke-linejoin: round; }
+  .sc-bib { fill: var(--red); }
+  .sc-patch { fill: #e0974a; }
+  .sc-gold { fill: #e3b23c; stroke: var(--line); stroke-width: 0.8; }
+  .sc-cushion { fill: var(--red); }
+  .sc-face { stroke: #2c2118; stroke-width: 1.3; stroke-linecap: round; }
+  .sc-eye { fill: #2c2118; }
+  .sc-cloth { fill: #fbf7ee; stroke: var(--line); stroke-width: 1; }
+  .sc-string { stroke: var(--line); stroke-width: 1; }
+  :global(:root[data-theme='dark']) .sc-string { stroke: #b9aac4; }
+  .sc-hit { fill: transparent; }
+  .sc-cloud { fill: var(--far); animation: sc-drift 60s linear infinite alternate; }
+  .sc-disc { fill: var(--disc); }
+  .sc-rabbit { fill: #d9cd9c; display: none; }
+  .sc-flame { fill: #6b5a49; }
+  .sc-halo { fill: none; }
+
+  /* things you can point at */
+  .sc-item {
+    cursor: help;
+    outline: none;
+  }
+  .sc-item[role='button'],
+  a.sc-item {
+    cursor: pointer;
+  }
+  .sc-item > * {
+    transition: translate 0.4s var(--spring);
+  }
+  .sc-item:hover > *,
+  .sc-item:focus-visible > * {
+    translate: 0 -3px;
+  }
+  .sc-item:focus-visible {
+    filter: drop-shadow(0 0 3px var(--stamp));
+  }
+
+  /* bamboo sways, a little out of step */
+  .sc-stalk {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: sc-sway 5.5s ease-in-out infinite alternate;
+    animation-delay: var(--d);
+  }
+  @keyframes sc-sway {
+    from { rotate: -1.6deg; }
+    to { rotate: 2deg; }
+  }
+  @keyframes sc-drift {
+    to { translate: 60px 0; }
+  }
+  .sc-foliage circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sc-breathe 6s ease-in-out infinite alternate;
+  }
+  .sc-foliage circle:nth-child(2n) { animation-delay: -3s; }
+  @keyframes sc-breathe {
+    to { scale: 1.05; }
+  }
+
+  /* fox: tail swishes; poked, it hops */
+  .sc-tail {
+    transform-box: fill-box;
+    transform-origin: 80% 100%;
+  }
+  .sc-fox:hover .sc-tail,
+  .sc-fox:focus-visible .sc-tail {
+    animation: sc-swish 0.7s ease-in-out infinite alternate;
+  }
+  @keyframes sc-swish {
+    to { rotate: -14deg; }
+  }
+  .sc-item.is-poked > g {
+    animation: sc-hop 0.5s var(--ease-out);
+  }
+  @keyframes sc-hop {
+    40% { translate: 0 -12px; }
+  }
+
+  /* the cat keeps beckoning */
+  .sc-paw {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: sc-beckon 1.6s ease-in-out infinite alternate;
+  }
+  .sc-neko:hover .sc-paw,
+  .sc-neko.is-poked .sc-paw {
+    animation-duration: 0.35s;
+  }
+  @keyframes sc-beckon {
+    from { rotate: -6deg; }
+    to { rotate: 22deg; }
+  }
+
+  /* ── night ── */
+  .sc-fireflies,
+  .sc-chochin {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .sc-fireflies,
+  :global(:root[data-theme='dark']) .sc-chochin {
+    display: block;
+  }
+  :global(:root[data-theme='dark']) .sc-rabbit {
+    display: block;
+  }
+  :global(:root[data-theme='dark']) .sc-disc {
+    filter: drop-shadow(0 0 16px rgba(246, 236, 196, 0.55));
+  }
+  :global(:root[data-theme='dark']) .sc-flame {
+    fill: #ffd27a;
+    filter: drop-shadow(0 0 6px #ffc45a);
+    animation: sc-flicker 2.6s steps(1) infinite;
+  }
+  :global(:root[data-theme='dark']) .sc-halo {
+    fill: rgba(255, 200, 110, 0.13);
+  }
+  :global(:root[data-theme='dark']) .sc-eye {
+    fill: #ffd27a;
+    filter: drop-shadow(0 0 3px #ffd27a);
+  }
+  @keyframes sc-flicker {
+    0%, 100% { opacity: 1; }
+    43% { opacity: 0.75; }
+    46% { opacity: 1; }
+    78% { opacity: 0.85; }
+  }
+  .sc-fireflies circle {
+    fill: #e6f08a;
+    filter: drop-shadow(0 0 4px #d9f06a);
+    animation: sc-firefly 5s ease-in-out infinite;
+    animation-delay: var(--d);
+  }
+  @keyframes sc-firefly {
+    0%, 100% { opacity: 0; translate: 0 0; }
+    30% { opacity: 1; }
+    60% { opacity: 0.9; translate: var(--dx) -18px; }
+    80% { opacity: 0; }
+  }
+  /* 提灯, festival lanterns strung over the garden */
+  .sc-chochin > path {
+    stroke: #6d5879;
+    stroke-width: 1.2;
+  }
+  .sc-lamp > g {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+    animation: sc-swing 4s ease-in-out infinite alternate;
+    animation-delay: var(--d);
+  }
+  .sc-lamp .cap { fill: #0d0810; }
+  .sc-lamp .paper {
+    fill: #ff7b8a;
+    filter: drop-shadow(0 0 9px rgba(255, 123, 138, 0.75));
+  }
+  .sc-lamp .paper.alt {
+    fill: #fbe9c0;
+    filter: drop-shadow(0 0 9px rgba(251, 233, 192, 0.7));
+  }
+  .sc-lamp text {
+    fill: #230b14;
+    font: 600 11px 'Noto Serif JP', serif;
+  }
+
+  /* ── labels ── */
+  .scene-tip {
+    position: absolute;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.1rem 0.6rem;
+    align-items: baseline;
+    width: max-content;
+    max-width: min(21rem, calc(100vw - 16px));
+    padding: 0.7rem 0.9rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--cream);
+    box-shadow: var(--lift);
+    pointer-events: none;
+    animation: sc-tip 0.25s var(--ease-out);
+  }
+  .scene-tip[hidden],
+  .scene-say[hidden] {
+    display: none;
+  }
+  .scene-tip b {
+    font: 600 1.25rem 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+    color: var(--ink);
+  }
+  .scene-tip i {
+    font: 400 0.72rem 'Noto Serif JP', serif;
+    font-style: normal;
+    letter-spacing: 1.5px;
+    color: var(--stamp);
+  }
+  .scene-tip span {
+    grid-column: 1 / -1;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  @keyframes sc-tip {
+    from { opacity: 0; translate: 0 6px; }
+  }
+  .scene-say {
+    position: absolute;
+    z-index: 4;
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    background: var(--stamp);
+    color: var(--on-stamp);
+    font: 600 0.95rem 'Noto Serif JP', serif;
+    pointer-events: none;
+  }
+  .scene-say.is-on {
+    animation: sc-say 1.3s var(--ease-out) both;
+  }
+  @keyframes sc-say {
+    0% { opacity: 0; scale: 0.4; translate: 0 10px; }
+    20% { opacity: 1; scale: 1.1; translate: 0 0; }
+    80% { opacity: 1; }
+    100% { opacity: 0; translate: 0 -16px; }
+  }
+  .scene-hint {
+    position: absolute;
+    left: clamp(1.5rem, 5vw, 4rem);
+    bottom: 2.1rem;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: opacity 0.4s;
+  }
+  .scene.is-touched .scene-hint {
+    opacity: 0;
+  }
+  @media (max-width: 760px) {
+    .scene-hint {
+      position: static;
+      margin: 0 0 0.4rem;
+      text-align: center;
+    }
+    .scene {
+      display: flex;
+      flex-direction: column-reverse;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sc-fireflies { display: none !important; }
+    .sc-stalk, .sc-paw, .sc-lamp > g, .sc-cloud, .sc-foliage circle { animation: none; }
+  }
+</style>

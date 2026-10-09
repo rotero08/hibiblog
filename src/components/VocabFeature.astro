@@ -7,6 +7,17 @@ import KippuTicket from './KippuTicket.astro';
  * A vocabulary card built on top of {@link KippuTicket}: a dark header with an
  * icon and labels, then the headword, reading, meaning and an example sentence.
  * Every textual field is a typed prop so it maps directly to CMS fields.
+ *
+ * @example
+ * ```mdx
+ * <VocabFeature
+ *   word="駅弁"
+ *   reading="ekiben"
+ *   meaning="la comida en caja que se vende en las estaciones"
+ *   exampleJa="新幹線で駅弁を食べた。"
+ *   exampleEs="Comí un ekiben en el shinkansen."
+ * />
+ * ```
  */
 interface Props {
   /** Eyebrow label above the word. @default 'Palabra de la semana' */

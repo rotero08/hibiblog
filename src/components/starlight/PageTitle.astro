@@ -1,0 +1,148 @@
+---
+/**
+ * Starlight `PageTitle` override: the chapter heading, with its "station" tag.
+ *
+ * Every guide chapter is a station with a stamp to collect (see src/data/guides.ts
+ * and /sellos/). The tag above the title says which station this is and whether
+ * its stamp is still waiting or already in the reader's book, so the stamp rally
+ * is explained right where it happens. Pages outside the guides get a plain title.
+ */
+import { locate, stationCode } from '../../data/guides';
+
+const { entry } = Astro.locals.starlightRoute;
+const here = locate(Astro.url.pathname);
+---
+
+{
+  here && (
+    <p class="st-tag" style={`--c:${here.line.color}`} data-stamp-key={here.station.href}>
+      <span class="st-code">{stationCode(here.line, here.index)}</span>
+      <span class="st-ja">
+        <ruby>
+          {here.station.ja}
+          <rt>{here.station.kana}</rt>
+        </ruby>
+      </span>
+      <span class="st-line">
+        {here.line.ja} · estación {here.index + 1} de {here.line.stations.length}
+      </span>
+      <a class="st-status" href="/sellos/" data-astro-reload title="Abrir tu libreta de sellos">
+        <span class="st-ring" aria-hidden="true" />
+        <span class="st-todo">Sello</span>
+        <span class="st-done">Sello</span>
+      </a>
+    </p>
+  )
+}
+{/* `_top` is Starlight's PAGE_TITLE_ID: the "Sinopsis" entry of the page TOC links to it. */}
+<h1 id="_top">{entry.data.title}</h1>
+
+<style>
+  h1 {
+    margin-top: 1rem;
+    font-size: var(--sl-text-h1);
+    line-height: var(--sl-line-height-headings);
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+  .st-tag + h1 {
+    margin-top: 0.7rem;
+  }
+
+  .st-tag {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.9rem;
+    margin: 0.4rem 0 0;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* station number, as painted on platforms: a ring in the line's colour */
+  .st-code {
+    display: grid;
+    place-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 4px solid var(--c);
+    border-radius: 50%;
+    background: #fbf7ee;
+    color: #2c2118;
+    font: 500 0.8rem 'JetBrains Mono', monospace;
+    letter-spacing: 0;
+  }
+  .st-ja {
+    font: 500 1.25rem / 1.9 'Noto Serif JP', serif;
+    letter-spacing: 3px;
+    color: var(--ink);
+    text-transform: none;
+  }
+  .st-ja rt {
+    font-size: 0.45em;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+  .st-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    padding: 0.4rem 0.8rem 0.4rem 0.55rem;
+    border: 1px dashed var(--muted);
+    border-radius: 2rem;
+    color: var(--ink-soft);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s, background 0.3s;
+  }
+  .st-status:hover {
+    color: var(--ink);
+    border-color: var(--stamp);
+  }
+  .st-ring {
+    position: relative;
+    width: 15px;
+    height: 15px;
+    border: 1.5px dashed var(--muted);
+    border-radius: 50%;
+  }
+  .st-done {
+    display: none;
+  }
+  /* collected (class set by /scripts/hibi.js) */
+  .st-tag.is-stamped .st-status {
+    border-style: solid;
+    border-color: var(--stamp);
+    color: var(--stamp);
+  }
+  .st-tag.is-stamped .st-ring {
+    border: 1.5px solid var(--stamp);
+    rotate: -10deg;
+  }
+  .st-tag.is-stamped .st-ring::after {
+    content: '済';
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    font: 600 8.5px 'Noto Serif JP', serif;
+    letter-spacing: 0;
+  }
+  .st-tag.is-stamped .st-todo {
+    display: none;
+  }
+  .st-tag.is-stamped .st-done {
+    display: inline;
+  }
+  @media (max-width: 40rem) {
+    .st-line {
+      display: none;
+    }
+    .st-status {
+      margin-left: 0;
+    }
+  }
+</style>

@@ -1,0 +1,198 @@
+---
+/**
+ * Creditos: attribution for the arrival guide, which is a Spanish translation
+ * and adaptation of "The SSAJ Student's Guide to Life in Japan".
+ *
+ * `full` renders the whole credit (used once, in the guide's introduction).
+ * Without it, a one-line credit for the foot of a chapter, naming the section
+ * of the original the chapter comes from.
+ *
+ * @example
+ * ```mdx
+ * <Creditos seccion="Stage 2: Upon Arrival" />
+ *
+ * <Creditos full />
+ * ```
+ */
+interface Props {
+  /** Render the complete credit block instead of the chapter footer line. @default false */
+  full?: boolean;
+  /** Section(s) of the original this chapter adapts, e.g. "Stage 2: Upon Arrival". */
+  seccion?: string;
+}
+
+const { full = false, seccion } = Astro.props;
+
+const ORIGINAL = "The SSAJ Student's Guide to Life in Japan";
+const SSAJ = "Singapore Students' Association (Japan)";
+---
+
+{
+  full ? (
+    <section id="creditos" class="creditos creditos-full not-content" aria-label="Créditos de la guía">
+      <p class="creditos-eyebrow">
+        <span lang="ja" aria-hidden="true">
+          出典
+        </span>
+        Créditos
+      </p>
+      <p class="creditos-lead">
+        Esta guía es una <strong>traducción al español, adaptada para estudiantes colombianos</strong>, de{' '}
+        <cite lang="en">{ORIGINAL}</cite> (cuarta edición), escrita por el comité ejecutivo de la{' '}
+        <span lang="en">{SSAJ}</span>, la asociación de estudiantes de Singapur en Japón.
+      </p>
+      <dl class="creditos-list">
+        <div>
+          <dt>Obra original</dt>
+          <dd>
+            La estructura, los consejos y la experiencia son de la SSAJ.{' '}
+            <a href="https://ssaj.net" rel="noopener">
+              ssaj.net
+            </a>
+          </dd>
+        </div>
+        <div>
+          <dt>Traducción y adaptación</dt>
+          <dd>
+            Hibi. Lo que era propio de Singapur (embajada, bancos, vuelos, comida) se reemplazó por su equivalente
+            para quien sale de Colombia, y los datos que cambiaron desde la edición original se actualizaron a
+            octubre de 2026.
+          </dd>
+        </div>
+        <div>
+          <dt>Imágenes</dt>
+          <dd>
+            Las fotografías y los datos de la encuesta de la SSAJ se reproducen con su permiso. Los modelos de
+            documentos oficiales son de la Agencia de Servicios de Inmigración de Japón. Las fotografías de apertura
+            y de cierre son de Su San Lee y Masaaki Komori (Unsplash). Las demás imágenes de la guía original
+            pertenecen a terceros y no se incluyen.
+          </dd>
+        </div>
+        <div>
+          <dt>Aviso</dt>
+          <dd>
+            No es una traducción oficial. La SSAJ no ha revisado ni avalado esta versión, y cualquier error de
+            traducción o de adaptación es de Hibi, no de la obra original.
+          </dd>
+        </div>
+      </dl>
+    </section>
+  ) : (
+    <p class="creditos creditos-line not-content">
+      <span class="creditos-mark" lang="ja" aria-hidden="true">
+        出典
+      </span>
+      <span>
+        Traducido y adaptado para estudiantes colombianos a partir de <cite lang="en">{ORIGINAL}</cite> (cuarta
+        edición), de la <span lang="en">{SSAJ}</span>.
+        {seccion && (
+          <>
+            {' '}
+            Sección original: <span lang="en">{seccion}</span>.
+          </>
+        )}{' '}
+        <a href="/guias/llegada/#creditos">Créditos completos</a>
+      </span>
+    </p>
+  )
+}
+
+<style>
+  .creditos {
+    font-family: 'Inter', sans-serif;
+    color: var(--ink-soft);
+  }
+  .creditos a {
+    color: var(--stamp);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  .creditos cite {
+    font-family: 'Lora', serif;
+    font-style: italic;
+  }
+
+  /* the full credit: a slip of paper, like the back of a ticket */
+  .creditos-full {
+    position: relative;
+    scroll-margin-top: calc(var(--sl-nav-height, 60px) + 1.5rem);
+    margin: 1.8rem 0;
+    padding: 1.4rem 1.5rem 1.3rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 27px, var(--sheet-rule) 27px 28px),
+      var(--sheet);
+    color: var(--sheet-soft);
+    box-shadow: var(--lift, 0 10px 30px rgba(0, 0, 0, 0.08));
+  }
+  .creditos-eyebrow {
+    margin: 0 0 0.7rem;
+    color: var(--stamp);
+    font: 600 11px / 1.4 'JetBrains Mono', monospace;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+  .creditos-eyebrow span {
+    margin-right: 0.5rem;
+    font: 600 12px / 1.4 'Noto Serif JP', serif;
+    letter-spacing: 1px;
+  }
+  .creditos-lead {
+    margin: 0 0 0.9rem;
+    color: var(--sheet-ink);
+    font: 400 1.02rem / 1.7 'Lora', serif;
+  }
+  .creditos-list {
+    display: grid;
+    gap: 0.7rem;
+    margin: 0;
+    padding: 0.9rem 0 0;
+    border-top: 1px dashed var(--sheet-dash);
+    font-size: 0.86rem;
+    line-height: 1.65;
+  }
+  .creditos-list div {
+    display: grid;
+    grid-template-columns: 9.5rem 1fr;
+    gap: 0.2rem 1rem;
+    align-items: baseline;
+  }
+  .creditos-list dt {
+    color: var(--sheet-ink);
+    font: 500 10.5px / 1.8 'JetBrains Mono', monospace;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+  }
+  .creditos-list dd {
+    margin: 0;
+  }
+  @media (max-width: 560px) {
+    .creditos-list div {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* the chapter footer line */
+  .creditos-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin: 3rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.65;
+  }
+  .creditos-mark {
+    flex: none;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    color: var(--stamp);
+    font: 600 11px / 1.5 'Noto Serif JP', serif;
+    letter-spacing: 1px;
+    rotate: -3deg;
+  }
+</style>

@@ -1,0 +1,341 @@
+/* ─────────────────────────────────────────
+   A post: the page of one blog entry or personal note.
+   Loaded only by src/layouts/PostLayout.astro.
+
+   The first half draws what the layout puts around the text. The second half
+   (.entry-body) styles what Markdown produces, so a post needs no HTML and no
+   classes of its own: headings, lists, quotes, images, tables and code just
+   come out right. Components opt out with the `not-content` class, as in the
+   guides.
+───────────────────────────────────────── */
+.entry {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 5vw, 2rem) 3.5rem;
+}
+
+/* ---- head ---- */
+.entry-head {
+  position: relative;
+  margin-bottom: 2.8rem;
+  padding: 2.4rem 0 2.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.entry-back,
+.entry-all {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--muted);
+  transition: color 0.2s, letter-spacing 0.4s var(--ease-out);
+}
+.entry-back:hover,
+.entry-all:hover {
+  color: var(--ink);
+  letter-spacing: 2.6px;
+}
+.entry-back {
+  margin-bottom: 1.9rem;
+}
+.entry-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* the dot follows each item, so a line that wraps never starts with one */
+.entry-kicker > :not(:last-child)::after {
+  content: '·';
+  margin: 0 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+.entry-tag {
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--c);
+}
+.entry-tag::before {
+  content: '㊞';
+  margin-right: 7px;
+  color: var(--stamp);
+  font: 600 11px 'Noto Serif JP', serif;
+}
+.entry-draft {
+  color: var(--stamp);
+}
+.entry-title {
+  margin-top: 0.9rem;
+  font: 400 clamp(1.9rem, 5vw, 2.8rem) / 1.18 'Noto Serif JP', serif;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.entry-ja {
+  margin-top: 0.6rem;
+  font: 400 1.1rem 'Noto Serif JP', serif;
+  letter-spacing: 4px;
+  color: var(--c);
+}
+.entry-lead {
+  max-width: 29rem;
+  margin-top: 1.1rem;
+  font: italic 400 1.13rem / 1.7 'Lora', serif;
+  color: var(--ink-soft);
+}
+/* the postmark is pressed across the rule that closes the head */
+.entry-postmark {
+  position: absolute;
+  right: 0;
+  bottom: -2.3rem;
+  width: 10.5rem;
+  rotate: -7deg;
+  opacity: 0.9;
+  pointer-events: none;
+  mix-blend-mode: var(--stamp-blend);
+}
+
+/* ---- body: what Markdown produces ---- */
+.entry-body {
+  font: 400 1.09rem / 1.85 'Lora', serif;
+  color: var(--ink-soft);
+  overflow-wrap: break-word;
+}
+.entry-body > * + * {
+  margin-top: 1.35em;
+}
+.entry-blank {
+  font-style: italic;
+  color: var(--muted);
+}
+
+.entry-body :is(h2, h3, h4):not(:where(.not-content *)) {
+  font-family: 'Lora', serif;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.entry-body > h2 {
+  margin-top: 2.4em;
+  font-size: 1.55rem;
+}
+/* a short red rule opens each section */
+.entry-body > h2::before {
+  content: '';
+  display: block;
+  width: 1.7rem;
+  height: 2px;
+  margin-bottom: 1rem;
+  background: var(--stamp);
+}
+.entry-body > h3 {
+  margin-top: 2.1em;
+  font-size: 1.22rem;
+}
+.entry-body > h4 {
+  margin-top: 1.9em;
+  font: 600 0.78rem / 1.4 'Inter', sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.entry-body > :is(h2, h3, h4) + * {
+  margin-top: 0.8em;
+}
+
+.entry-body a:not(:where(.not-content *, .gt, .kippu-ticket)) {
+  color: var(--stamp);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition: text-decoration-thickness 0.2s;
+}
+.entry-body a:not(:where(.not-content *, .gt, .kippu-ticket)):hover {
+  text-decoration-thickness: 2px;
+}
+.entry-body strong:not(:where(.not-content *)) {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.entry-body :is(ul, ol):not(:where(.not-content *)) {
+  padding-left: 1.5em;
+}
+.entry-body li:not(:where(.not-content *)) + li,
+.entry-body li:not(:where(.not-content *)) > :is(ul, ol) {
+  margin-top: 0.45em;
+}
+.entry-body li:not(:where(.not-content *))::marker {
+  color: var(--stamp);
+}
+
+/* someone else's words */
+.entry-body blockquote:not(:where(.not-content *)) {
+  padding: 0.2em 0 0.2em 1.3em;
+  border-left: 3px solid var(--stamp);
+  font-style: italic;
+  color: var(--ink);
+}
+.entry-body blockquote:not(:where(.not-content *)) > * + * {
+  margin-top: 0.8em;
+}
+
+/* a pause in the text: three dots instead of a line */
+.entry-body hr {
+  margin: 2.6em 0;
+  border: 0;
+  overflow: visible;
+  text-align: center;
+  color: var(--muted);
+}
+.entry-body hr::before {
+  content: '・　・　・';
+  font: 400 0.9rem 'Noto Serif JP', serif;
+}
+
+/* pictures. An image followed, on the next line, by a line in italics gets that
+   line as its caption:
+       ![A river at dusk](./rio.jpg)
+       *The Kamo, in October.*                                               */
+.entry-body img:not(:where(.not-content *)) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px var(--border), var(--lift);
+}
+.entry-body > p:has(> img) {
+  margin-top: 2.2em;
+}
+.entry-body > p:has(> img) + * {
+  margin-top: 2.2em;
+}
+.entry-body p > img + em {
+  display: block;
+  margin-top: 0.8rem;
+  font: italic 400 0.9rem / 1.5 'Lora', serif;
+  text-align: center;
+  color: var(--muted);
+}
+
+.entry-body :not(pre) > code {
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+  background: var(--cream3);
+  color: var(--ink);
+  font: 500 0.84em 'JetBrains Mono', monospace;
+}
+/* code blocks (three backticks) are drawn by Expressive Code, as in the guides */
+.entry-body .expressive-code {
+  font-style: normal;
+}
+
+/* tables, as in the guides: a timetable, not a spreadsheet */
+.entry-body table:not(:where(.not-content *)) {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 0.93rem / 1.6 'Inter', sans-serif;
+}
+.entry-body th:not(:where(.not-content *)) {
+  padding: 0.55rem 0.8rem 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--brown);
+  font: 600 10.5px / 1.6 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  text-align: left;
+  text-transform: uppercase;
+}
+.entry-body td:not(:where(.not-content *)) {
+  padding: 0.65rem 0.8rem 0.65rem 0;
+  border-bottom: 1px dashed var(--border);
+  vertical-align: top;
+}
+.entry-body tbody tr:last-child td:not(:where(.not-content *)) {
+  border-bottom-color: transparent;
+}
+
+/* footnotes ([^1] in the text) */
+.entry-body .footnotes {
+  margin-top: 3em;
+  padding-top: 1.2em;
+  border-top: 1px dashed var(--border);
+  font-size: 0.92rem;
+}
+.entry-body .footnotes > h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.entry-body sup a {
+  text-decoration: none;
+  font: 600 0.72em 'JetBrains Mono', monospace;
+}
+
+/* the site's own components, at home in a column of text */
+.entry-body .philosophy-box p {
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+.entry-body .philosophy-box p + p {
+  margin-top: 0.8em;
+}
+.entry-body .vocab-feature {
+  max-width: 23rem;
+  margin-inline: auto;
+}
+
+/* ---- foot ---- */
+.entry-foot {
+  margin-top: 3.6rem;
+}
+.entry-end {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 2.4rem;
+}
+.entry-end::before,
+.entry-end::after {
+  content: '';
+  flex: 1;
+  border-top: 1px dashed var(--border);
+}
+.entry-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.2rem 1rem;
+}
+.entry-all {
+  margin-top: 1.2rem;
+}
+
+@media (max-width: 640px) {
+  .entry-head {
+    padding: 1.7rem 0 3.9rem;
+  }
+  .entry-back {
+    margin-bottom: 1.4rem;
+  }
+  .entry-lead {
+    max-width: none;
+  }
+  .entry-postmark {
+    bottom: -1.7rem;
+    width: 8rem;
+  }
+  .entry-body {
+    font-size: 1.04rem;
+    line-height: 1.8;
+  }
+}

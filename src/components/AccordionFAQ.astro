@@ -6,6 +6,16 @@
  * client-side JavaScript (and therefore renders correctly inside Starlight MDX
  * guides). Items share a `name` so only one stays open at a time, mirroring the
  * original single-open accordion behaviour.
+ *
+ * @example
+ * ```mdx
+ * <AccordionFAQ
+ *   items={[
+ *     { question: '¿Hace falta el JLPT?', answer: 'Para estudiar, casi nunca.' },
+ *     { question: '¿Cuánto se tarda?', answer: ['Primer párrafo.', 'Segundo párrafo.'] },
+ *   ]}
+ * />
+ * ```
  */
 interface FaqItem {
   /** The question shown on the clickable summary row. */

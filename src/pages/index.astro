@@ -2,9 +2,23 @@
 import Layout from '../layouts/Layout.astro';
 import VocabFeature from '../components/VocabFeature.astro';
 import JournalHeader from '../components/JournalHeader.astro';
+import Train from '../components/Train.astro';
+import StationStrip from '../components/StationStrip.astro';
+import GuideTicket from '../components/GuideTicket.astro';
+import Tanzaku from '../components/Tanzaku.astro';
+import Omikuji from '../components/Omikuji.astro';
+import PostList from '../components/PostList.astro';
+import { Image } from 'astro:assets';
+import avatar from '../assets/avatar-maneki-neko.webp';
+import { lines } from '../data/guides';
+import { japanNow } from '../data/koyomi';
+
+const japones = lines[0];
+const now = japanNow();
+const headline = [...'日々の記録'];
 ---
 
-<Layout title="日々 — Hibi" description="Días, palabras, vida en Japón. Guías de japonés y notas honestas desde dentro.">
+<Layout title="日々 · Hibi" description="Días, palabras, vida en Japón. Guías de japonés y notas honestas de alguien que vivió allí.">
   <!-- Hero -->
   <div class="hero-wrapper">
     <svg class="hero-bg" viewBox="0 0 1400 520" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -29,19 +43,29 @@ import JournalHeader from '../components/JournalHeader.astro';
       <div class="hero-left">
         <div class="hero-eyebrow">Guías de japonés · Vida en Japón · Reflexiones</div>
         <div class="hero-headline">
-          <span class="line1">日々の記録</span>
+          <span class="line1" aria-label="日々の記録">{headline.map((ch, i) => <span style={`--n:${i}`} aria-hidden="true">{ch}</span>)}</span>
           <span class="line2">días, palabras, vida en japón</span>
         </div>
         <p class="hero-desc">Guías para aprender japonés de verdad, no solo pasar exámenes. Vida en Japón tal como es. Notas honestas de alguien que sigue aprendiendo.</p>
+        {/* the time in Japan right now, kept current in the browser */}
+        <p class="hero-clock">
+          <span class="hc-jp">本日</span>
+          <span data-jp-date>{now.date}</span>（<span class="hc-jp" data-jp-weekday>{now.weekday}</span>）
+          <span class="hc-jp" data-jp-era>{now.era}</span>
+          <span class="hc-sep">·</span>
+          <span class="hc-jp">日本時間</span> <b data-jp-time>{now.time}</b>
+        </p>
       </div>
       <div class="hero-right"><span class="hero-kanji-stack">言葉と生活</span></div>
     </div>
+    {/* the bottom edge of the hero is a track; a local train pulls in on it */}
+    <div class="hero-track" aria-hidden="true"><Train /></div>
   </div>
 
   <div class="home-with-sidebar">
     <div class="home-main-col">
       <!-- Japanese Guide feature -->
-      <div class="jp-guide-block" style="margin-top:3rem">
+      <div class="jp-guide-block" style="margin-top:3rem" data-reveal>
         <div class="jp-guide-header">
           <div class="jp-guide-header-left">
             <div class="jp-guide-eyebrow">Obra principal</div>
@@ -49,9 +73,9 @@ import JournalHeader from '../components/JournalHeader.astro';
               Guía Completa de Japonés
               <span class="jp-guide-subtitle">日本語完全ガイド</span>
             </h2>
-            <p class="jp-guide-desc">Una guía de principio a fin para aprender japonés como se debe — sin atajos, sin métodos mágicos, con comprensión real del idioma.</p>
+            <p class="jp-guide-desc">Una guía de principio a fin para aprender japonés como se debe: sin atajos, sin métodos mágicos, con comprensión real del idioma.</p>
             <div class="jp-guide-meta">
-              <span><strong>6</strong> partes</span>
+              <span><strong>{japones.stations.length}</strong> estaciones</span>
               <span><strong>1 FAQ</strong> dedicada</span>
               <span><strong>~4h</strong> lectura total</span>
               <span><strong>N5 → N2</strong> progresión</span>
@@ -59,6 +83,8 @@ import JournalHeader from '../components/JournalHeader.astro';
           </div>
           <div class="jp-guide-kanji">語</div>
         </div>
+
+        <StationStrip line={japones} />
 
         <div class="jp-guide-footer">
           <span>Actualizado junio 2026 · Lectura libre</span>
@@ -73,80 +99,24 @@ import JournalHeader from '../components/JournalHeader.astro';
             <span class="col-title">La Guía de Japón</span>
             <a class="col-link as-link" href="/japon/">Ver todo →</a>
           </div>
-          <a class="japan-guide-card as-link" href="/guias/llegada/" data-astro-reload>
-            <div class="guide-card-tag">Guía Esencial</div>
-            <div class="guide-card-title">Llegando a Japón por primera vez</div>
-            <div class="guide-card-meta">Aeropuerto · Transporte · Primeros días</div>
-          </a>
-          <a class="japan-guide-card as-link" href="/japon/guias/">
-            <div class="guide-card-tag">Guía Esencial</div>
-            <div class="guide-card-title">Alquilar piso siendo extranjero</div>
-            <div class="guide-card-meta">Garantías · Contratos · Key money</div>
-          </a>
-          <a class="japan-guide-card as-link" href="/japon/guias/">
-            <div class="guide-card-tag">Guía Práctica</div>
-            <div class="guide-card-title">Trámites, burocracia y visa</div>
-            <div class="guide-card-meta">My Number · Residencia · Banco</div>
-          </a>
-          <a class="japan-guide-card as-link" href="/japon/guias/">
-            <div class="guide-card-tag">Guía Práctica</div>
-            <div class="guide-card-title">Vida cotidiana en Japón</div>
-            <div class="guide-card-meta">Konbini · Transporte · Salud</div>
-          </a>
+          <GuideTicket featured href="/guias/llegada/" tag="Eje principal" title="Llegando a Japón por primera vez" meta="Visa · Llegada · Trámites · Vida diaria" desc="La hoja de ruta completa para llegar y vivir en Japón. Empieza aquí; las demás guías salen de esta." num="01" reload />
+          <GuideTicket href="/guias/llegada/vivienda/" tag="Guía Esencial" title="Alquilar piso siendo extranjero" meta="Garantías · Contratos · Key money" num="02" reload />
+          <GuideTicket href="/guias/llegada/tramites/" tag="Guía Práctica" title="Trámites, residencia y My Number" meta="Ayuntamiento · Seguro · Pensión" num="03" reload />
+          <GuideTicket href="/guias/llegada/dia-a-dia/" tag="Guía Práctica" title="Vida cotidiana en Japón" meta="Basura · Facturas · Emergencias" num="04" reload />
         </div>
         <div>
           <div class="home-col-header">
             <span class="col-title">El Blog de Japón</span>
             <a class="col-link as-link" href="/blog/">Ver todo →</a>
           </div>
-          <a class="blog-post-item as-link" href="/blog/">
-            <div class="bp-tag">Blog</div>
-            <div class="bp-title">Por qué el konbini arruinó cualquier otro país para mí</div>
-            <div class="bp-meta">Mayo 2026 · 5 min</div>
-          </a>
-          <a class="blog-post-item as-link" href="/blog/">
-            <div class="bp-tag">Blog</div>
-            <div class="bp-title">El primer verano japonés: calor, cicadas, y aprender a sudar</div>
-            <div class="bp-meta">Julio 2025 · 4 min</div>
-          </a>
-          <a class="blog-post-item as-link" href="/blog/">
-            <div class="bp-tag">Blog</div>
-            <div class="bp-title">Tomar el shinkansen por primera vez tiene algo especial</div>
-            <div class="bp-meta">Marzo 2025 · 3 min</div>
-          </a>
-          <a class="blog-post-item as-link" href="/blog/">
-            <div class="bp-tag">Blog</div>
-            <div class="bp-title">Los supermercados municipales a las 8pm son otra dimensión</div>
-            <div class="bp-meta">Enero 2025 · 3 min</div>
-          </a>
-          <a class="blog-post-item as-link" href="/blog/">
-            <div class="bp-tag">Blog</div>
-            <div class="bp-title">Intenté hablar japonés por primera vez con un desconocido</div>
-            <div class="bp-meta">Noviembre 2024 · 6 min</div>
-          </a>
+          <PostList shelf="blog" shape="row" limit={5} />
         </div>
       </div>
 
       <!-- Personal section -->
       <div class="personal-section">
         <JournalHeader num="№ 03" title="Notas de Campo e Impresiones" seal="旅" viewAllHref="/personal/" />
-        <div class="personal-grid">
-          <a class="personal-card as-link" href="/personal/">
-            <div class="pc-date">Abril 2026</div>
-            <div class="pc-title">Seis meses después: lo que me equivoqué sobre mudarme a Japón</div>
-            <div class="pc-excerpt">Las cosas que ningún blog de expats te dice.</div>
-          </a>
-          <a class="personal-card as-link" href="/personal/">
-            <div class="pc-date">Febrero 2026</div>
-            <div class="pc-title">Sobre la soledad en el extranjero y por qué te hace mejor en idiomas</div>
-            <div class="pc-excerpt">Un efecto secundario que nadie menciona.</div>
-          </a>
-          <a class="personal-card as-link" href="/personal/">
-            <div class="pc-date">Enero 2026</div>
-            <div class="pc-title">Lo que me llevo del primer año: japonés, Japón, y yo</div>
-            <div class="pc-excerpt">Balance honesto de doce meses aprendiendo.</div>
-          </a>
-        </div>
+        <PostList shelf="personal" shape="note" limit={3} />
       </div>
     </div>
 
@@ -154,17 +124,14 @@ import JournalHeader from '../components/JournalHeader.astro';
     <aside class="home-sidebar">
       <div class="about-card">
         <div class="about-top">
-          <div class="about-avatar">人</div>
-          <div>
-            <div class="about-name">Tu nombre aquí</div>
-            <div class="about-loc">Japón, en algún lugar</div>
-          </div>
+          {/* Public domain (CC0) maneki-neko illustration from rawpixel, image 6288614. */}
+          <Image class="about-avatar" src={avatar} alt="Maneki-neko, el gato de la suerte" width={56} height={56} densities={[1, 2, 3]} />
+          <div class="about-name">DelfosT</div>
         </div>
-        <p class="about-tagline">Escribo sobre japonés y vida en Japón desde adentro. No soy profesor. Solo alguien que presta atención.</p>
+        <p class="about-tagline">Viví un tiempo en Japón y llevo años estudiando japonés. En este blog voy dejando lo que me habría gustado que alguien me explicara cuando empecé, y también notas sobre lo que sigo aprendiendo.</p>
         <div class="about-tags">
-          <span class="about-tag">N2</span>
-          <span class="about-tag">Tokio</span>
-          <span class="about-tag">3 años aquí</span>
+          <span class="about-tag">N1</span>
+          <span class="about-tag">Viví en Japón</span>
         </div>
       </div>
 
@@ -176,6 +143,14 @@ import JournalHeader from '../components/JournalHeader.astro';
         exampleJa="この古い茶碗に侘寂を感じる。"
         exampleEs="Siento wabi-sabi en este viejo cuenco de té."
       />
+
+      <div class="sidebar-block" data-reveal>
+        <Tanzaku />
+      </div>
+
+      <div class="sidebar-block" data-reveal>
+        <Omikuji />
+      </div>
 
       <div class="sidebar-block">
         <div class="section-label">Explorar por tema</div>
@@ -190,15 +165,61 @@ import JournalHeader from '../components/JournalHeader.astro';
 
       <div class="sidebar-block">
         <div class="now-card">
-          <div class="section-label" style="margin-bottom:.4rem">現在 — Ahora mismo</div>
+          <div class="section-label" style="margin-bottom:.4rem">現在 · Ahora mismo</div>
           <p>
-            Leyendo: <span class="val">夜は短し歩けよ乙女</span><br />
-            Estudiando: <span class="val">patrones N1</span><br />
-            Escuchando: <span class="jp">太陽とシスコムーン</span><br />
-            Humor: <span class="jp">梅雨 de la...</span>
+            Leyendo: <span class="val">Muv-Luv</span><br />
+            Aprendiendo: <span class="val">a hacer output</span><br />
+            Estudiando: <span class="val">historia de Japón</span>
           </p>
         </div>
       </div>
     </aside>
   </div>
 </Layout>
+
+<style>
+  .hero-clock {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.5rem;
+    margin-top: 1.5rem;
+    font: 500 12px 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+  .hc-jp {
+    font-family: 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+    color: var(--ink-soft);
+  }
+  .hc-sep {
+    opacity: 0.75;
+  }
+  .hero-clock b {
+    font-weight: 500;
+    color: var(--stamp);
+  }
+  /* sleepers under the hero's bottom edge, and the train that stops on it */
+  .hero-track {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 3;
+    height: 7px;
+    background: repeating-linear-gradient(90deg, var(--border) 0 3px, transparent 3px 14px) 0 100% / 100% 5px no-repeat;
+    border-top: 2px solid var(--brown);
+    opacity: 0.9;
+  }
+  .hero-track :global(.train) {
+    position: absolute;
+    bottom: 100%;
+    left: max(clamp(1.5rem, 5vw, 4rem), calc((100% - 1450px) / 2 + clamp(1.5rem, 5vw, 4rem)));
+    margin-left: 46%;
+    margin-bottom: -1px;
+  }
+  @media (max-width: 900px) {
+    .hero-track :global(.train) {
+      margin-left: 8%;
+    }
+  }
+</style>

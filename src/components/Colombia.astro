@@ -1,0 +1,91 @@
+---
+/**
+ * Colombia: a callout for the parts of the arrival guide that were written
+ * for Colombian students, as opposed to translated from the original guide.
+ * The left edge carries the flag's three bands in their 2:1:1 proportions, so
+ * a reader can tell at a glance what was adapted.
+ *
+ * Slot content is authored as plain Markdown inside MDX.
+ *
+ * @example
+ * ```mdx
+ * <Colombia title="Dos nombres y dos apellidos">
+ *
+ * En los formularios japoneses el nombre completo va en una sola casilla.
+ *
+ * </Colombia>
+ * ```
+ */
+interface Props {
+  /** Short heading shown above the text. @default 'Desde Colombia' */
+  title?: string;
+}
+
+const { title = 'Desde Colombia' } = Astro.props;
+---
+
+<aside class="co-note" aria-label={title}>
+  <p class="co-note-title">
+    <span class="co-note-ja" lang="ja" aria-hidden="true">コロンビア</span>
+    {title}
+  </p>
+  <div class="co-note-body"><slot /></div>
+</aside>
+
+<style>
+  .co-note {
+    --co-y: #e8b70c;
+    --co-b: #24479e;
+    --co-r: #c8283c;
+    position: relative;
+    margin: 1.6rem 0;
+    padding: 1rem 1.2rem 1rem 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0 8px 8px 0;
+    background: var(--cream2);
+    transition: background 0.35s, border-color 0.35s;
+  }
+  :global([data-theme='dark']) .co-note {
+    --co-y: #f0c948;
+    --co-b: #7f9cf0;
+    --co-r: #ff7b8a;
+  }
+  /* the flag: yellow takes the top half, blue and red a quarter each */
+  .co-note::before {
+    content: '';
+    position: absolute;
+    inset: -1px auto -1px -1px;
+    width: 5px;
+    background: linear-gradient(to bottom, var(--co-y) 0 50%, var(--co-b) 50% 75%, var(--co-r) 75% 100%);
+  }
+  .co-note-title {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 0 0 0.5rem;
+    color: var(--ink);
+    font: 600 11px / 1.4 'JetBrains Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .co-note-ja {
+    color: var(--muted);
+    font: 400 11px / 1.4 'Noto Serif JP', serif;
+    letter-spacing: 1px;
+  }
+  .co-note-body {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+  .co-note-body :global(> :first-child) {
+    margin-top: 0;
+  }
+  .co-note-body :global(> :last-child) {
+    margin-bottom: 0;
+  }
+  .co-note-body :global(strong) {
+    color: var(--ink);
+  }
+</style>

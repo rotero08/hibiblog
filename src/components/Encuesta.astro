@@ -1,0 +1,178 @@
+---
+/**
+ * Encuesta: one or more questions of the SSAJ cost-of-living survey, drawn as
+ * bars. The original guide shows them as pie charts in English. The numbers
+ * live in `src/data/encuesta-ssaj.ts` so they can be shown translated.
+ *
+ * Bars are scaled to the largest answer of each question, so the shape of the
+ * distribution reads at a glance. The exact percentage is printed on every row.
+ *
+ * @example
+ * ```mdx
+ * <Encuesta tema="alojamiento" />
+ *
+ * <Encuesta tema={['alquiler', 'comida', 'transporte']} />
+ * ```
+ */
+import { ENCUESTA, type ClaveEncuesta, type TemaEncuesta } from '../data/encuesta-ssaj';
+
+interface Props {
+  /**
+   * A question of the survey, or several to lay out side by side. The questions
+   * are the keys of `ENCUESTA` (the editor lists them inside the quotes).
+   */
+  tema: ClaveEncuesta | ClaveEncuesta[];
+}
+
+const temas = [Astro.props.tema].flat();
+const porcentaje = (n: number) => `${n.toFixed(1).replace('.', ',')}%`;
+---
+
+<div class:list={['encuestas', 'not-content', { 'encuestas-grid': temas.length > 1 }]}>
+  {
+    temas.map((clave) => {
+      const { titulo, filas, nota }: TemaEncuesta = ENCUESTA[clave];
+      const max = Math.max(...filas.map(([, valor]) => valor));
+      return (
+        <figure class="encuesta">
+          <figcaption>
+            <span class="encuesta-eyebrow">
+              <span lang="ja" aria-hidden="true">
+                調査
+              </span>
+              Encuesta SSAJ · 2022
+            </span>
+            <span class="encuesta-titulo">{titulo}</span>
+          </figcaption>
+          <ul class="encuesta-filas">
+            {filas.map(([franja, valor]) => (
+              <li class:list={[{ 'es-max': valor === max }]} style={`--v:${((valor / max) * 100).toFixed(1)}%`}>
+                <span class="encuesta-franja">{franja}</span>
+                <span class="encuesta-valor">{porcentaje(valor)}</span>
+                <span class="encuesta-barra" aria-hidden="true">
+                  <i />
+                </span>
+              </li>
+            ))}
+          </ul>
+          {nota && <p class="encuesta-nota">{nota}</p>}
+        </figure>
+      );
+    })
+  }
+</div>
+
+<style>
+  .encuestas {
+    margin: 1.6rem 0;
+  }
+  .encuestas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 0.9rem;
+  }
+
+  .encuesta {
+    margin: 0;
+    padding: 1.1rem 1.2rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--cream2);
+    font-family: 'Inter', sans-serif;
+  }
+  .encuesta figcaption {
+    display: grid;
+    gap: 0.25rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .encuesta-eyebrow {
+    color: var(--muted);
+    font: 500 10.5px / 1.4 'JetBrains Mono', monospace;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+  }
+  .encuesta-eyebrow span {
+    margin-right: 0.45rem;
+    color: var(--stamp);
+    font: 600 11px / 1.4 'Noto Serif JP', serif;
+    letter-spacing: 1px;
+  }
+  .encuesta-titulo {
+    color: var(--ink);
+    font: 500 1rem / 1.35 'Lora', serif;
+  }
+
+  .encuesta-filas {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .encuesta-filas li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.3rem 0.8rem;
+    align-items: baseline;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+  .encuesta-valor {
+    color: var(--muted);
+    font: 500 0.74rem / 1.35 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* the bar is a stretch of track: a rail, the distance covered, and a station dot */
+  .encuesta-barra {
+    position: relative;
+    grid-column: 1 / -1;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--border) 70%, transparent);
+  }
+  .encuesta-barra i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: max(var(--v), 4px);
+    border-radius: 2px;
+    background: var(--purple);
+  }
+  .encuesta-barra i::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -4px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--purple);
+    border-radius: 50%;
+    background: var(--cream2);
+    translate: 0 -50%;
+  }
+
+  .es-max {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .es-max .encuesta-valor {
+    color: var(--stamp);
+  }
+  .es-max .encuesta-barra i {
+    background: var(--stamp);
+  }
+  .es-max .encuesta-barra i::after {
+    border-color: var(--stamp);
+  }
+
+  .encuesta-nota {
+    margin: 0.9rem 0 0;
+    color: var(--muted);
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+</style>

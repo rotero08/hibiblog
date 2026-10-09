@@ -1,0 +1,223 @@
+---
+/**
+ * Omikuji: おみくじ, the paper fortunes you draw at a shrine: shake the box,
+ * a numbered stick falls out, and the slip with that number tells your luck.
+ * Here the fortunes are about studying, and each one points at something to read.
+ */
+const fortunes = [
+  { luck: '大吉', kana: 'だいきち', es: 'Gran fortuna', text: 'Hoy una palabra que llevas semanas olvidando se queda para siempre.', href: '/guias/japones/vocabulario/', cta: 'Vocabulario y Anki' },
+  { luck: '中吉', kana: 'ちゅうきち', es: 'Fortuna media', text: 'Entenderás una frase entera sin traducirla. No lo cuentes; disfrútalo.', href: '/guias/japones/inmersion/', cta: 'Inmersión y listening' },
+  { luck: '小吉', kana: 'しょうきち', es: 'Pequeña fortuna', text: 'Veinte minutos hoy valen más que dos horas el domingo.', href: '/guias/japones/', cta: 'La guía, desde el principio' },
+  { luck: '吉', kana: 'きち', es: 'Fortuna', text: 'Una partícula que te confundía hoy tiene sentido. は y が te saludan.', href: '/guias/japones/gramatica/', cta: 'Gramática base' },
+  { luck: '末吉', kana: 'すえきち', es: 'Fortuna tardía', text: 'El progreso llega, pero en tren local. Para en todas las estaciones.', href: '/guias/japones/fundamentos/', cta: 'Fundamentos y escritura' },
+  { luck: '吉', kana: 'きち', es: 'Fortuna', text: 'Buen día para hablar con un desconocido. Di すみません y respira.', href: '/guias/japones/hablar/', cta: 'Hablar y producción' },
+  { luck: '凶', kana: 'きょう', es: 'Mala suerte', text: 'Confundirás シ con ツ delante de alguien. Ata este papel a una rama y sigue.', href: '/guias/japones/fundamentos/', cta: 'Repasar el katakana' },
+  { luck: '大吉', kana: 'だいきち', es: 'Gran fortuna', text: 'El cajero del konbini te entenderá a la primera. Con bolsa o sin ella.', href: '/japon/', cta: 'Vivir en Japón' },
+];
+---
+
+<div class="omi" data-omikuji data-fortunes={JSON.stringify(fortunes)}>
+  <span class="section-label">おみくじ · Tu suerte de hoy</span>
+  <div class="omi-stage">
+    <button type="button" class="omi-box" data-omi-draw aria-label="Agitar la caja y sacar un omikuji">
+      <span class="omi-stick" aria-hidden="true"><b data-omi-num>七</b></span>
+      <span class="omi-body" aria-hidden="true">
+        <span class="omi-kanji">御神籤</span>
+      </span>
+    </button>
+    <div class="omi-slip" aria-live="polite" hidden data-omi-slip>
+      <p class="omi-luck"><ruby><span data-omi-luck></span><rt data-omi-kana></rt></ruby></p>
+      <p class="omi-es" data-omi-es></p>
+      <p class="omi-text" data-omi-text></p>
+      <a class="omi-link" data-omi-link data-astro-reload></a>
+    </div>
+  </div>
+  <p class="omi-hint" data-omi-hint>Toca la caja para agitarla.</p>
+</div>
+
+<script is:inline>
+  (function () {
+    var KANJI = ['一', '二', '三', '四', '五', '六', '七', '八'];
+    function init() {
+      document.querySelectorAll('[data-omikuji]').forEach(function (omi) {
+        if (omi.dataset.ready) return;
+        omi.dataset.ready = '1';
+        var fortunes = JSON.parse(omi.dataset.fortunes);
+        var box = omi.querySelector('[data-omi-draw]');
+        var slip = omi.querySelector('[data-omi-slip]');
+        var busy = false;
+        box.addEventListener('click', function () {
+          if (busy) return;
+          busy = true;
+          var i = Math.floor(Math.random() * fortunes.length);
+          var f = fortunes[i];
+          omi.classList.remove('is-out', 'is-open');
+          slip.hidden = true;
+          omi.querySelector('[data-omi-num]').textContent = KANJI[i % KANJI.length];
+          void box.offsetWidth;
+          omi.classList.add('is-shaking');
+          setTimeout(function () {
+            omi.classList.remove('is-shaking');
+            omi.classList.add('is-out');
+          }, 900);
+          setTimeout(function () {
+            omi.querySelector('[data-omi-luck]').textContent = f.luck;
+            omi.querySelector('[data-omi-kana]').textContent = f.kana;
+            omi.querySelector('[data-omi-es]').textContent = f.es;
+            omi.querySelector('[data-omi-text]').textContent = f.text;
+            var link = omi.querySelector('[data-omi-link]');
+            link.textContent = f.cta + ' →';
+            link.href = f.href;
+            slip.hidden = false;
+            omi.dataset.luck = f.luck;
+            omi.classList.add('is-open');
+            omi.querySelector('[data-omi-hint]').textContent = 'Agita otra vez si no te convence.';
+            busy = false;
+          }, 1500);
+        });
+      });
+    }
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
+
+<style>
+  .omi-stage {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: end;
+    min-height: 9.5rem;
+  }
+  /* the hexagonal wooden box */
+  .omi-box {
+    position: relative;
+    width: 4.2rem;
+    height: 8.4rem;
+    cursor: pointer;
+    transform-origin: 50% 90%;
+    transition: rotate 0.5s var(--spring);
+  }
+  .omi-box:hover {
+    rotate: -6deg;
+  }
+  .omi-body {
+    position: absolute;
+    inset: 1.6rem 0 0;
+    display: grid;
+    place-content: center;
+    border-radius: 4px 4px 7px 7px;
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.16), transparent 22%, transparent 78%, rgba(0, 0, 0, 0.2)),
+      #9a2f1b;
+    box-shadow: var(--paper-shadow);
+  }
+  .omi-body::before {
+    content: '';
+    position: absolute;
+    inset: -5px 18% auto;
+    height: 8px;
+    border-radius: 3px;
+    background: #6f2010;
+  }
+  .omi-kanji {
+    writing-mode: vertical-rl;
+    padding: 0.5rem 0.3rem;
+    background: #f5efe0;
+    color: #2c2118;
+    font: 600 0.82rem / 1 'Noto Serif JP', serif;
+    letter-spacing: 0.2em;
+  }
+  .omi-stick {
+    position: absolute;
+    left: 50%;
+    top: 1.5rem;
+    width: 0.7rem;
+    height: 4.6rem;
+    margin-left: -0.35rem;
+    display: grid;
+    justify-items: center;
+    padding-top: 0.25rem;
+    border-radius: 2px;
+    background: #e9d6ab;
+    color: #9a2f1b;
+    font: 600 0.6rem / 1 'Noto Serif JP', serif;
+    transition: translate 0.5s var(--spring);
+  }
+  .omi.is-out .omi-stick {
+    translate: 0 -2.3rem;
+  }
+  .omi.is-shaking .omi-box {
+    animation: omi-shake 0.9s ease-in-out;
+  }
+  @keyframes omi-shake {
+    0%, 100% { rotate: 0deg; translate: 0 0; }
+    12% { rotate: -16deg; translate: -3px -4px; }
+    28% { rotate: 14deg; translate: 3px 2px; }
+    44% { rotate: -12deg; translate: -2px -5px; }
+    60% { rotate: 150deg; translate: 0 -6px; }
+    80% { rotate: 172deg; translate: 0 2px; }
+    92% { rotate: 20deg; }
+  }
+
+  /* the slip */
+  .omi-slip {
+    padding: 0.9rem 1rem 1rem;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 21px, var(--sheet-rule) 21px 22px),
+      var(--sheet);
+    color: var(--sheet-ink);
+    box-shadow: var(--paper-shadow);
+    transform-origin: 50% 0;
+  }
+  .omi.is-open .omi-slip {
+    animation: omi-unroll 0.7s var(--spring) both;
+  }
+  @keyframes omi-unroll {
+    from {
+      opacity: 0;
+      scale: 1 0.15;
+      rotate: -4deg;
+    }
+  }
+  .omi-luck {
+    font: 600 2rem / 1.6 'Noto Serif JP', serif;
+    letter-spacing: 0.1em;
+    color: var(--stamp);
+  }
+  .omi[data-luck='凶'] .omi-luck {
+    color: var(--sheet-soft);
+  }
+  .omi-luck rt {
+    font: 400 0.3em 'Noto Serif JP', serif;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .omi-es {
+    font-size: 10.5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .omi-text {
+    margin: 0.5rem 0 0.6rem;
+    font: italic 400 0.86rem / 1.55 'Lora', serif;
+  }
+  .omi-link {
+    font-size: 10.5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--stamp);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  .omi-hint {
+    margin-top: 0.7rem;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+</style>

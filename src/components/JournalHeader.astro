@@ -5,6 +5,11 @@ import HankoSeal from './HankoSeal.astro';
  * JournalHeader — the "traveller's journal" section header (Cabecera de
  * Registro). A numbered eyebrow plus title on the left, an optional dashed
  * hanko seal and an optional "see all" link on the right.
+ *
+ * @example
+ * ```mdx
+ * <JournalHeader num="№ 03" title="Notas de campo" seal="旅" viewAllHref="/personal/" />
+ * ```
  */
 interface Props {
   /** Section number label, e.g. "№ 01". */

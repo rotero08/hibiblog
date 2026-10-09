@@ -1,0 +1,38 @@
+---
+/**
+ * PageHeader: the heading block of a section page. A small label, the title,
+ * its Japanese subtitle and, as the slot, a sentence or two of introduction.
+ */
+interface Props {
+  /** Small uppercase label above the title. */
+  eyebrow: string;
+  title: string;
+  /** Japanese subtitle under the title. */
+  ja?: string;
+  /** Accent colour of the label and the subtitle. @default 'var(--green)' */
+  color?: string;
+}
+
+const { eyebrow, title, ja, color = 'var(--green)' } = Astro.props;
+---
+
+<div class="japan-hub-header" style={`--c:${color}`}>
+  <div class="guide-page-eyebrow">{eyebrow}</div>
+  <h1 class="guide-page-title">{title}</h1>
+  {ja && <span class="guide-page-jp" lang="ja">{ja}</span>}
+  {Astro.slots.has('default') && <p class="guide-page-desc"><slot /></p>}
+</div>
+
+<style>
+  /* the doubled class outranks the site-wide defaults for these three */
+  .japan-hub-header .guide-page-eyebrow,
+  .japan-hub-header .guide-page-jp {
+    color: var(--c);
+  }
+  .japan-hub-header .guide-page-eyebrow::after {
+    background: var(--c);
+  }
+  .japan-hub-header .guide-page-desc {
+    margin-top: 0.8rem;
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import HankoSeal from './HankoSeal.astro';
+import { lines, stationCode, totalStations } from '../data/guides';
 
 /**
  * SiteNav — the shared top navigation bar (brand hanko, section links, the
@@ -8,24 +9,33 @@ import HankoSeal from './HankoSeal.astro';
  * Header component override) so every page shows the identical original nav.
  *
  * Active-state detection mirrors the original showPage() highlight logic.
+ * The theme switch, dropdown and mobile menu are driven by /scripts/hibi.js.
+ *
+ * The links come in two groups: first the three sections of the site, then,
+ * after a rule, the tools (the stamp book and the theme switch). The stamp book
+ * is not a section but the reader's own progress, so it shows as a counter that
+ * opens a small panel: how many stamps, and the next station to read on each
+ * line. On phones the counter stays in the bar as a plain link to the book, and
+ * the panel is laid out inside the menu.
  */
 const path = Astro.url.pathname;
-const isJpGuide = path.startsWith('/guias/japones');
+const isJpGuide = path.startsWith('/guias/japones') || path.startsWith('/japones');
 const isJapan =
-  path.startsWith('/japon') || path.startsWith('/blog') || path.startsWith('/guias/llegada');
+  /^\/japon(\/|$)/.test(path) || path.startsWith('/blog') || path.startsWith('/guias/llegada');
 const isPersonal = path.startsWith('/personal');
+const isBook = path.startsWith('/sellos');
 
 // Optional search slot — supplied with Starlight's <Search /> on guide pages,
 // empty (and therefore hidden) on the custom pages.
 const hasSearch = Astro.slots.has('search');
 ---
 
-<nav class="main-nav">
+<nav class="main-nav" aria-label="Principal">
   <a class="nav-brand" href="/">
     <HankoSeal text="日々" variant="ring" size={48} />
     <span class="nav-title">
       <span class="jp">日々</span>
-      <span class="sub">Hibi — notas diarias</span>
+      <span class="sub">Hibi · notas diarias</span>
     </span>
   </a>
   {hasSearch && (
@@ -33,35 +43,114 @@ const hasSearch = Astro.slots.has('search');
       <slot name="search" />
     </div>
   )}
-  <ul class="nav-links">
-    <li>
-      <a class="nav-link" class:list={[{ active: isJpGuide }]} href="/guias/japones/" data-astro-reload>
-        Guías de Japonés
-      </a>
+
+  {/* phones: the counter stays in the bar and goes straight to the book */}
+  <a class="nav-book-chip nav-book-chip--bar" class:list={[{ active: isBook }]} href="/sellos/">
+    <span class="vh">Tu libreta de sellos: </span>
+    <span class="nb-ring"><span data-stamp-count>0</span></span>
+    <span class="nb-of"><span class="vh"> de </span><span aria-hidden="true">/</span>{totalStations}</span>
+  </a>
+  <button class="nav-burger" data-menu-toggle aria-label="Menú" aria-expanded="false" aria-controls="nav-links">
+    <span></span><span></span><span></span>
+  </button>
+
+  <ul class="nav-links" id="nav-links">
+    {/* each section label is a link to its main page; the caret opens the shortcuts */}
+    <li class="nav-dropdown nav-split" data-hover>
+      <a class="nav-link" class:list={[{ active: isJpGuide }]} href="/japones/">Japonés</a>
+      <button class="nav-caret" data-dropdown-toggle aria-haspopup="true" aria-expanded="false" aria-label="Más de Japonés">▾</button>
+      <div class="nav-dropdown-menu" data-dropdown-menu>
+        <a class="dropdown-sub-link" href="/guias/japones/" data-astro-reload>Guía principal</a>
+        <a class="dropdown-sub-link" href="/guias/japones/gramatica/" data-astro-reload>Gramática</a>
+        <a class="dropdown-sub-link" href="/japones/#notas">Notas cortas</a>
+      </div>
     </li>
-    <li class="nav-dropdown">
-      <button
-        class="nav-link"
-        class:list={[{ active: isJapan }]}
-        data-dropdown-toggle
-        aria-haspopup="true"
-        aria-expanded="false"
-      >
-        Japón ▾
-      </button>
-      <div class="nav-dropdown-menu">
-        <a class="dropdown-main-link" href="/japon/">Guías y Blog (Hub)</a>
-        <div class="divider"></div>
-        <a class="dropdown-sub-link" href="/guias/llegada/" data-astro-reload>↳ Guía de Llegada</a>
-        <a class="dropdown-sub-link" href="/japon/guias/">↳ Guías Temáticas</a>
-        <a class="dropdown-sub-link" href="/blog/">↳ El Blog</a>
+    <li class="nav-dropdown nav-split" data-hover>
+      <a class="nav-link" class:list={[{ active: isJapan }]} href="/japon/">Japón</a>
+      <button class="nav-caret" data-dropdown-toggle aria-haspopup="true" aria-expanded="false" aria-label="Más de Japón">▾</button>
+      <div class="nav-dropdown-menu" data-dropdown-menu>
+        <a class="dropdown-sub-link" href="/guias/llegada/" data-astro-reload>Guía de Llegada</a>
+        <a class="dropdown-sub-link" href="/japon/guias/">Guías temáticas</a>
+        <a class="dropdown-sub-link" href="/blog/">El blog</a>
       </div>
     </li>
     <li>
       <a class="nav-link" class:list={[{ active: isPersonal }]} href="/personal/">Personal</a>
     </li>
-    <li>
-      <button class="mode-btn" data-theme-toggle aria-label="Cambiar modo">
+
+    {/* tools: the stamp book, then day / night */}
+    {/* the chip is a link to the book; its panel opens on hover or focus */}
+    <li class="nav-dropdown nav-book" data-hover>
+      <a
+        class="nav-book-chip"
+        class:list={[{ active: isBook }]}
+        href="/sellos/"
+        data-stamp-total={totalStations}
+        title="Tu libreta de sellos"
+      >
+        <span class="vh">Tu libreta de sellos: </span>
+        <span class="nb-ring"><span data-stamp-count>0</span></span>
+        <span class="nb-of"><span class="vh"> de </span><span aria-hidden="true">/</span>{totalStations}</span>
+      </a>
+      <div class="nav-book-pop" data-dropdown-menu style={`--all:${totalStations}`}>
+        <div class="nbp-off" role="status">
+          <p>Los sellos están desactivados.</p>
+          <button type="button" data-stamps-toggle>Activar sellos</button>
+        </div>
+        <div class="nbp-on">
+        <p class="nbp-kicker"><span lang="ja">スタンプ帳</span> Libreta de sellos</p>
+        <p class="nbp-owner" data-owner-show>
+          de <b data-owner-name></b> <span lang="ja" data-owner-kana></span>
+        </p>
+        <p class="nbp-count">
+          <b data-stamp-count>0</b><span>/ {totalStations}</span><small>sellos</small>
+        </p>
+        <div class="nbp-bar" aria-hidden="true"><i></i></div>
+        <p class="nbp-hint nbp-when-none">
+          Cada capítulo de las guías es una estación. Léelo hasta el final y su sello queda en tu libreta.
+        </p>
+        <p class="nbp-label">
+          <span class="nbp-when-none">Empieza por aquí</span>
+          <span class="nbp-when-some">Sigue leyendo</span>
+          <span class="nbp-when-all">Libreta completa</span>
+        </p>
+        <ul class="nbp-lines">
+          {
+            lines.map((line) => (
+              <li class="nbp-line" style={`--c:${line.color}`} data-stamp-scope>
+                <ol>
+                  {line.stations.map((s, i) => (
+                    <li class:list={[{ 'is-next': i === 0 }]} data-stamp-key={s.href}>
+                      <a href={s.href} data-astro-reload>
+                        <span class="nbp-badge" aria-hidden="true">{line.code}</span>
+                        <span class="nbp-text">
+                          <span class="nbp-code">{stationCode(line, i)} · {line.name}</span>
+                          <span class="nbp-name"><b lang="ja">{s.ja}</b> {s.label}</span>
+                        </span>
+                        <span class="nbp-go" aria-hidden="true">→</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+                <p class="nbp-done">
+                  <span class="nbp-badge" aria-hidden="true">{line.code}</span>
+                  <span>{line.name}: todas las estaciones selladas</span>
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+        <a class="nbp-open" href="/sellos/">Abrir la libreta →</a>
+        <p class="nbp-acts">
+          <a href="/sellos/#nombre">Nombre</a>
+          <button type="button" data-stamps-toggle>Desactivar</button>
+          <button type="button" data-all-reset>Borrar todo</button>
+        </p>
+        </div>
+      </div>
+    </li>
+    <li class="nav-mode">
+      <button class="mode-btn" data-theme-toggle aria-label="Cambiar entre día y noche">
         <span class="mode-kanji kanji-moon">月</span>
         <span class="mode-kanji kanji-sun">日</span>
         <span class="label-dark">Noche</span>
@@ -69,54 +158,7 @@ const hasSearch = Astro.slots.has('search');
       </button>
     </li>
   </ul>
+  {/* reading progress: a little train running along the bottom of the bar */}
+  <div class="nav-rail" aria-hidden="true"><i></i><b></b></div>
 </nav>
 
-<script is:inline>
-  (function () {
-    if (window.__hibiNav) return;
-    window.__hibiNav = true;
-
-    function applyTheme(theme) {
-      document.documentElement.dataset.theme = theme;
-      try {
-        localStorage.setItem('starlight-theme', theme);
-      } catch (e) {}
-    }
-
-    function closeAllDropdowns() {
-      document.querySelectorAll('.nav-dropdown-menu.open').forEach(function (m) {
-        m.classList.remove('open');
-      });
-      document
-        .querySelectorAll('[data-dropdown-toggle][aria-expanded="true"]')
-        .forEach(function (b) {
-          b.setAttribute('aria-expanded', 'false');
-        });
-    }
-
-    document.addEventListener('click', function (e) {
-      var themeToggle = e.target.closest('[data-theme-toggle]');
-      if (themeToggle) {
-        var isDark = document.documentElement.dataset.theme === 'dark';
-        applyTheme(isDark ? 'light' : 'dark');
-        return;
-      }
-
-      var ddToggle = e.target.closest('[data-dropdown-toggle]');
-      if (ddToggle) {
-        e.stopPropagation();
-        var menu = ddToggle.parentElement.querySelector('.nav-dropdown-menu');
-        var willOpen = menu && !menu.classList.contains('open');
-        closeAllDropdowns();
-        if (willOpen) {
-          menu.classList.add('open');
-          ddToggle.setAttribute('aria-expanded', 'true');
-        }
-        return;
-      }
-
-      // Any other click closes open dropdowns.
-      closeAllDropdowns();
-    });
-  })();
-</script>

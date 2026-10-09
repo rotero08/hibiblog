@@ -11,6 +11,9 @@
  *
  * Falls back to Starlight's computed pagination for any page outside the guides.
  */
+import EkiStamp from '../EkiStamp.astro';
+import { locate, stationCode, totalStations } from '../../data/guides';
+
 type Link = { type: 'link'; href: string; label: string; isCurrent: boolean };
 type Group = { type: 'group'; label: string; entries: SidebarEntry[] };
 type SidebarEntry = Link | Group;
@@ -49,46 +52,282 @@ if (currentGroup) {
 }
 
 const isRtl = dir === 'rtl';
+
+// Station data for this chapter (Japanese name, stamp), when it is a guide page.
+const here = locate(path);
+const stationOf = (href?: string) => (href ? locate(href)?.station : undefined);
+const prevSt = stationOf(prev?.href);
+const nextSt = stationOf(next?.href);
 ---
 
-<div class="pagination-links print:hidden" dir={dir}>
-  {
-    prev && (
-      <a href={prev.href} rel="prev">
-        <svg class="pager-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-          <path d={isRtl ? 'M5 12h14M12 5l7 7-7 7' : 'M19 12H5M12 19l-7-7 7-7'} />
-        </svg>
-        <span>
-          {Astro.locals.t('page.previousLink')}
-          <br />
-          <span class="link-title">{prev.label}</span>
-        </span>
-      </a>
-    )
-  }
-  {
-    next && (
-      <a href={next.href} rel="next">
-        <svg class="pager-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-          <path d={isRtl ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7'} />
-        </svg>
-        <span>
-          {Astro.locals.t('page.nextLink')}
-          <br />
-          <span class="link-title">{next.label}</span>
-        </span>
-      </a>
-    )
-  }
-</div>
+{
+  here && (
+    <>
+      {/* 駅名標, the name board on the platform: this station, and its neighbours */}
+      {/* reaching the board collects the chapter's stamp (see /scripts/hibi.js) */}
+      <nav
+        class="sign print:hidden"
+        style={`--c:${here.line.color}`}
+        aria-label="Capítulo anterior y siguiente"
+        data-stamp-card={here.station.href}
+        data-station={`${here.station.ja} (${here.station.label})`}
+        data-total={totalStations}
+      >
+        <a class="sign-pad" href="/sellos/" data-astro-reload data-stamp-ui title="Tu libreta de sellos">
+          <span class="sign-pad-ring" aria-hidden="true"></span>
+          <span class="sign-stamp"><EkiStamp line={here.line} index={here.index} /></span>
+        </a>
+        <span class="sign-say" data-stamp-say role="status"></span>
+        <div class="sign-here">
+          <span class="sign-kana">{here.station.kana}</span>
+          <strong class="sign-name">{here.station.ja}</strong>
+          <span class="sign-code">{stationCode(here.line, here.index)} · {here.station.label}</span>
+        </div>
+        <div class:list={['sign-band', { 'no-prev': !prev, 'no-next': !next }]} aria-hidden="true">
+          <span class="sign-mark"></span>
+        </div>
+        <div class="sign-next">
+          {prev ? (
+            <a class="sign-adj" href={prev.href} rel="prev">
+              <span class="sign-adj-ja"><small>{prevSt?.kana}</small>{prevSt?.ja ?? '←'}</span>
+              <span class="sign-adj-es">← {prev.label}</span>
+            </a>
+          ) : (
+            <span class="sign-adj sign-adj--none">
+              <span class="sign-adj-ja"><small>しはつ</small>始発</span>
+              <span class="sign-adj-es">Aquí empieza la línea.</span>
+            </span>
+          )}
+          {next ? (
+            <a class="sign-adj sign-adj--r" href={next.href} rel="next">
+              <span class="sign-adj-ja"><small>{nextSt?.kana}</small>{nextSt?.ja ?? '→'}</span>
+              <span class="sign-adj-es">{next.label} →</span>
+            </a>
+          ) : (
+            <span class="sign-adj sign-adj--r sign-adj--none">
+              <span class="sign-adj-ja"><small>しゅうてん</small>終点</span>
+              <span class="sign-adj-es">Fin de la línea. Gracias por viajar.</span>
+            </span>
+          )}
+        </div>
+      </nav>
+    </>
+  )
+}
+
+{
+  !here && (
+    <div class="pagination-links print:hidden" dir={dir}>
+      {prev && (
+        <a href={prev.href} rel="prev">
+          <svg class="pager-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d={isRtl ? 'M5 12h14M12 5l7 7-7 7' : 'M19 12H5M12 19l-7-7 7-7'} />
+          </svg>
+          <span>{Astro.locals.t('page.previousLink')}<br /><span class="link-title">{prev.label}</span></span>
+        </a>
+      )}
+      {next && (
+        <a href={next.href} rel="next">
+          <svg class="pager-arrow" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d={isRtl ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7'} />
+          </svg>
+          <span>{Astro.locals.t('page.nextLink')}<br /><span class="link-title">{next.label}</span></span>
+        </a>
+      )}
+    </div>
+  )
+}
 
 <style>
+  /* the stamp sits in the corner of the board: an empty ring until collected */
+  .sign {
+    position: relative;
+  }
+  .sign-pad {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.8rem;
+    display: grid;
+    place-items: center;
+    width: 5.6rem;
+    aspect-ratio: 1;
+    /* keeps the stamp's ink blending inside the pad, so it can't smear a line across the board */
+    isolation: isolate;
+  }
+  /* said once, beside the stamp, when it is collected */
+  .sign-say {
+    position: absolute;
+    top: 0.75rem;
+    left: 1rem;
+    max-width: 11rem;
+    font: italic 500 0.82rem / 1.35 'Lora', serif;
+    color: var(--stamp);
+    opacity: 0;
+    translate: 0 4px;
+    transition: opacity 0.4s, translate 0.5s var(--spring);
+    pointer-events: none;
+  }
+  .sign-say.is-on {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .sign-pad-ring {
+    position: absolute;
+    inset: 4%;
+    border: 1.5px dashed var(--sheet-dash);
+    border-radius: 50%;
+    transition: opacity 0.3s;
+  }
+  .sign-stamp {
+    width: 100%;
+    rotate: -9deg;
+    opacity: 0;
+    mix-blend-mode: var(--stamp-blend);
+  }
+  .sign.is-stamped .sign-stamp {
+    opacity: 0.92;
+  }
+  .sign.is-stamped .sign-pad-ring {
+    opacity: 0;
+  }
+  .sign.is-pressing .sign-stamp {
+    animation: press 0.62s var(--ease-out) both;
+  }
+  @keyframes press {
+    0% { opacity: 0; scale: 1.9; rotate: -22deg; filter: blur(6px); }
+    42% { opacity: 1; scale: 0.93; rotate: -9deg; filter: blur(0); }
+    70% { scale: 1.025; }
+    100% { opacity: 0.92; scale: 1; }
+  }
+
+  /* ---- station name board: white enamel by day, a lit box at night ---- */
+  .sign {
+    --band: 1.5rem;
+    display: grid;
+    padding: 1.5rem 0 1.1rem;
+    border-radius: 10px;
+    background: var(--sheet);
+    color: var(--sheet-ink);
+    box-shadow: 0 0 0 1px var(--border), var(--lift);
+  }
+  :global(:root[data-theme='dark']) .sign {
+    box-shadow: 0 0 0 1px var(--border), 0 0 60px rgba(255, 123, 160, 0.1), var(--lift);
+  }
+  .sign-here {
+    display: grid;
+    justify-items: center;
+    gap: 0.25rem;
+    text-align: center;
+  }
+  .sign-kana {
+    font: 500 0.9rem / 1 'Noto Serif JP', serif;
+    letter-spacing: 0.4em;
+    text-indent: 0.4em;
+  }
+  .sign-name {
+    font: 600 clamp(2rem, 5vw, 2.8rem) / 1.2 'Noto Serif JP', serif;
+    letter-spacing: 0.2em;
+    text-indent: 0.2em;
+    color: var(--sheet-ink);
+  }
+  .sign-code {
+    font: 500 0.74rem 'JetBrains Mono', monospace;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--sheet-soft);
+  }
+  /* the band is cut into an arrow at each end that has a neighbour. Cutting the
+     band itself (instead of covering its corners) leaves no hairline at the edge. */
+  .sign-band {
+    --l: calc(var(--band) * 0.75);
+    --r: calc(var(--band) * 0.75);
+    display: flex;
+    justify-content: center;
+    height: var(--band);
+    margin: 1rem 0 0.8rem;
+    background: var(--c);
+    clip-path: polygon(var(--l) 0, calc(100% - var(--r)) 0, 100% 50%, calc(100% - var(--r)) 100%, var(--l) 100%, 0 50%);
+  }
+  .sign-band.no-prev {
+    --l: 0px;
+  }
+  .sign-band.no-next {
+    --r: 0px;
+  }
+  .sign-mark {
+    width: var(--band);
+    height: var(--band);
+    background: color-mix(in oklab, var(--c) 60%, black);
+  }
+  .sign-next {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 0 1.5rem;
+  }
+  .sign-adj {
+    display: grid;
+    align-content: start;
+    gap: 0.3rem;
+    min-width: 0;
+    color: var(--sheet-ink);
+    text-decoration: none;
+  }
+  .sign-adj--r {
+    justify-items: end;
+    text-align: end;
+  }
+  .sign-adj-ja {
+    display: grid;
+    gap: 0.15rem;
+    font: 600 1.3rem / 1.2 'Noto Serif JP', serif;
+    letter-spacing: 0.14em;
+    transition: translate 0.5s var(--spring);
+  }
+  .sign-adj-ja small {
+    font: 500 0.52em / 1 'Noto Serif JP', serif;
+    letter-spacing: 0.25em;
+    color: var(--sheet-soft);
+  }
+  .sign-adj-es {
+    font: 400 0.9rem / 1.35 'Lora', serif;
+    color: var(--sheet-soft);
+  }
+  a.sign-adj:hover .sign-adj-ja {
+    translate: -0.4rem 0;
+  }
+  a.sign-adj--r:hover .sign-adj-ja {
+    translate: 0.4rem 0;
+  }
+  a.sign-adj:hover .sign-adj-es {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  /* the end of the line: there, but plainly not a link */
+  .sign-adj--none .sign-adj-ja {
+    color: var(--sheet-soft);
+  }
+  .sign-adj--none .sign-adj-es {
+    font-style: italic;
+  }
+  @media (max-width: 40rem) {
+    .sign-pad {
+      width: 3.8rem;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+    .sign-say {
+      max-width: 6.5rem;
+      font-size: 0.74rem;
+    }
+  }
+
   .pagination-links {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
     gap: 1rem;
   }
-  a {
+  .pagination-links a {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -96,28 +335,28 @@ const isRtl = dir === 'rtl';
     width: 100%;
     flex-basis: calc(50% - 0.5rem);
     flex-grow: 1;
-    border: 1px solid var(--border-lt);
+    border: 1px solid var(--border);
     background: var(--cream2);
     border-radius: 6px;
     padding: 1rem 1.1rem;
     text-decoration: none;
-    color: var(--muted);
+    color: var(--ink-soft);
     overflow-wrap: anywhere;
     transition: background 0.25s, border-color 0.35s, transform 0.15s;
   }
-  [rel='next'] {
+  .pagination-links [rel='next'] {
     justify-content: end;
     text-align: end;
     flex-direction: row-reverse;
   }
-  a:hover {
+  .pagination-links a:hover {
     background: var(--cream3);
     border-color: var(--stamp);
   }
-  [rel='prev']:hover {
+  .pagination-links [rel='prev']:hover {
     transform: translateX(-2px);
   }
-  [rel='next']:hover {
+  .pagination-links [rel='next']:hover {
     transform: translateX(2px);
   }
   .pager-arrow {
@@ -129,7 +368,7 @@ const isRtl = dir === 'rtl';
     stroke-linejoin: round;
   }
   :global(:root[data-theme='dark']) .pager-arrow {
-    stroke: #9a8abf;
+    stroke: #c8aaf5;
   }
   .link-title {
     display: block;

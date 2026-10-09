@@ -1,0 +1,74 @@
+---
+/**
+ * PostLayout: the page of one post, for both shelves (the blog and the
+ * personal notes). The file only holds the text; everything around it is drawn
+ * here from the post's header: where it belongs, its label and date, how long
+ * it takes to read, a postmark with the date, and the posts next to it.
+ *
+ * What Markdown produces inside the post is styled by src/styles/post.css.
+ */
+import { render } from 'astro:content';
+import Layout from './Layout.astro';
+import Postmark from '../components/Postmark.astro';
+import GuideTicket from '../components/GuideTicket.astro';
+import HankoSeal from '../components/HankoSeal.astro';
+import { SHELVES, isoDate, longDate, monthYear, postHref, readingMinutes, stampDate, type Post } from '../lib/posts';
+import '../styles/post.css';
+
+interface Props {
+  post: Post;
+  /** The posts written just after and just before this one, if any. */
+  newer?: Post;
+  older?: Post;
+}
+
+const { post, newer, older } = Astro.props;
+const shelf = SHELVES[post.collection];
+const { title, description, date, ja, draft } = post.data;
+const tag = post.data.tag ?? shelf.tag;
+const minutes = readingMinutes(post);
+// a file with only its header: a draft that has not been started
+const blank = !post.body?.trim();
+const { Content } = await render(post);
+---
+
+<Layout title={`${title} · Hibi`} description={description}>
+  <article class="entry" style={`--c:${shelf.color}`}>
+    <header class="entry-head">
+      <a class="entry-back" href={`/${post.collection}/`}>← {shelf.title}</a>
+      <p class="entry-kicker">
+        <span class="entry-tag">{tag}</span>
+        <time datetime={isoDate(date)}>{longDate(date)}</time>
+        {minutes > 0 && <span>{minutes} min de lectura</span>}
+        {draft && <span class="entry-draft">Borrador: no se publica</span>}
+      </p>
+      <h1 class="entry-title">{title}</h1>
+      {ja && <p class="entry-ja" lang="ja">{ja}</p>}
+      <p class="entry-lead">{description}</p>
+      <div class="entry-postmark"><Postmark date={stampDate(date)} mark={shelf.mark} /></div>
+    </header>
+
+    <div class="entry-body">
+      {blank ? <p class="entry-blank">Esta entrada todavía no tiene texto.</p> : <Content />}
+    </div>
+
+    {/* a <div>, not a <footer>: the site's own footer is styled by tag name */}
+    <div class="entry-foot">
+      {/* 了, "the end": the mark that closes a text */}
+      <p class="entry-end"><HankoSeal text="了" variant="square" size={38} rotation={5} /></p>
+      {
+        (newer || older) && (
+          <nav class="entry-nav" aria-label="Otras entradas">
+            {older && (
+              <GuideTicket href={postHref(older)} tag={shelf.older} title={older.data.title} meta={monthYear(older.data.date)} num="前" />
+            )}
+            {newer && (
+              <GuideTicket href={postHref(newer)} tag={shelf.newer} title={newer.data.title} meta={monthYear(newer.data.date)} num="次" />
+            )}
+          </nav>
+        )
+      }
+      <a class="entry-all" href={`/${post.collection}/`}>{shelf.all} →</a>
+    </div>
+  </article>
+</Layout>

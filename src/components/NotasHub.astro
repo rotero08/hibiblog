@@ -1,0 +1,61 @@
+---
+/**
+ * NotasHub: the short notes of the Japanese section as one list, with a row of
+ * tag chips to filter it. The chips are links to /japones/ (all) and
+ * /japones/tema/<tag>/, so the page is plain static HTML. The tags come from
+ * src/data/topics.ts.
+ *
+ * Used by /japones/ and the tag pages.
+ */
+import PostList from './PostList.astro';
+import { topics } from '../data/topics';
+
+interface Props {
+  /** Slug of the tag being shown; leave empty for every note. */
+  topic?: string;
+}
+
+const { topic } = Astro.props;
+---
+
+<nav class="chips" aria-label="Filtrar notas por etiqueta">
+  <a class:list={['chip', { on: !topic }]} href="/japones/" aria-current={!topic ? 'page' : undefined}>Todas</a>
+  {
+    topics.map((t) => (
+      <a class:list={['chip', { on: topic === t.slug }]} href={`/japones/tema/${t.slug}/`} aria-current={topic === t.slug ? 'page' : undefined}>
+        {t.label}
+      </a>
+    ))
+  }
+</nav>
+<PostList shelf="japones" topic={topic} shape="peek" />
+
+<style>
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+  }
+  .chip {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+  }
+  .chip:hover {
+    border-color: var(--ink-soft);
+    color: var(--ink);
+  }
+  .chip.on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--cream);
+  }
+</style>

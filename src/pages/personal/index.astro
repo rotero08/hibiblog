@@ -1,0 +1,18 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import PostList from '../../components/PostList.astro';
+import { SHELVES } from '../../lib/posts';
+
+// Every .md / .mdx file in src/content/personal/ is listed here, newest first.
+const shelf = SHELVES.personal;
+---
+
+<Layout title={`${shelf.title} · Hibi`} description="Ensayos cortos sobre el aprendizaje, el silencio y vivir lejos del hogar.">
+  <div class="japan-hub">
+    <PageHeader eyebrow="Personal" title={shelf.title} ja={shelf.ja} color={shelf.color}>
+      Ensayos cortos sobre los procesos internos, el silencio, el aprendizaje consciente y el impacto de vivir a miles de kilómetros del hogar.
+    </PageHeader>
+    <PostList shelf="personal" />
+  </div>
+</Layout>

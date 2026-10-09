@@ -1,0 +1,173 @@
+---
+/**
+ * Tanzaku: 短冊, the paper strip you write a poem or a wish on and hang up.
+ * It carries the name of the micro-season (七十二候) Japan is in today, sways
+ * in the draught, and its paper changes colour with the season. Rendered at
+ * build time and corrected in the browser, so it is right on any day.
+ */
+import { currentKo, koRange } from '../data/koyomi';
+const ko = currentKo();
+---
+
+<div class="tz" data-ko={ko.index} data-season={ko.season}>
+  <div class="tz-hang" aria-hidden="true">
+    <span class="tz-string"></span>
+    <div class="tz-strip">
+      <p class="tz-name"><ruby><span data-ko-name>{ko.name}</span><rt data-ko-kana>{ko.kana}</rt></ruby></p>
+      <p class="tz-sekki" data-ko-sekki>{ko.sekki.name}</p>
+    </div>
+  </div>
+  <div class="tz-cap">
+    <span class="section-label">季節 · Ahora en Japón</span>
+    <p class="tz-es"><span data-ko-es>{ko.es}</span></p>
+    <p class="tz-meta">
+      <span data-ko-name>{ko.name}</span> · microestación <span data-ko-index>{ko.index}</span>/72<br />
+      <span data-ko-range>{koRange(ko)}</span> · <span data-ko-sekki-es>{ko.sekki.romaji}, {ko.sekki.es.toLowerCase()}</span>
+    </p>
+  </div>
+</div>
+
+<script>
+  import { currentKo, koRange } from '../data/koyomi';
+  function sync() {
+    const el = document.querySelector<HTMLElement>('.tz[data-ko]');
+    if (!el) return;
+    const ko = currentKo();
+    if (el.dataset.ko === String(ko.index)) return;
+    el.dataset.ko = String(ko.index);
+    el.dataset.season = ko.season;
+    const set = (sel: string, text: string) => el.querySelectorAll(sel).forEach((n) => (n.textContent = text));
+    set('[data-ko-name]', ko.name);
+    set('[data-ko-kana]', ko.kana);
+    set('[data-ko-es]', ko.es);
+    set('[data-ko-index]', String(ko.index));
+    set('[data-ko-range]', koRange(ko));
+    set('[data-ko-sekki]', ko.sekki.name);
+    set('[data-ko-sekki-es]', `${ko.sekki.romaji}, ${ko.sekki.es.toLowerCase()}`);
+  }
+  sync();
+  document.addEventListener('astro:page-load', sync);
+</script>
+
+<style>
+  .tz {
+    --tz-paper: #f1dcae;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.2rem;
+    align-items: start;
+  }
+  .tz[data-season='spring'] {
+    --tz-paper: #f4d5d3;
+  }
+  .tz[data-season='summer'] {
+    --tz-paper: #cfe6cc;
+  }
+  .tz[data-season='autumn'] {
+    --tz-paper: #f1dcae;
+  }
+  .tz[data-season='winter'] {
+    --tz-paper: #d9e3ee;
+  }
+  :global(:root[data-theme='dark']) .tz {
+    --tz-paper: #5a4226;
+    --tz-ink: #fbeed3;
+    --tz-seal: #ffb0a0;
+  }
+  :global(:root[data-theme='dark']) .tz[data-season='spring'] {
+    --tz-paper: #5c2f45;
+  }
+  :global(:root[data-theme='dark']) .tz[data-season='summer'] {
+    --tz-paper: #27503f;
+  }
+  :global(:root[data-theme='dark']) .tz[data-season='winter'] {
+    --tz-paper: #2f3f5e;
+  }
+  .tz-hang {
+    display: grid;
+    justify-items: center;
+    transform-origin: 50% 0;
+    animation: tz-sway 7s ease-in-out infinite alternate;
+  }
+  .tz:hover .tz-hang {
+    animation-duration: 1.6s;
+  }
+  .tz-string {
+    width: 1px;
+    height: 1.1rem;
+    background: var(--muted);
+  }
+  .tz-strip {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.9rem;
+    width: 3.5rem;
+    min-height: 11.5rem;
+    padding: 1.7rem 0 0.8rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 20%), var(--tz-paper);
+    color: var(--tz-ink, #2c2118);
+    box-shadow: var(--paper-shadow);
+  }
+  .tz-strip::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--cream);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+  .tz-name {
+    writing-mode: vertical-rl;
+    font: 600 1.45rem / 1 'Noto Serif JP', serif;
+    letter-spacing: 0.12em;
+  }
+  .tz-name rt {
+    font: 400 0.32em 'Noto Serif JP', serif;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+  }
+  .tz-sekki {
+    writing-mode: vertical-rl;
+    padding: 0.4em 0.2em;
+    border: 1.5px solid var(--tz-seal, #bc3318);
+    border-radius: 2px;
+    font: 600 0.66rem / 1 'Noto Serif JP', serif;
+    letter-spacing: 0.15em;
+    color: var(--tz-seal, #bc3318);
+  }
+  .tz-cap {
+    padding-top: 1.1rem;
+  }
+  .tz-cap .section-label {
+    margin-bottom: 0.6rem;
+  }
+  .tz-es {
+    font: italic 400 1rem / 1.4 'Lora', serif;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .tz-meta {
+    margin-top: 0.6rem;
+    font-size: 11px;
+    line-height: 1.7;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+  .tz-meta [data-ko-name] {
+    font-family: 'Noto Serif JP', serif;
+    color: var(--brown);
+  }
+  @keyframes tz-sway {
+    from {
+      rotate: -2deg;
+    }
+    to {
+      rotate: 2.6deg;
+    }
+  }
+</style>

@@ -1,0 +1,50 @@
+---
+/**
+ * Postmark: 消印, the round date stamp a post office presses over the stamps
+ * of a letter, with the wavy lines that cancel them. Each post carries one:
+ * the site's name on top, the date across the middle, and the shelf below
+ * (日記, a diary, for the blog; 手記, a personal note).
+ */
+interface Props {
+  /** The date as it is written on stamps: "2026.05.12". */
+  date: string;
+  /** Two characters for the lower part. */
+  mark: string;
+  class?: string;
+}
+
+const { date, mark, class: className } = Astro.props;
+---
+
+<svg class:list={['postmark', 'ink', className]} viewBox="0 0 196 120" aria-hidden="true">
+  <g fill="none" stroke="currentColor">
+    <circle cx="60" cy="60" r="54" stroke-width="3"></circle>
+    <path d="M7.9 46 H112.1 M7.9 74 H112.1" stroke-width="1.6"></path>
+    <path class="postmark-waves" d="M122 36 q8 -7 16 0 t16 0 t16 0 t16 0 M122 52 q8 -7 16 0 t16 0 t16 0 t16 0 M122 68 q8 -7 16 0 t16 0 t16 0 t16 0 M122 84 q8 -7 16 0 t16 0 t16 0 t16 0" stroke-width="2.2" stroke-linecap="round"></path>
+  </g>
+  <g fill="currentColor" text-anchor="middle">
+    <text class="postmark-ja" x="60" y="37" font-size="17">日々</text>
+    <text class="postmark-date" x="60" y="64.5" font-size="12.5">{date}</text>
+    <text class="postmark-ja" x="60" y="95" font-size="17">{mark}</text>
+  </g>
+</svg>
+
+<style>
+  .postmark {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    color: var(--stamp);
+  }
+  .postmark-ja {
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+  }
+  .postmark-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+</style>

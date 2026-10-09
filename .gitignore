@@ -12,3 +12,39 @@ pnpm-debug.log*
 .env.production
 # macOS
 .DS_Store
+
+# environment variables (any variant, keep the example)
+.env.*
+!.env.example
+
+# logs
+*.log
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local Claude Code settings and scratch files (shared .claude/settings.json is kept)
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
+# editor and OS files (.vscode/extensions.json is kept)
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# caches and temp
+.cache/
+.tmp/
+*.tsbuildinfo
+.pnpm-store/
+.eslintcache
+
+# Windows/Linux leftovers
+desktop.ini
+.directory
+.Trash-*

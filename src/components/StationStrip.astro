@@ -1,0 +1,289 @@
+---
+/**
+ * StationStrip draws a guide as a railway line: every chapter is a station
+ * you can click. A small train rides to whichever station you point at, and
+ * stations whose stamp you have collected show as visited.
+ */
+import { stationCode, type Line } from '../data/guides';
+
+interface Props {
+  line: Line;
+}
+const { line } = Astro.props;
+---
+
+<nav class="strip" style={`--c:${line.color};--n:${line.stations.length}`} aria-label={`Estaciones de ${line.name}`} data-strip data-stamp-scope>
+  <p class="strip-head">
+    <span class="strip-badge">{line.code}</span>
+    <span class="strip-ja">{line.ja}</span>
+    <span class="strip-name">{line.name} · {line.stations.length} estaciones</span>
+    <span class="strip-tally"><span data-stamp-count>0</span>/{line.stations.length} sellos</span>
+  </p>
+  <p class="strip-hint">
+    Cada capítulo es una estación. Léelo hasta el final y queda <strong>sellada</strong>;
+    <a href="/sellos/">tus sellos se guardan en la libreta →</a>
+  </p>
+  <ol class="strip-line">
+    <li class="strip-train" aria-hidden="true"></li>
+    {
+      line.stations.map((s, i) => (
+        <li class="strip-stop" data-stamp-key={s.href} style={`--i:${i}`}>
+          <a href={s.href} data-astro-reload>
+            <span class="strip-node"></span>
+            <span class="strip-code">{stationCode(line, i)}</span>
+            <span class="strip-kanji">{s.ja}</span>
+            <span class="strip-label">{s.label}</span>
+            <span class="strip-next">Siguiente</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<script is:inline>
+  (function () {
+    function init() {
+      document.querySelectorAll('[data-strip]').forEach(function (strip) {
+        if (strip.dataset.ready) return;
+        strip.dataset.ready = '1';
+        var train = strip.querySelector('.strip-train');
+        var stops = strip.querySelectorAll('.strip-stop');
+        function go(stop) {
+          train.style.setProperty('--x', stop.offsetLeft + stop.offsetWidth / 2 + 'px');
+          train.style.setProperty('--y', stop.offsetTop + 'px');
+        }
+        stops.forEach(function (stop) {
+          stop.addEventListener('pointerenter', function () { go(stop); });
+          stop.addEventListener('focusin', function () { go(stop); });
+        });
+        // wait at the next station still missing its stamp (hibi.js marks it)
+        function home() {
+          var next = strip.querySelector('.strip-stop.is-next') || stops[stops.length - 1];
+          if (next) go(next);
+        }
+        home();
+        document.addEventListener('hibi:stamps', home);
+        strip.addEventListener('pointerleave', home);
+        requestAnimationFrame(function () { strip.classList.add('is-ready'); });
+      });
+    }
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
+
+<style>
+  .strip {
+    padding: 1.3rem 1.4rem 1.5rem;
+    background: var(--cream);
+    border-top: 1px solid var(--border);
+    transition: background 0.35s, border-color 0.35s;
+  }
+  .strip-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.8rem;
+    margin-bottom: 1.4rem;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .strip-badge {
+    display: grid;
+    place-content: center;
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--c);
+    border-radius: 50%;
+    background: #fbf7ee;
+    color: #2c2118;
+    font: 700 11px 'Inter', sans-serif;
+    letter-spacing: 0;
+  }
+  .strip-ja {
+    font: 500 14px 'Noto Serif JP', serif;
+    letter-spacing: 3px;
+    color: var(--ink);
+  }
+  .strip-tally {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    color: var(--stamp);
+  }
+
+  .strip-hint {
+    margin: -0.6rem 0 1.4rem;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  .strip-hint strong {
+    color: var(--stamp);
+    font-weight: 600;
+  }
+  .strip-hint a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--stamp);
+  }
+  .strip-next {
+    display: none;
+    margin-top: 0.15rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2rem;
+    background: var(--stamp);
+    color: var(--on-stamp);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .strip-stop.is-next .strip-next {
+    display: inline-block;
+  }
+  .strip-stop.is-next .strip-node {
+    border-color: var(--stamp);
+  }
+  .strip-line {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    list-style: none;
+  }
+  /* the track */
+  .strip-line::before {
+    content: '';
+    position: absolute;
+    inset: 9px 0 auto;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--c);
+    margin-inline: calc(50% / var(--n));
+    transform-origin: 0 50%;
+    animation: track 1.1s var(--ease-io) both 0.2s;
+  }
+  @keyframes track {
+    from {
+      scale: 0 1;
+    }
+  }
+  .strip-train {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 34px;
+    height: 16px;
+    margin: 3px 0 0 -17px;
+    border-radius: 4px 9px 4px 4px;
+    background:
+      linear-gradient(var(--cream), var(--cream)) 5px 4px / 6px 5px no-repeat,
+      linear-gradient(var(--cream), var(--cream)) 14px 4px / 6px 5px no-repeat,
+      linear-gradient(var(--cream), var(--cream)) 23px 4px / 6px 5px no-repeat,
+      var(--ink);
+    box-shadow: 0 0 0 3px var(--cream);
+    translate: var(--x, 0) var(--y, 0);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .strip.is-ready .strip-train {
+    opacity: 1;
+    transition: translate 0.8s var(--ease-brake), opacity 0.4s 0.9s;
+  }
+
+  .strip-stop a {
+    display: grid;
+    justify-items: center;
+    gap: 0.25rem;
+    padding: 0 0.3rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    animation: stop-in 0.6s var(--ease-out) both;
+    animation-delay: calc(var(--i) * 0.07s + 0.5s);
+  }
+  @keyframes stop-in {
+    from {
+      opacity: 0;
+      translate: 0 0.5rem;
+    }
+  }
+  .strip-node {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 0.45rem;
+    border: 4px solid var(--c);
+    border-radius: 50%;
+    background: var(--cream);
+    transition: background 0.25s, scale 0.45s var(--spring), border-color 0.25s;
+  }
+  .strip-stop a:hover .strip-node,
+  .strip-stop a:focus-visible .strip-node {
+    scale: 1.2;
+  }
+  /* visited: the ring is inked in */
+  .strip-stop.is-stamped .strip-node {
+    background: var(--stamp);
+    border-color: var(--stamp);
+    box-shadow: inset 0 0 0 3px var(--cream);
+  }
+  .strip-code {
+    font: 500 10px 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    color: var(--c);
+  }
+  .strip-kanji {
+    font: 500 15px 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+    color: var(--ink);
+    transition: color 0.2s;
+  }
+  .strip-label {
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .strip-stop a:hover .strip-label {
+    color: var(--ink);
+  }
+
+  /* narrow: the line turns and runs down the page */
+  @media (max-width: 760px) {
+    .strip-line {
+      grid-template-columns: 1fr;
+      gap: 0.2rem;
+    }
+    .strip-line::before {
+      inset: 0.7rem auto 0.7rem 9px;
+      width: 5px;
+      height: auto;
+      margin: 0;
+      transform-origin: 50% 0;
+      animation-name: track-v;
+    }
+    @keyframes track-v {
+      from {
+        scale: 1 0;
+      }
+    }
+    .strip-train {
+      display: none;
+    }
+    .strip-stop a {
+      grid-template-columns: 22px auto auto 1fr;
+      justify-items: start;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.35rem 0;
+      text-align: left;
+    }
+    .strip-node {
+      margin: 0;
+    }
+  }
+</style>

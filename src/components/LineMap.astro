@@ -1,0 +1,668 @@
+---
+/**
+ * LineMap: 路線図, the route map printed above the doors of a Japanese train.
+ *
+ * Here it is the site map at the foot of every page. The site is drawn as one
+ * line, the 日々線 (Hibi line), and every section is a stop on it. The stop of
+ * the page you are on is marked "Estás aquí" and has the train on it, the sign
+ * on the left points at the stop after it, and every stop is a link. Two of
+ * the stops are where a guide starts, so they carry the badge of that guide's
+ * own line (see src/data/guides.ts), the way a map marks a transfer.
+ *
+ * Printed on the same paper as the stamp book, so it follows day and night.
+ */
+import { lines, type Line } from '../data/guides';
+
+interface Stop {
+  href: string;
+  /** Station name in Japanese and its reading. */
+  ja: string;
+  kana: string;
+  /** Name of the section, in full and as written under the stop. */
+  es: string;
+  short: string;
+  /** What is there: a few words for the map, a sentence for the sign. */
+  about: string;
+  more: string;
+  /** The guide that starts at this stop, if one does. */
+  line?: Line;
+  /** Does this URL path belong to the stop? */
+  test: (path: string) => boolean;
+  /** Starlight guides need a full page load. */
+  reload?: boolean;
+}
+
+const guide = (id: Line['id']) => lines.find((line) => line.id === id)!;
+const japones = guide('japones');
+const llegada = guide('llegada');
+
+const stops: Stop[] = [
+  {
+    href: '/', ja: '日々', kana: 'ひび', es: 'Portada', short: 'Portada',
+    about: 'El inicio',
+    more: 'El inicio del recorrido, con lo último de cada sección.',
+    test: (p) => p === '/',
+  },
+  {
+    href: japones.home, ja: '日本語', kana: 'にほんご', es: 'Guías de japonés', short: 'Japonés',
+    about: `Guía en ${japones.stations.length} capítulos`,
+    more: `Aprender el idioma paso a paso, en ${japones.stations.length} capítulos.`,
+    line: japones, test: (p) => p.startsWith('/guias/japones'), reload: true,
+  },
+  {
+    href: llegada.home, ja: '到着', kana: 'とうちゃく', es: 'Guía de llegada', short: 'Llegada',
+    about: `Guía en ${llegada.stations.length} capítulos`,
+    more: `De la visa a la vida diaria, en ${llegada.stations.length} capítulos.`,
+    line: llegada, test: (p) => p.startsWith('/guias/llegada'), reload: true,
+  },
+  {
+    href: '/japon/', ja: '生活', kana: 'せいかつ', es: 'Vivir en Japón', short: 'Japón',
+    about: 'Guías prácticas por tema',
+    more: 'Guías prácticas para llegar, instalarse y vivir allí.',
+    test: (p) => p.startsWith('/japon'),
+  },
+  {
+    href: '/blog/', ja: 'ブログ', kana: 'ぶろぐ', es: 'El Blog', short: 'Blog',
+    about: 'Crónicas de la vida diaria',
+    more: 'Crónicas y observaciones de la vida cotidiana.',
+    test: (p) => p.startsWith('/blog'),
+  },
+  {
+    href: '/personal/', ja: '手記', kana: 'しゅき', es: 'Personal', short: 'Personal',
+    about: 'Ensayos y reflexiones',
+    more: 'Ensayos cortos sobre aprender y vivir lejos de casa.',
+    test: (p) => p.startsWith('/personal'),
+  },
+];
+
+const path = Astro.url.pathname;
+const here = stops.findIndex((s) => s.test(path));
+const onLine = here !== -1;
+const atEnd = here === stops.length - 1;
+// Where the sign points: the stop after this one. From the last stop, or from
+// a page that is not on the line (the stamp book, a 404), back to the first.
+const nextIndex = onLine && !atEnd ? here + 1 : 0;
+const next = stops[nextIndex];
+const sign = !onLine
+  ? { ja: '始発', es: 'Primera parada' }
+  : atEnd
+    ? { ja: '終点', es: 'Fin de la línea' }
+    : { ja: '次は', es: 'Próxima parada' };
+const code = (i: number) => `H${String(i + 1).padStart(2, '0')}`;
+const reloadAttrs = (s: Stop) => (s.reload ? { 'data-astro-reload': true } : {});
+---
+
+<nav class="lm" aria-labelledby="lm-title" data-line-map style={`--n:${stops.length};--at:${here}`}>
+  <div class="lm-board">
+    <div class="lm-head">
+      <span class="lm-badge" aria-hidden="true">H</span>
+      <span class="lm-line" lang="ja" aria-hidden="true">日々線</span>
+      <h2 class="lm-title" id="lm-title">Mapa del sitio <span>· {stops.length} paradas</span></h2>
+      <a class="lm-top" href="#top" aria-label="Volver arriba"><span>Volver arriba</span> <i aria-hidden="true">↑</i></a>
+    </div>
+
+    <div class="lm-body">
+      {/* the sign: where to go from here */}
+      <a class="lm-next" href={next.href} data-lm-next={nextIndex} {...reloadAttrs(next)}>
+        <span class="lm-kicker"><b lang="ja" aria-hidden="true">{sign.ja}</b> {sign.es}</span>
+        <span class="lm-name">{next.es}</span>
+        <span class="lm-reading" lang="ja" aria-hidden="true"><b>{next.ja}</b><i>{next.kana}</i></span>
+        <span class="lm-more">{next.more}</span>
+        <span class="lm-go" aria-hidden="true">→</span>
+      </a>
+
+      {/* the whole line */}
+      <div class="lm-map">
+        <ol class="lm-route">
+          {onLine && <li class="lm-train" aria-hidden="true" />}
+          {
+            stops.map((s, i) => (
+              <li class:list={['lm-stop', { 'is-here': i === here }]} style={`--i:${i}`}>
+                <a href={s.href} aria-current={i === here ? 'page' : undefined} {...reloadAttrs(s)}>
+                  <span class="lm-ja" lang="ja" aria-hidden="true">{s.ja}</span>
+                  <span class="lm-node" aria-hidden="true" />
+                  <span class="lm-tag">
+                    {i === here ? (
+                      <b class="lm-pill">Estás aquí</b>
+                    ) : onLine && !atEnd && i === nextIndex ? (
+                      <b class="lm-pill is-soon">Próxima</b>
+                    ) : (
+                      <span class="lm-code" aria-hidden="true">{code(i)}</span>
+                    )}
+                  </span>
+                  <span class="lm-es">{s.short}</span>
+                  <span class="lm-about">
+                    {s.line && <span class="lm-xfer" style={`--x:${s.line.color}`} aria-hidden="true">{s.line.code}</span>}
+                    {s.about}
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script is:inline>
+  (function () {
+    function init() {
+      document.querySelectorAll('[data-line-map]').forEach(function (map) {
+        if (map.dataset.ready) return;
+        map.dataset.ready = '1';
+        var route = map.querySelector('.lm-route');
+        var home = map.style.getPropertyValue('--at');
+        var send = function (i) { map.style.setProperty('--at', i); };
+
+        // the train rides to the stop you point at, and goes back when you leave
+        map.querySelectorAll('.lm-stop').forEach(function (stop, i) {
+          stop.addEventListener('pointerenter', function () { send(i); });
+          stop.addEventListener('focusin', function () { send(i); });
+        });
+        var sign = map.querySelector('[data-lm-next]');
+        sign.addEventListener('pointerenter', function () { send(sign.getAttribute('data-lm-next')); });
+        sign.addEventListener('focusin', function () { send(sign.getAttribute('data-lm-next')); });
+        [route, sign].forEach(function (el) {
+          el.addEventListener('pointerleave', function () { send(home); });
+          el.addEventListener('focusout', function () { send(home); });
+        });
+
+        // the first time the map is seen, the line is drawn and the train pulls in
+        if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        map.classList.add('is-waiting');
+        var io = new IntersectionObserver(
+          function (entries) {
+            if (!entries.some(function (en) { return en.isIntersecting; })) return;
+            io.disconnect();
+            map.classList.remove('is-waiting');
+            map.classList.add('is-arriving');
+          },
+          { threshold: 0.45 }
+        );
+        io.observe(route);
+      });
+    }
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
+
+<style>
+  .lm {
+    /* the Hibi line is printed in seal red */
+    --c: var(--stamp);
+    position: relative;
+    z-index: 10;
+    max-width: 1450px;
+    margin: 0 auto;
+    padding: 0 clamp(1.5rem, 5vw, 4rem);
+  }
+  .lm-board {
+    border-radius: 10px;
+    background: var(--sheet);
+    color: var(--sheet-ink);
+    box-shadow: var(--paper-shadow);
+    transition: background 0.35s, color 0.35s;
+  }
+  .lm a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* ---- heading: which line this is, and the way back up ---- */
+  .lm-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem 0.8rem;
+    padding: 0.8rem 1.4rem;
+    border-bottom: 1.5px dashed var(--sheet-dash);
+  }
+  .lm-badge,
+  .lm-xfer {
+    flex: none;
+    display: inline-grid;
+    place-content: center;
+    border-radius: 50%;
+    background: #fbf7ee;
+    color: #2c2118;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .lm-badge {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--c);
+    font-size: 11px;
+  }
+  .lm-line {
+    font: 500 14px 'Noto Serif JP', serif;
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+  .lm-title {
+    font: 600 11px / 1.4 'Inter', sans-serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--sheet-ink);
+  }
+  .lm-title span {
+    font-weight: 500;
+    color: var(--sheet-soft);
+  }
+  .lm-top {
+    margin-left: auto;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--c);
+    font: 600 11px / 1.4 'Inter', sans-serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .lm-top i {
+    display: inline-block;
+    font-style: normal;
+    color: var(--c);
+    transition: translate 0.35s var(--ease-out);
+  }
+  .lm-top:hover i {
+    translate: 0 -3px;
+  }
+
+  .lm-body {
+    display: grid;
+    grid-template-columns: minmax(17rem, 0.7fr) minmax(0, 2fr);
+  }
+
+  /* ---- the sign: next stop ---- */
+  .lm-next {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: center;
+    column-gap: 1rem;
+    padding: 1.3rem 1.4rem 1.4rem;
+    border-right: 1.5px dashed var(--sheet-dash);
+  }
+  .lm-next > * {
+    grid-column: 1;
+  }
+  .lm-next > .lm-kicker {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.7rem;
+    font: 600 10.5px / 1.3 'Inter', sans-serif;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--sheet-soft);
+  }
+  .lm-kicker b {
+    flex: none;
+    padding: 0.22rem 0.5rem 0.2rem;
+    border-radius: 3px;
+    background: var(--c);
+    color: var(--on-stamp);
+    font: 600 12px / 1.2 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+    text-indent: 2px;
+    white-space: nowrap;
+  }
+  .lm-name {
+    font: 500 1.55rem / 1.2 'Lora', serif;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color 0.25s;
+  }
+  .lm-reading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    margin-top: 0.3rem;
+  }
+  .lm-reading b {
+    font: 600 1.05rem 'Noto Serif JP', serif;
+    letter-spacing: 2px;
+  }
+  .lm-reading i {
+    font: 400 0.75rem 'Noto Serif JP', serif;
+    letter-spacing: 1.5px;
+    color: var(--ink-n);
+  }
+  .lm-more {
+    margin-top: 0.55rem;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--sheet-soft);
+  }
+  .lm-next > .lm-go {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+    align-self: center;
+    display: grid;
+    place-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1.5px solid var(--c);
+    border-radius: 50%;
+    color: var(--c);
+    font-size: 1.1rem;
+    transition: translate 0.4s var(--ease-out), background-color 0.25s, color 0.25s;
+  }
+  .lm-next:hover .lm-go,
+  .lm-next:focus-visible .lm-go {
+    translate: 4px 0;
+    background-color: var(--c);
+    color: var(--on-stamp);
+  }
+  .lm-next:hover .lm-name,
+  .lm-next:focus-visible .lm-name {
+    text-decoration-color: var(--c);
+  }
+
+  /* ---- the line ---- */
+  .lm-map {
+    min-width: 0;
+    padding: 1rem 0.9rem 1.3rem;
+  }
+  .lm-route {
+    /* room above the track for a name written downwards */
+    --names: 4.3rem;
+    --node: 20px;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    list-style: none;
+  }
+  /* the track, from the first stop to the last */
+  .lm-route::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--names) + var(--node) / 2 - 2.5px);
+    left: calc(50% / var(--n));
+    right: calc(50% / var(--n));
+    height: 5px;
+    border-radius: 3px;
+    background: var(--c);
+    transform-origin: 0 50%;
+    transition: scale 0.7s var(--ease-out);
+  }
+  .lm-stop a {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: var(--names) var(--node);
+    justify-items: center;
+    height: 100%;
+    padding: 0 0.35rem 0.2rem;
+    text-align: center;
+    transition: opacity 0.5s var(--ease-out), translate 0.5s var(--ease-out);
+    transition-delay: calc(var(--i) * 0.07s + 0.15s);
+  }
+  /* the station's name in Japanese hangs over the track, as on the real maps */
+  .lm-ja {
+    align-self: end;
+    padding-bottom: 0.55rem;
+    writing-mode: vertical-rl;
+    font: 500 1.05rem / 1 'Noto Serif JP', serif;
+    letter-spacing: 0.16em;
+    white-space: nowrap;
+  }
+  .lm-node {
+    box-sizing: border-box;
+    width: var(--node);
+    height: var(--node);
+    border: 4px solid var(--c);
+    border-radius: 50%;
+    background: var(--sheet);
+    transition: background-color 0.25s, box-shadow 0.25s;
+  }
+  .lm-tag {
+    display: grid;
+    place-items: center;
+    min-height: 1.3rem;
+    margin-top: 0.5rem;
+  }
+  .lm-code {
+    font: 500 10px 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    color: var(--c);
+  }
+  .lm-pill {
+    padding: 0.2rem 0.55rem 0.17rem;
+    border-radius: 2rem;
+    background: var(--c);
+    color: var(--on-stamp);
+    font: 600 9px / 1.3 'Inter', sans-serif;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .lm-pill.is-soon {
+    background: none;
+    box-shadow: inset 0 0 0 1.5px var(--c);
+    color: var(--c);
+  }
+  .lm-es {
+    margin-top: 0.3rem;
+    font: 500 1rem / 1.25 'Lora', serif;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color 0.25s;
+  }
+  .lm-about {
+    margin-top: 0.25rem;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--sheet-soft);
+    text-wrap: balance;
+  }
+  /* the badge of the guide that starts at this stop: its own line */
+  .lm-xfer {
+    box-sizing: border-box;
+    width: 17px;
+    height: 17px;
+    margin-right: 0.3rem;
+    border: 2.5px solid var(--x);
+    font-size: 8.5px;
+    line-height: 1;
+    vertical-align: baseline;
+  }
+  .lm-stop a:hover .lm-node,
+  .lm-stop a:focus-visible .lm-node {
+    background: var(--c);
+  }
+  .lm-stop a:hover .lm-es,
+  .lm-stop a:focus-visible .lm-es {
+    text-decoration-color: var(--c);
+  }
+  /* the stop of this page is inked in */
+  .lm-stop.is-here .lm-node {
+    background: var(--c);
+    box-shadow: inset 0 0 0 3px var(--sheet);
+  }
+  /* the big links keep their focus ring inside the board */
+  .lm :is(.lm-next, .lm-stop a):focus-visible {
+    outline: 2px solid var(--c);
+    outline-offset: -3px;
+    border-radius: 6px;
+  }
+
+  /* the train: at this page's stop, or at the one you are pointing at */
+  .lm-train {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--names) + var(--node) / 2 - 8px);
+    left: calc((var(--at) + 0.5) * 100% / var(--n));
+    width: 34px;
+    height: 16px;
+    margin-left: -17px;
+    border-radius: 4px 9px 4px 4px;
+    background:
+      linear-gradient(var(--sheet), var(--sheet)) 5px 4px / 6px 5px no-repeat,
+      linear-gradient(var(--sheet), var(--sheet)) 14px 4px / 6px 5px no-repeat,
+      linear-gradient(var(--sheet), var(--sheet)) 23px 4px / 6px 5px no-repeat,
+      var(--sheet-ink);
+    box-shadow: 0 0 0 3px var(--sheet);
+    pointer-events: none;
+    transition: left 0.8s var(--ease-brake);
+  }
+
+  /* Before the map has been seen nothing is drawn. Then the line is laid, the
+     stops come up one after another, and the train runs in from the first stop
+     and brakes at this page's. */
+  .lm.is-waiting .lm-route::before {
+    scale: 0 1;
+  }
+  .lm.is-waiting .lm-stop a {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+  .lm.is-waiting .lm-train {
+    opacity: 0;
+  }
+  .lm.is-arriving .lm-train {
+    animation: lm-arrive 0.9s var(--ease-brake) 0.45s backwards;
+  }
+  @keyframes lm-arrive {
+    from {
+      left: calc(50% / var(--n));
+      opacity: 0;
+    }
+    25% {
+      opacity: 1;
+    }
+  }
+
+  /* ---- narrow: the sign goes on top, and the line runs down the page ---- */
+  @media (max-width: 940px) {
+    .lm-body {
+      grid-template-columns: 1fr;
+    }
+    .lm-next {
+      border-right: 0;
+      border-bottom: 1.5px dashed var(--sheet-dash);
+    }
+    .lm-map {
+      padding: 0.7rem 1.4rem 0.9rem;
+    }
+    .lm-route {
+      grid-template-columns: 1fr;
+    }
+    .lm-route::before {
+      top: 1.6rem;
+      bottom: 1.6rem;
+      left: calc(var(--node) / 2 - 2.5px);
+      right: auto;
+      width: 5px;
+      height: auto;
+      transform-origin: 50% 0;
+    }
+    .lm.is-waiting .lm-route::before {
+      scale: 1 0;
+    }
+    .lm-train {
+      display: none;
+    }
+    .lm-stop a {
+      grid-template-columns: var(--node) auto minmax(0, 1fr) auto;
+      grid-template-rows: auto auto;
+      justify-items: start;
+      align-items: center;
+      gap: 0.1rem 0.85rem;
+      padding: 0.6rem 0;
+      text-align: left;
+    }
+    .lm-node {
+      grid-area: 1 / 1 / 3 / 2;
+    }
+    .lm-es {
+      grid-area: 1 / 2;
+      margin: 0;
+    }
+    .lm-tag {
+      grid-area: 1 / 3;
+      min-height: 0;
+      margin: 0;
+    }
+    .lm-code {
+      display: none;
+    }
+    .lm-about {
+      grid-area: 2 / 2 / 3 / 4;
+      margin: 0;
+    }
+    .lm-ja {
+      grid-area: 1 / 4 / 3 / 5;
+      align-self: center;
+      padding: 0;
+      writing-mode: horizontal-tb;
+      letter-spacing: 0.12em;
+    }
+  }
+  @media (max-width: 600px) {
+    .lm-title span,
+    .lm-top span {
+      display: none;
+    }
+    /* the way back up is just its arrow, in a ring */
+    .lm-top {
+      display: grid;
+      place-content: center;
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      border: 1.5px solid var(--c);
+      border-radius: 50%;
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+  }
+  @media (max-width: 520px) {
+    .lm-head {
+      padding-inline: 1.1rem;
+    }
+    .lm-next {
+      padding-inline: 1.1rem;
+    }
+    .lm-map {
+      padding-inline: 1.1rem;
+    }
+    .lm-name {
+      font-size: 1.45rem;
+    }
+  }
+  @media (max-width: 380px) {
+    .lm-line {
+      display: none;
+    }
+    /* the smallest phones: a name, its label and the kanji still share one row */
+    .lm-stop a {
+      column-gap: 0.55rem;
+    }
+    .lm-pill {
+      padding-inline: 0.45rem;
+      letter-spacing: 1px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lm.is-arriving .lm-train {
+      animation: none;
+    }
+    .lm-train,
+    .lm-route::before,
+    .lm-stop a,
+    .lm-go,
+    .lm-node,
+    .lm-top i {
+      transition: none;
+    }
+  }
+</style>

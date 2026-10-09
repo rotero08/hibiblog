@@ -1,0 +1,114 @@
+---
+title: "Entrada de muestra"
+description: "Todo lo que cabe en una entrada, escrito en el mismo archivo que lo enseña. Sirve de plantilla: se copia, se cambia el encabezado y se escribe."
+date: 2024-10-01
+tag: Muestra
+ja: 見本
+draft: true
+---
+
+Esta entrada no se publica. Está marcada como borrador, así que solo aparece mientras trabajas con `pnpm dev`. Sirve para ver cómo queda cada cosa y para copiarla al empezar una entrada nueva.
+
+## El encabezado
+
+Cada entrada es un archivo `.mdx` en `src/content/blog/`, o en `src/content/personal/` si es una reflexión. El nombre del archivo es la dirección: `primer-shinkansen.mdx` se lee en `/blog/primer-shinkansen/`.
+
+Arriba va un encabezado con los datos de la entrada:
+
+```yaml
+---
+title: "Tomar el shinkansen por primera vez"
+description: "Una o dos frases. Salen en las tarjetas y debajo del título."
+date: 2026-03-14
+tag: Transporte
+---
+```
+
+`title`, `description` y `date` son obligatorios. `tag` es la etiqueta de la tarjeta. Hay dos opcionales más: `ja`, un subtítulo en japonés, y `draft: true`, que deja la entrada como borrador.
+
+El tiempo de lectura, la fecha de las tarjetas y los enlaces a la entrada anterior y a la siguiente se calculan solos.
+
+## Texto
+
+Debajo del encabezado se escribe en Markdown normal. Un párrafo es un bloque de texto separado del siguiente por una línea en blanco. Hay **negrita**, *cursiva* y [enlaces](/guias/llegada/).
+
+Las listas se escriben con guiones:
+
+- Un elemento.
+- Otro elemento.
+- Y otro más.
+
+O con números, si el orden importa:
+
+1. Primero esto.
+2. Luego esto.
+
+Una cita lleva el signo "mayor que" al principio de la línea:
+
+> 一期一会 (ichigo ichie): cada encuentro ocurre una sola vez.
+
+Tres guiones solos en una línea marcan una pausa:
+
+---
+
+Y el texto sigue después.
+
+### Un subtítulo
+
+Los títulos de sección llevan dos almohadillas y los subtítulos, tres.
+
+## Imágenes
+
+La imagen se guarda junto a la entrada o en `src/assets/` y se pone con la sintaxis de Markdown. Si la línea siguiente está en cursiva, queda como pie de foto:
+
+![Una persona de pie junto a un jardín en otoño, vista desde el interior de un templo](../../assets/llegada/jardin-otono.jpg)
+*Tenryū-ji, Kioto. Foto de Masaaki Komori (Unsplash).*
+
+El texto entre corchetes describe la imagen para quien no puede verla. Astro la optimiza al compilar.
+
+## Japonés
+
+Para lo que Markdown no trae hay componentes. No hace falta importarlos. En el editor, al pasar el cursor sobre la etiqueta se ve qué hace el componente, qué atributos acepta y un ejemplo.
+
+`Frases` arma una lista de expresiones con su lectura y su significado:
+
+<Frases
+  title="En la estación"
+  items={[
+    ['切符', 'kippu', 'Boleto'],
+    ['乗り換え', 'norikae', 'Transbordo'],
+    ['次は京都です', 'tsugi wa Kyōto desu', 'La próxima parada es Kioto'],
+  ]}
+/>
+
+`VocabFeature` destaca una sola palabra:
+
+<VocabFeature
+  label="Palabra de la entrada"
+  labelJa="今日の単語"
+  word="駅弁"
+  reading="ekiben"
+  meaning="la comida en caja que se vende en las estaciones"
+  exampleJa="新幹線で駅弁を食べた。"
+  exampleEs="Comí un ekiben en el shinkansen."
+/>
+
+Y `Philosophy` separa una idea del resto del texto:
+
+<Philosophy>
+
+Lo que va aquí dentro también es Markdown. Deja una línea en blanco después de abrir la etiqueta y otra antes de cerrarla.
+
+</Philosophy>
+
+## Tablas
+
+| Tren | Paradas | Tokio a Kioto, aprox. |
+| --- | --- | --- |
+| Nozomi | Pocas | 2 h 15 min |
+| Hikari | Algunas | 2 h 40 min |
+| Kodama | Todas | 3 h 40 min |
+
+## Publicar
+
+Mientras el encabezado diga `draft: true`, la entrada solo existe en tu computadora. Al quitar esa línea aparece en el blog, en la portada y en la página de Japón la próxima vez que se compile el sitio.

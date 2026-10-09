@@ -1,0 +1,108 @@
+---
+/**
+ * Frases is a pocket phrasebook: how something is written in Japan, how to read
+ * it, and what it means. Used across the arrival guide for the words printed on
+ * signs and forms and the sentences needed at a counter.
+ *
+ * Each item is a `[japonés, lectura, español]` tuple, which keeps the MDX short.
+ *
+ * @example
+ * ```mdx
+ * <Frases
+ *   title="En la estación"
+ *   items={[
+ *     ['切符', 'kippu', 'Boleto'],
+ *     ['乗り換え', 'norikae', 'Transbordo'],
+ *   ]}
+ * />
+ * ```
+ */
+type Phrase = [ja: string, romaji: string, es: string];
+
+interface Props {
+  /** The phrases, in display order. */
+  items: Phrase[];
+  /** Optional heading above the list. */
+  title?: string;
+}
+
+const { items, title } = Astro.props;
+---
+
+<div class="frases not-content">
+  {title && <p class="frases-title">{title}</p>}
+  <dl class="frases-list">
+    {
+      items.map(([ja, romaji, es]) => (
+        <div class="frase">
+          <dt>
+            <span class="frase-ja" lang="ja">
+              {ja}
+            </span>
+            {romaji && <span class="frase-romaji">{romaji}</span>}
+          </dt>
+          <dd>{es}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</div>
+
+<style>
+  .frases {
+    margin: 1.4rem 0 1.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--cream2);
+    overflow: hidden;
+    transition: background 0.35s, border-color 0.35s;
+  }
+  .frases-title {
+    margin: 0;
+    padding: 0.6rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--cream3);
+    color: var(--brown);
+    font: 600 10.5px / 1.5 'JetBrains Mono', monospace;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+  .frases-list {
+    margin: 0;
+  }
+  .frase {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 0.3rem 1.4rem;
+    align-items: center;
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .frase:last-child {
+    border-bottom: 0;
+  }
+  .frase dt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin: 0;
+  }
+  .frase-ja {
+    color: var(--ink);
+    font: 500 1.02rem / 1.5 'Noto Serif JP', serif;
+  }
+  .frase-romaji {
+    color: var(--muted);
+    font: 400 0.74rem / 1.5 'JetBrains Mono', monospace;
+  }
+  .frase dd {
+    margin: 0;
+    color: var(--ink-soft);
+    font: 400 0.9rem / 1.55 'Inter', sans-serif;
+  }
+  @media (max-width: 560px) {
+    .frase {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

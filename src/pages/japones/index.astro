@@ -1,0 +1,49 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import NotasHub from '../../components/NotasHub.astro';
+import StationStrip from '../../components/StationStrip.astro';
+import { lines } from '../../data/guides';
+
+// Main page of the Japanese section: the guide and, below it, the short
+// notes (every file in src/content/japones/, newest first).
+const japones = lines[0];
+---
+
+<Layout title="Japonés · Hibi" description="La guía completa de japonés y notas cortas sobre gramática, palabras y kanji.">
+  <div class="japan-hub">
+    <PageHeader eyebrow="Japonés" title="Aprender japonés" ja="日本語" color="var(--purple)">
+      Dos cosas: una guía larga para seguir en orden, y notas cortas sobre una partícula, un kanji o una palabra, para leer cuando quieras.
+    </PageHeader>
+
+    <div class="jp-guide-block" data-reveal>
+      <div class="jp-guide-header">
+        <div class="jp-guide-header-left">
+          <div class="jp-guide-eyebrow">Obra principal</div>
+          <h2 class="jp-guide-title">
+            Guía Completa de Japonés
+            <span class="jp-guide-subtitle">日本語完全ガイド</span>
+          </h2>
+          <p class="jp-guide-desc">De los silabarios a la conversación, en {japones.stations.length} estaciones. Se lee en orden o por secciones.</p>
+        </div>
+        <div class="jp-guide-kanji">語</div>
+      </div>
+      <StationStrip line={japones} />
+      <div class="jp-guide-footer">
+        <span>Gramática, vocabulario, inmersión y más</span>
+        <a class="jp-start-btn as-link" href="/guias/japones/" data-astro-reload>Abrir la guía →</a>
+      </div>
+    </div>
+
+    <h2 class="notes-title" id="notas">Notas cortas</h2>
+    <NotasHub />
+  </div>
+</Layout>
+
+<style>
+  .notes-title {
+    margin: 0 0 0.9rem;
+    font: 500 1.15rem 'Lora', serif;
+    color: var(--ink);
+  }
+</style>

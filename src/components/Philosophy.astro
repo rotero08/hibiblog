@@ -3,6 +3,15 @@
  * Philosophy — an accented "thesis" callout box (the purple-bordered
  * philosophy box from the guides). Slot content is authored as plain Markdown
  * inside MDX, so guide files stay free of raw HTML.
+ *
+ * @example
+ * ```mdx
+ * <Philosophy accent="var(--green)">
+ *
+ * Anki no es la meta, es la herramienta.
+ *
+ * </Philosophy>
+ * ```
  */
 interface Props {
   /** Accent colour for the left border (any CSS colour or custom property). @default 'var(--purple)' */
