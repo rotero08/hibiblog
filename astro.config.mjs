@@ -35,7 +35,7 @@ const AUTO_IMPORTED_COMPONENTS = [
 // https://astro.build/config
 export default defineConfig({
   // Update to the deployed origin; used for sitemap + canonical URLs.
-  site: 'https://hibi.example.com',
+  site: 'https://hibi-blog.delfost.workers.dev',
   // "static" + a server adapter is the modern replacement for the removed
   // `output: 'hybrid'`: everything is prerendered by default, while any route
   // can opt into on-demand SSR later via `export const prerender = false`.

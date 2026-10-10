@@ -23,14 +23,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local Claude Code settings and scratch files (shared .claude/settings.json is kept)
-.claude/settings.local.json
-.claude/worktrees/
+# Claude Code settings, skills and scratch files
+.claude/
 CLAUDE.local.md
 
-# editor and OS files (.vscode/extensions.json is kept)
-.vscode/*
-!.vscode/extensions.json
+# editor and OS files
+.vscode/
 .idea/
 *.swp
 *~

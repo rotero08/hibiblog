@@ -1,0 +1,10 @@
+{
+  // Cloudflare serves the prerendered site as static assets; no Worker code runs.
+  // With the Node adapter, `astro build` puts the pages in dist/client.
+  "name": "hibi-blog",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "404-page"
+  }
+}
