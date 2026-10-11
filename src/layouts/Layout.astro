@@ -6,6 +6,7 @@ import HankoSeal from '../components/HankoSeal.astro';
 import SiteNav from '../components/SiteNav.astro';
 import LineMap from '../components/LineMap.astro';
 import Scenery from '../components/Scenery.astro';
+import { FEEDS } from '../lib/feed';
 
 /**
  * Layout — the shared chrome for every custom (non-Starlight) page.
@@ -39,6 +40,7 @@ const FONT_HREF =
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {Object.values(FEEDS).map((feed) => <link rel="alternate" type="application/rss+xml" title={feed.title} href={new URL(feed.href, Astro.site)} />)}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href={FONT_HREF} rel="stylesheet" />
@@ -82,6 +84,7 @@ const FONT_HREF =
         <HankoSeal text="検" variant="square" size={44} rotation={6} />
         <div class="footer-fare">
           <span><a class="footer-stamps as-link" href="/sellos/" data-stamp-ui>Libreta de sellos · <span data-stamp-count>0</span></a><button type="button" class="footer-stamps footer-stamps-on" data-stamps-toggle>Activar sellos</button></span>
+          <span><a class="footer-rss as-link" href={FEEDS.all.href}>Suscribirse · RSS</a></span>
           <span>GRACIAS POR VISITAR</span>
           <span class="fare-jp">ご愛読ありがとうございました</span>
         </div>

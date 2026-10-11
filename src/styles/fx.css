@@ -1270,7 +1270,8 @@ html.theme-wipe * {
   scale: 1.08;
   opacity: 0.2;
 }
-.footer-stamps {
+.footer-stamps,
+.footer-rss {
   color: var(--stamp);
   border-bottom: 1px solid currentColor;
 }

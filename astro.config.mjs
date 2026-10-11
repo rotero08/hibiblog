@@ -83,6 +83,8 @@ export default defineConfig({
           attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true },
         },
         { tag: 'link', attrs: { rel: 'stylesheet', href: FONT_HREF } },
+        // The feed of every post (src/pages/rss.xml.ts), found by feed readers on the guides too.
+        { tag: 'link', attrs: { rel: 'alternate', type: 'application/rss+xml', title: '日々 · Hibi', href: '/rss.xml' } },
         { tag: 'script', attrs: { src: '/scripts/leaves.js', defer: true } },
         { tag: 'script', attrs: { src: '/scripts/hibi.js', defer: true } },
       ],
