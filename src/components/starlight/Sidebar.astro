@@ -48,6 +48,11 @@ const currentGroup = section
   : undefined;
 
 const inicioHref = section?.home ?? '/';
+
+// On the single-page version of a guide (guias/[guia]/completa.astro) the
+// chapters are sections of the page, so the menu scrolls to them.
+const whole = section ? noSlash(path) === `${noSlash(section.home)}/completa` : false;
+const hrefOf = (href: string) => (whole ? `#${noSlash(href).split('/').pop()}` : href);
 const inicioActive = section ? noSlash(path) === noSlash(inicioHref) : false;
 
 // Fallback to all groups for any future docs page outside the two guides.
@@ -102,7 +107,7 @@ const chaptersOf = (g: Group): Link[] => {
       <a
         class="doc-toc-item"
         class:list={[{ 'is-active': inicioActive }]}
-        href={inicioHref}
+        href={whole ? '#introduccion' : inicioHref}
         aria-current={inicioActive ? 'page' : undefined}
       >
         <span class="doc-toc-stamp" aria-hidden="true" />
@@ -126,7 +131,7 @@ const chaptersOf = (g: Group): Link[] => {
             <a
               class="doc-toc-item"
               class:list={[{ 'is-active': link.isCurrent }]}
-              href={link.href}
+              href={hrefOf(link.href)}
               aria-current={link.isCurrent ? 'page' : undefined}
             >
               <span class="doc-toc-stamp" aria-hidden="true" />
@@ -339,6 +344,18 @@ const chaptersOf = (g: Group): Link[] => {
   }
   .doc-toc-item:hover {
     transform: translateX(4px);
+  }
+  /* on the route the stop stays on its line: the box holds still and only the label moves */
+  .doc-nav-group .doc-toc-item:hover {
+    transform: none;
+  }
+  .doc-nav-group .doc-toc-num,
+  .doc-nav-group .doc-toc-title {
+    transition: translate 0.45s var(--spring);
+  }
+  .doc-nav-group .doc-toc-item:hover .doc-toc-num,
+  .doc-nav-group .doc-toc-item:hover .doc-toc-title {
+    translate: 4px 0;
   }
   .doc-site {
     display: none;

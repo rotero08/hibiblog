@@ -1,0 +1,202 @@
+---
+/**
+ * A guide as a single page: every chapter one after the other, each one opened
+ * by its station, so the chapters stay in view and in the sidebar and the table
+ * of contents. It reads the same MDX files as the chapter pages, in the order
+ * of `src/data/guides.ts`, so nothing is written twice.
+ *
+ * The chapter pages stay the place where the stamps are collected, and this page
+ * is left out of the search index so the text is not found twice.
+ */
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, render } from 'astro:content';
+import { lines, stationCode } from '../../../data/guides';
+
+export function getStaticPaths() {
+  return lines.map((line) => ({ params: { guia: line.id } }));
+}
+
+const { guia } = Astro.params;
+const line = lines.find((l) => l.id === guia)!;
+
+const trim = (path: string) => path.replace(/\/+$/, '');
+const docs = await getCollection('docs');
+const entryOf = (href: string) => {
+  const id = trim(href).replace(/^\//, '');
+  return docs.find((d) => d.id === id || d.id === `${id}/index`);
+};
+
+// The chapter's address is its anchor on this page: /guias/llegada/visa/ is #visa.
+const anchorOf = (href: string, index: number) => (index === 0 ? 'introduccion' : trim(href).split('/').pop()!);
+
+const chapters = await Promise.all(
+  line.stations.map(async (station, index) => {
+    const entry = entryOf(station.href);
+    if (!entry) throw new Error(`Falta el capítulo ${station.href}.`);
+    const { Content, headings } = await render(entry);
+    return { station, index, entry, Content, headings, id: anchorOf(station.href, index) };
+  }),
+);
+
+// Section names repeat between chapters ("En tren", "Qué llevar"), and an address
+// must be unique on a page. The first one keeps its address, a later one gets its
+// chapter's in front. The script below applies the same rule to the page.
+const seen = new Set(chapters.map((c) => c.id));
+const addressed = chapters.map((c) => ({
+  ...c,
+  headings: c.headings.map((h) => {
+    const slug = seen.has(h.slug) ? `${c.id}-${h.slug}` : h.slug;
+    seen.add(slug);
+    return { ...h, slug };
+  }),
+}));
+
+// The page's table of contents: each chapter, with its own sections below it.
+const headings = addressed.flatMap(({ station, headings, id }) => [
+  { depth: 2, slug: id, text: station.label },
+  ...headings.filter((h) => h.depth === 2).map((h) => ({ ...h, depth: 3 })),
+]);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: `${line.name}, completa`,
+    description: `Los ${chapters.length} capítulos de la ${line.name.toLowerCase()} en una sola página.`,
+    pagefind: false,
+  }}
+  headings={headings}
+>
+  <p class="intro">
+    Los {chapters.length} capítulos de la guía, uno tras otro. Cada capítulo empieza con su estación, y
+    puedes saltar entre ellos desde el menú.
+  </p>
+
+  {
+    chapters.map(({ station, index, entry, Content, id }) => (
+      <section class="capitulo" id={id} style={`--c:${line.color}`}>
+        <header class="not-content capitulo-cabecera">
+          <p class="capitulo-estacion">
+            <span class="capitulo-codigo">{stationCode(line, index)}</span>
+            <span class="capitulo-ja" lang="ja">
+              <ruby>
+                {station.ja}
+                <rt>{station.kana}</rt>
+              </ruby>
+            </span>
+            <a class="capitulo-solo" href={station.href} data-astro-reload>
+              Abrir solo este capítulo →
+            </a>
+          </p>
+          <h2 class="capitulo-titulo">
+            <a href={`#${id}`}>{entry.data.title}</a>
+          </h2>
+        </header>
+        <Content />
+      </section>
+    ))
+  }
+</StarlightPage>
+
+<script>
+  // The same rule as in the frontmatter: repeated section addresses get their chapter's in front.
+  const seen = new Set<string>();
+  document.querySelectorAll('.capitulo').forEach((c) => seen.add(c.id));
+  document.querySelectorAll<HTMLElement>('.capitulo').forEach((chapter) => {
+    chapter.querySelectorAll<HTMLElement>('h2[id], h3[id], h4[id], h5[id], h6[id]').forEach((h) => {
+      if (h.closest('.capitulo-cabecera')) return;
+      const id = seen.has(h.id) ? `${chapter.id}-${h.id}` : h.id;
+      seen.add(id);
+      if (id === h.id) return;
+      h.parentElement?.querySelector(`a[href="#${h.id}"]`)?.setAttribute('href', `#${id}`);
+      h.id = id;
+    });
+  });
+
+  // A link to another chapter of the same guide scrolls to it on this page.
+  const base = location.pathname.replace(/completa\/?$/, '');
+  document.querySelectorAll<HTMLAnchorElement>('.capitulo a[href^="/guias/"]').forEach((a) => {
+    const url = new URL(a.href);
+    if (!url.pathname.startsWith(base) || url.pathname.endsWith('/completa/')) return;
+    const chapter = url.pathname.slice(base.length).replace(/\/$/, '');
+    const target = url.hash ? document.getElementById(url.hash.slice(1)) : document.getElementById(chapter || 'introduccion');
+    if (target) a.setAttribute('href', `#${target.id}`);
+  });
+</script>
+
+<style>
+  .intro {
+    margin: 0 0 1rem;
+    color: var(--ink-soft);
+  }
+
+  .capitulo {
+    /* clear Starlight's fixed header when jumping to a chapter */
+    scroll-margin-top: calc(var(--sl-nav-height, 4rem) + 1rem);
+    margin-top: 4rem;
+    padding-top: 2.2rem;
+    border-top: 1px dashed var(--border);
+  }
+  .capitulo-cabecera {
+    margin-bottom: 1.5rem;
+  }
+  .capitulo-estacion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.9rem;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* the station number, as painted on platforms: a ring in the line's colour */
+  .capitulo-codigo {
+    display: grid;
+    place-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 4px solid var(--c);
+    border-radius: 50%;
+    background: #fbf7ee;
+    color: #2c2118;
+    font: 500 0.8rem 'JetBrains Mono', monospace;
+    letter-spacing: 0;
+  }
+  .capitulo-ja {
+    font: 500 1.25rem / 1.9 'Noto Serif JP', serif;
+    letter-spacing: 3px;
+    color: var(--ink);
+    text-transform: none;
+  }
+  .capitulo-ja rt {
+    font-size: 0.45em;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+  .capitulo-solo {
+    margin-left: auto;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .capitulo-solo:hover {
+    color: var(--stamp);
+  }
+  .capitulo-titulo {
+    margin: 0.7rem 0 0;
+    font-size: var(--sl-text-h1);
+    line-height: var(--sl-line-height-headings);
+    font-weight: 600;
+  }
+  .capitulo-titulo a {
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+  @media (max-width: 40rem) {
+    .capitulo-solo {
+      margin-left: 0;
+    }
+  }
+</style>

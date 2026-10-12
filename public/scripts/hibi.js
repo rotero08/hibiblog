@@ -129,7 +129,7 @@
     if (toggle) {
       store.set(STAMPS_OFF, stampsOff() ? '0' : '1');
       markStampsOff();
-      watchStampCard();
+      watchStampCards();
       return;
     }
 
@@ -384,9 +384,12 @@
   }
 
   var pageObservers = [];
-  function watchStampCard() {
-    var card = document.querySelector('[data-stamp-card]');
-    if (!card || stampsOff()) return;
+  // a chapter page has one card (the station board); the single-page guide has one per chapter
+  function watchStampCards() {
+    if (stampsOff()) return;
+    document.querySelectorAll('[data-stamp-card]').forEach(watchStampCard);
+  }
+  function watchStampCard(card) {
     var key = trim(card.getAttribute('data-stamp-card'));
     if (readStamps()[key]) return card.classList.add('is-stamped');
     var io = new IntersectionObserver(
@@ -509,7 +512,7 @@
     markStampsOff();
     markStamps();
     markOwner();
-    watchStampCard();
+    watchStampCards();
     watchReveals();
     japanClock();
     onScroll();

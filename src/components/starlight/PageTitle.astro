@@ -6,11 +6,16 @@
  * and /sellos/). The tag above the title says which station this is and whether
  * its stamp is still waiting or already in the reader's book, so the stamp rally
  * is explained right where it happens. Pages outside the guides get a plain title.
+ *
+ * Under the title, a switch changes how the guide is read: chapter by chapter,
+ * or all of it on one page (src/pages/guias/[guia]/completa.astro).
  */
-import { locate, stationCode } from '../../data/guides';
+import { lines, locate, stationCode } from '../../data/guides';
 
 const { entry } = Astro.locals.starlightRoute;
 const here = locate(Astro.url.pathname);
+const whole = lines.find((l) => Astro.url.pathname.replace(/\/+$/, '') === `${l.home}completa`);
+const line = here?.line ?? whole;
 ---
 
 {
@@ -36,6 +41,14 @@ const here = locate(Astro.url.pathname);
 }
 {/* `_top` is Starlight's PAGE_TITLE_ID: the "Sinopsis" entry of the page TOC links to it. */}
 <h1 id="_top">{entry.data.title}</h1>
+{
+  line && (
+    <nav class="vista print:hidden" aria-label="Cómo leer la guía">
+      <a href={line.home} aria-current={whole ? undefined : 'page'} data-astro-reload>Por capítulos</a>
+      <a href={`${line.home}completa/`} aria-current={whole ? 'page' : undefined} data-astro-reload>Una sola página</a>
+    </nav>
+  )
+}
 
 <style>
   h1 {
@@ -47,6 +60,32 @@ const here = locate(Astro.url.pathname);
   }
   .st-tag + h1 {
     margin-top: 0.7rem;
+  }
+
+  /* the reading switch: two options, the current one filled */
+  .vista {
+    display: inline-flex;
+    margin-top: 1rem;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    background: var(--cream2);
+    font: 500 12px / 1 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+  }
+  .vista a {
+    padding: 0.5rem 0.95rem;
+    border-radius: 2rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+  }
+  .vista a:hover {
+    color: var(--ink);
+  }
+  .vista a[aria-current='page'] {
+    background: var(--stamp);
+    color: #fff;
   }
 
   .st-tag {
