@@ -502,6 +502,49 @@
   }
   setInterval(japanClock, 15000);
 
+  /* ---------- keep the current menu entry in view ---------- */
+  // Both menus (the chapters on the left, the page's sections on the right) are
+  // long. When the current entry changes, as the reader scrolls or moves to
+  // another page, it is brought to the middle of its own menu.
+  function scrollParent(el) {
+    for (var p = el.parentElement; p; p = p.parentElement) {
+      var o = getComputedStyle(p).overflowY;
+      if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) return p;
+    }
+    return null;
+  }
+  function centerIn(el, instant, onlyIfHidden) {
+    var p = el && scrollParent(el);
+    if (!p) return;
+    if (onlyIfHidden) {
+      var r = el.getBoundingClientRect(), pr = p.getBoundingClientRect();
+      if (r.top >= pr.top + 40 && r.bottom <= pr.bottom - 40) return;
+    }
+    var top = p.scrollTop + el.getBoundingClientRect().top - p.getBoundingClientRect().top - (p.clientHeight - el.offsetHeight) / 2;
+    p.scrollTo({ top: Math.max(0, top), behavior: instant || reduce() ? 'auto' : 'smooth' });
+  }
+  function watchCurrentEntries() {
+    [
+      // the chapters stay put while the current one is on screen, so "Volver" and the switch are not pushed away
+      ['.doc-nav', '.doc-toc-item.is-active', 'class', true],
+      ['starlight-toc', 'a[aria-current="true"]', 'aria-current', false],
+    ].forEach(function (spec) {
+      var menu = document.querySelector(spec[0]);
+      if (!menu) return;
+      var queued = false;
+      var center = function (instant) {
+        queued = false;
+        centerIn(menu.querySelector(spec[1]), instant, spec[3]);
+      };
+      var mo = new MutationObserver(function () {
+        if (!queued) { queued = true; requestAnimationFrame(function () { center(false); }); }
+      });
+      mo.observe(menu, { attributes: true, attributeFilter: [spec[2]], subtree: true });
+      pageObservers.push(mo);
+      center(true);
+    });
+  }
+
   /* ---------- per page ---------- */
   function init() {
     pageObservers.forEach(function (io) { io.disconnect(); });
@@ -514,6 +557,7 @@
     markOwner();
     watchStampCards();
     watchReveals();
+    watchCurrentEntries();
     japanClock();
     onScroll();
   }

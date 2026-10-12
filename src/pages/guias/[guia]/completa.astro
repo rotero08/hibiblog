@@ -112,6 +112,33 @@ const headings = addressed.flatMap(({ station, headings, id }) => [
     });
   });
 
+  // The menu on the left follows the reading: the chapter at the top of the screen is the current one.
+  const chapters = [...document.querySelectorAll<HTMLElement>('.capitulo')];
+  const links = new Map<string, HTMLAnchorElement[]>();
+  document.querySelectorAll<HTMLAnchorElement>('.doc-nav a.doc-toc-item').forEach((a) => {
+    const id = a.getAttribute('href')?.slice(1) ?? '';
+    links.set(id, [...(links.get(id) ?? []), a]);
+  });
+  let current = '';
+  let queued = false;
+  const follow = () => {
+    queued = false;
+    // the last chapter whose top has passed the upper third of the screen
+    const line = innerHeight * 0.3;
+    const here = chapters.filter((c) => c.getBoundingClientRect().top <= line).pop() ?? chapters[0];
+    if (here.id === current) return;
+    current = here.id;
+    links.forEach((list, id) =>
+      list.forEach((a) => {
+        a.classList.toggle('is-active', id === here.id);
+        if (id === here.id) a.setAttribute('aria-current', 'page');
+        else a.removeAttribute('aria-current');
+      }),
+    );
+  };
+  addEventListener('scroll', () => queued || ((queued = true), requestAnimationFrame(follow)), { passive: true });
+  follow();
+
   // A link to another chapter of the same guide scrolls to it on this page.
   const base = location.pathname.replace(/completa\/?$/, '');
   document.querySelectorAll<HTMLAnchorElement>('.capitulo a[href^="/guias/"]').forEach((a) => {

@@ -1431,3 +1431,39 @@ header.header .main-nav {
     padding: 0;
   }
 }
+
+
+/* Right pane: "En esta página". The section being read is marked clearly, like the
+   outline in a document editor: a filled row with an accent bar, and the rest
+   quiet. hibi.js keeps that row in the middle of the pane as the page scrolls. */
+starlight-toc nav a {
+  position: relative;
+  display: block;
+  padding: 0.35rem 0.6rem 0.35rem 0.8rem;
+  border-radius: 0 6px 6px 0;
+  color: var(--ink-soft);
+  line-height: 1.35;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+starlight-toc nav a::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 2px;
+  background: transparent;
+  transition: background 0.2s;
+}
+starlight-toc nav a:hover {
+  background: color-mix(in srgb, var(--stamp) 8%, transparent);
+  color: var(--ink);
+}
+starlight-toc nav a[aria-current='true'] {
+  background: color-mix(in srgb, var(--stamp) 16%, transparent);
+  color: var(--stamp);
+  font-weight: 600;
+}
+starlight-toc nav a[aria-current='true']::before {
+  background: var(--stamp);
+}

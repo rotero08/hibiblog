@@ -102,6 +102,15 @@ const chaptersOf = (g: Group): Link[] => {
 
   {/* counts and "next" marks are for this guide only (see markStamps in hibi.js) */}
   <div data-stamp-scope>
+  {/* how the guide is read: chapter by chapter, or all of it on one page (guias/[guia]/completa.astro) */}
+  {
+    section && (
+      <div class="doc-view" role="group" aria-label="Cómo leer la guía">
+        <a href={section.home} aria-current={whole ? undefined : 'page'} data-astro-reload>Capítulos</a>
+        <a href={`${section.home}completa/`} aria-current={whole ? 'page' : undefined} data-astro-reload>Página única</a>
+      </div>
+    )
+  }
   <ul class="doc-toc-list doc-nav-top">
     <li data-stamp-key={inicioHref}>
       <a
@@ -244,6 +253,44 @@ const chaptersOf = (g: Group): Link[] => {
   .doc-toc-item.is-active {
     border-color: var(--stamp);
     background: var(--cream3);
+    /* an accent bar on the left, so the current chapter reads at a glance */
+    box-shadow: inset 4px 0 0 var(--stamp);
+  }
+  .doc-toc-item.is-active .doc-toc-num {
+    color: var(--stamp);
+  }
+
+  /* the reading switch: small, above the list */
+  .doc-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin: 0 0 0.8rem;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--cream2);
+    font: 500 11px / 1 'Inter', sans-serif;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .doc-view a {
+    padding: 0.5rem 0.4rem;
+    border-radius: 4px;
+    color: var(--ink-soft);
+    text-align: center;
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+  }
+  .doc-view a:hover {
+    color: var(--ink);
+  }
+  .doc-view a[aria-current='page'] {
+    background: var(--stamp);
+    color: #fff;
+  }
+  :global(:root[data-theme='dark']) .doc-view a[aria-current='page'] {
+    color: #2a0f16;
   }
   .doc-toc-stamp {
     width: 14px;
